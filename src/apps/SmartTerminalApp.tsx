@@ -206,6 +206,18 @@ export const SmartTerminalApp: React.FC = () => {
           break;
         }
 
+        if (
+          targetIp === '194.165.16.100' &&
+          !discoveredClues.some((c) => c.id === 'clue_datacenter_core_ip')
+        ) {
+          sound.playError();
+          appendLog(
+            'error',
+            `ERR_FACILITY_ROUTING_LOCKED: 194.165.16.100 supercluster requires routing clearance from Chief Viktor Reyes. Crack his WebMail (v.reyes@aethelgard.corp) first.`
+          );
+          break;
+        }
+
         runWithProgress(
           `INJECTING EXPLOIT PAYLOAD ON ${targetIp}:${portNum}...`,
           1800,

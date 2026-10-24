@@ -60,8 +60,9 @@ Every tool runs as a draggable, multi-window application inside the NEXUS deskto
 
 ---
 
-## 📂 Chapter 1 Campaign (3 Connected Operations)
+## 📂 Campaign Overview (Chapters 1 & 2 // 6 Operations)
 
+### Chapter 1: Ghost in the Machine
 1. **Operation 01 — *Ghost in the Inbox*** *(OSINT & Social Engineering)*
    * **Client:** Elena Vance (CEO, Velox AI)
    * **Brief:** Investigate co-founder & CTO Marcus Cole, who is suspected of secretly selling Velox AI's proprietary v4 neural engine. Track him across *LookUp*, *Velox AI*, and *Chirper*, crack his WebMail, and uncover the offshore dead-drop IP.
@@ -71,6 +72,17 @@ Every tool runs as a draggable, multi-window application inside the NEXUS deskto
 3. **Operation 03 — *Severance Package*** *(High-Risk Active Trace Breach)*
    * **Client:** `ZERO [ENCRYPTED]`
    * **Brief:** Infiltrate military defense contractor **Aethelgard Corp** (`203.0.113.88`). Compromise Director Julian Sterling's WebMail for his 2FA Vault Token, breach Port 443 under an active neural trace, exfiltrate `PROJECT_MIRROR_TARGETS.dec`, and shred `/var/connection.log` before the trace hits `100%`.
+
+### Chapter 2: Deep State Mirror
+4. **Operation 04 — *Orbital Eye*** *(RF Telemetry & SatCom Hijacking)*
+   * **Client:** `ZERO [ENCRYPTED]`
+   * **Brief:** Aethelgard re-tasks military surveillance satellite **VALKYRIE-7** to locate you. Acquire the `SatCom Hijack Framework v1.1` from the BlackMarket, breach orbital ground relay `185.220.101.5` on Port 80, and intercept the Facility Delta telemetry logs.
+5. **Operation 05 — *The Gatekeeper*** *(Security Chief OSINT & WebMail Compromise)*
+   * **Client:** `ZERO [ENCRYPTED]`
+   * **Brief:** Profile Chief Security Officer Viktor Reyes (`@reyes_actual`) on Chirper. Synthesize his gatehouse shift PIN and military unit callout in PassWeaver to breach his corporate inbox (`v.reyes@aethelgard.corp`) and locate the central supercluster node.
+6. **Operation 06 — *The Kill-Switch*** *(Supercluster Meltdown & Final Purge)*
+   * **Client:** `ZERO [ENCRYPTED]`
+   * **Brief:** Acquire `Quantum Core Exploit v3.0`. Infiltrate Project Mirror's central supercluster (`194.165.16.100`) on Port 8080 under aggressive Active Trace countermeasures, exfiltrate `GLOBAL_CITIZEN_DOSSIERS.db`, inject the `TITAN-ZERO-PURGE` firmware wipe, and escape cleanly.
 
 ---
 

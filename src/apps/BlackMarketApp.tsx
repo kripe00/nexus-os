@@ -2,6 +2,8 @@ import React from 'react';
 import {
   CheckCircle2,
   Coins,
+  Cpu,
+  Radio,
   ShieldAlert,
   ShoppingBag,
   Terminal,
@@ -14,12 +16,20 @@ import { WindowFrame } from '../components/WindowFrame';
 export const BlackMarketApp: React.FC = () => {
   const { crypto, ownedTools, buyTool, openApp } = useGame();
 
+  const getItemIcon = (id: string, category: string) => {
+    if (category === 'STEALTH') return <Wifi className="w-4 h-4" />;
+    if (id === 'ssl_zero_day_v2') return <ShieldAlert className="w-4 h-4" />;
+    if (id === 'sat_uplink_hijack_v1') return <Radio className="w-4 h-4" />;
+    if (id === 'quantum_bypass_v3') return <Cpu className="w-4 h-4" />;
+    return <Terminal className="w-4 h-4" />;
+  };
+
   return (
     <WindowFrame
       id="blackmarket"
       icon={<ShoppingBag className="w-3.5 h-3.5" />}
-      width="w-[620px]"
-      height="h-[480px]"
+      width="w-[640px]"
+      height="h-[520px]"
     >
       {/* Header */}
       <div className="px-4 py-3 bg-[#0c0e13] border-b border-[#1e232c] flex items-center justify-between text-xs">
@@ -61,13 +71,7 @@ export const BlackMarketApp: React.FC = () => {
                       : 'bg-[#151921] border-[#303947] text-[#58a6ff]'
                   }`}
                 >
-                  {item.category === 'STEALTH' ? (
-                    <Wifi className="w-4 h-4" />
-                  ) : item.id === 'ssl_zero_day_v2' ? (
-                    <ShieldAlert className="w-4 h-4" />
-                  ) : (
-                    <Terminal className="w-4 h-4" />
-                  )}
+                  {getItemIcon(item.id, item.category)}
                 </div>
 
                 <div className="space-y-1">

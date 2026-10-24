@@ -373,6 +373,32 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           connectedIp !== '203.0.113.88'
         );
 
+      // Chapter 2 Objectives
+      case 'obj_m4_buy_sat':
+        return ownedTools.includes('sat_uplink_hijack_v1');
+      case 'obj_m4_crack_sat':
+        return (crackedPorts['185.220.101.5'] || []).includes(80);
+      case 'obj_m4_download_sat':
+        return hasFile('evidence_sat_intercept');
+
+      case 'obj_m5_reyes_clues':
+        return hasClueId('clue_reyes_unit') && hasClueId('clue_reyes_pin');
+      case 'obj_m5_passweaver':
+        return crackedEmails.includes('v.reyes@aethelgard.corp');
+      case 'obj_m5_webmail':
+        return hasClueId('clue_datacenter_core_ip');
+
+      case 'obj_m6_buy_quantum':
+        return ownedTools.includes('quantum_bypass_v3');
+      case 'obj_m6_breach_cluster':
+        return (crackedPorts['194.165.16.100'] || []).includes(8080);
+      case 'obj_m6_purge_escape':
+        return (
+          hasFile('evidence_global_dossiers') &&
+          !logsDirtyOnServer['194.165.16.100'] &&
+          connectedIp !== '194.165.16.100'
+        );
+
       default:
         return false;
     }
@@ -597,11 +623,27 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
+    if (clue.id === 'clue_sat_relay_ip') {
+      setTerminalSelectedIp('185.220.101.5');
+      openApp('terminal');
+      addNotification('Satellite Target Loaded', `Downlink IP ${clue.value} selected in Terminal`, 'clue');
+      return;
+    }
+
+    if (clue.id === 'clue_datacenter_core_ip') {
+      setTerminalSelectedIp('194.165.16.100');
+      openApp('terminal');
+      addNotification('Supercluster Target Loaded', `Core IP ${clue.value} selected in Terminal`, 'clue');
+      return;
+    }
+
     // Personal / Date / Code clue -> Load into PassWeaver and auto-select it!
     if (clue.targetPerson.includes('Marcus')) {
       setPassWeaverTargetEmail('m.cole@velox-ai.io');
     } else if (clue.targetPerson.includes('Julian')) {
       setPassWeaverTargetEmail('j.sterling@aethelgard.corp');
+    } else if (clue.targetPerson.includes('Reyes') || clue.targetPerson.includes('Viktor')) {
+      setPassWeaverTargetEmail('v.reyes@aethelgard.corp');
     }
     setPassWeaverSelectedClues((prev) =>
       prev.includes(clue.id) ? prev : [...prev, clue.id]

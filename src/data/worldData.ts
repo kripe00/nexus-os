@@ -1,7 +1,9 @@
 import { Clue, EmailAccount, Mission, ServerNode, ShopItem } from '../types/game';
 
 export const ALL_CLUES: Record<string, Clue> = {
-  // Mission 1 Clues (Marcus Cole)
+  // ==========================================
+  // CHAPTER 1 CLUES
+  // ==========================================
   clue_marcus_email: {
     id: 'clue_marcus_email',
     label: 'Work Email',
@@ -26,7 +28,6 @@ export const ALL_CLUES: Record<string, Clue> = {
     category: 'date',
     source: 'Chirper @mcole_dev',
   },
-  // Found inside Marcus's email -> Unlocks Mission 1 completion & Mission 2 target
   clue_dropoff_ip: {
     id: 'clue_dropoff_ip',
     label: 'Dead-Drop Server IP',
@@ -35,8 +36,6 @@ export const ALL_CLUES: Record<string, Clue> = {
     category: 'ip',
     source: 'WebMail Encrypted Draft',
   },
-
-  // Mission 2 Clues (Found on Dead-Drop Server 198.51.100.42)
   clue_aethelgard_ip: {
     id: 'clue_aethelgard_ip',
     label: 'Aethelgard Vault IP',
@@ -45,8 +44,6 @@ export const ALL_CLUES: Record<string, Clue> = {
     category: 'ip',
     source: 'transfer_manifest.log',
   },
-
-  // Mission 3 Clues (Dr. Julian Vance / Aethelgard Corp)
   clue_julian_email: {
     id: 'clue_julian_email',
     label: 'Director Email',
@@ -79,9 +76,75 @@ export const ALL_CLUES: Record<string, Clue> = {
     category: 'credential',
     source: 'Julian Sterling WebMail',
   },
+
+  // ==========================================
+  // CHAPTER 2 CLUES (Deep State Mirror)
+  // ==========================================
+  // Mission 4: Orbital Uplink (Satellite Relay)
+  clue_sat_relay_ip: {
+    id: 'clue_sat_relay_ip',
+    label: 'Orbital Sat Relay IP',
+    value: '185.220.101.5',
+    targetPerson: 'Aethelgard Uplink Grid',
+    category: 'ip',
+    source: 'Aethelgard Infrastructure Directory',
+  },
+  clue_sat_beacon_callsign: {
+    id: 'clue_sat_beacon_callsign',
+    label: 'Transponder Callsign',
+    value: 'VALKYRIE-7',
+    targetPerson: 'Aethelgard Telemetry',
+    category: 'code',
+    source: 'Orbital Telemetry Ledger',
+  },
+  clue_officer_email: {
+    id: 'clue_officer_email',
+    label: 'Security Chief Email',
+    value: 'v.reyes@aethelgard.corp',
+    targetPerson: 'Chief Viktor Reyes',
+    category: 'credential',
+    source: 'uplink_intercept_log.txt',
+  },
+
+  // Mission 5: The Gatekeeper (Chief Viktor Reyes)
+  clue_reyes_unit: {
+    id: 'clue_reyes_unit',
+    label: 'Military Unit Callout',
+    value: 'Phantom77',
+    targetPerson: 'Chief Viktor Reyes',
+    category: 'personal',
+    source: 'Chirper @reyes_actual',
+  },
+  clue_reyes_pin: {
+    id: 'clue_reyes_pin',
+    label: 'Gatehouse Shift Code',
+    value: '8821',
+    targetPerson: 'Chief Viktor Reyes',
+    category: 'code',
+    source: 'Facility Guard Roster Post',
+  },
+  clue_datacenter_core_ip: {
+    id: 'clue_datacenter_core_ip',
+    label: 'Project Mirror Core IP',
+    value: '194.165.16.100',
+    targetPerson: 'Project Mirror Central Supercluster',
+    category: 'ip',
+    source: 'Viktor Reyes WebMail Inbox',
+  },
+
+  // Mission 6: The Kill-Switch (Mainframe Core Infiltration)
+  clue_core_firmware_key: {
+    id: 'clue_core_firmware_key',
+    label: 'Supercluster Purge Key',
+    value: 'TITAN-ZERO-PURGE',
+    targetPerson: 'ZERO / Project Mirror',
+    category: 'credential',
+    source: 'supercluster_architecture.spec',
+  },
 };
 
 export const EMAIL_ACCOUNTS: Record<string, EmailAccount> = {
+  // Mission 1 Target
   'm.cole@velox-ai.io': {
     email: 'm.cole@velox-ai.io',
     ownerName: 'Marcus Cole (CTO, Velox AI)',
@@ -120,6 +183,8 @@ export const EMAIL_ACCOUNTS: Record<string, EmailAccount> = {
       },
     ],
   },
+
+  // Mission 3 Target
   'j.sterling@aethelgard.corp': {
     email: 'j.sterling@aethelgard.corp',
     ownerName: 'Julian Sterling (VP Special Projects, Aethelgard)',
@@ -132,7 +197,7 @@ export const EMAIL_ACCOUNTS: Record<string, EmailAccount> = {
         from: 'security-ops@aethelgard.corp',
         to: 'j.sterling@aethelgard.corp',
         subject: 'URGENT: Intrusion Detected on Staging Node 198.51.100.42',
-        date: 'Today, 23:10',
+        date: 'Oct 24, 23:10',
         body: `Director Sterling,\n\nSomeone breached our external dead-drop server (198.51.100.42) and accessed the Velox AI transfer manifest.\n\nWe have migrated all sensitive Project Mirror dossiers to the internal high-security vault (IP: 203.0.113.88). Active Trace countermeasures are armed on Port 443.`,
         clues: [ALL_CLUES.clue_aethelgard_ip],
       },
@@ -141,15 +206,44 @@ export const EMAIL_ACCOUNTS: Record<string, EmailAccount> = {
         from: 'sysadmin@aethelgard.corp',
         to: 'j.sterling@aethelgard.corp',
         subject: 'Your Updated Vault Root Token',
-        date: 'Today, 23:15',
+        date: 'Oct 24, 23:15',
         body: `Sir,\n\nPer protocol, the Aethelgard Internal Vault (203.0.113.88) now requires both port exploitation and your secondary authorization token stored in your profile.\n\nAuthorization Token: OMEGA-99-KEY\n\nRemember: Any unauthorized terminal session on 203.0.113.88 triggers an immediate neural-grid trace. Always run 'wipe_logs' before disconnecting.`,
         clues: [ALL_CLUES.clue_vault_override],
+      },
+    ],
+  },
+
+  // Mission 5 Target (Chapter 2)
+  'v.reyes@aethelgard.corp': {
+    email: 'v.reyes@aethelgard.corp',
+    ownerName: 'Viktor Reyes (Chief Security Officer, Facility Delta)',
+    password: 'Phantom778821',
+    hint: 'Military unit callout + Gatehouse shift code',
+    requiredClueIds: ['clue_reyes_unit', 'clue_reyes_pin'],
+    inbox: [
+      {
+        id: 'msg_reyes_1',
+        from: 'facility-ops@aethelgard.corp',
+        to: 'v.reyes@aethelgard.corp',
+        subject: 'SECURITY BULLETIN: Maximum Lockdown on Supercluster Core',
+        date: 'Today, 01:14',
+        body: `Chief Reyes,\n\nDirector Sterling has placed all Facility Delta systems on Red Alert following external intrusions into the orbital uplink.\n\nThe central Project Mirror supercluster node (IP: 194.165.16.100) is running on isolated Port 8080. If rogue operatives attempt terminal penetration, automated counter-firewalls will initiate an instant trace cycle. Guard the firmware purge token with your life.`,
+        clues: [ALL_CLUES.clue_datacenter_core_ip],
+      },
+      {
+        id: 'msg_reyes_2',
+        from: 'surveillance-ai@aethelgard.corp',
+        to: 'v.reyes@aethelgard.corp',
+        subject: 'Real-Time Intercept: Freelance Operator Located',
+        date: 'Today, 01:28',
+        body: `Automated ping from Project Mirror: Target #002 (Nexus Operator) active subnet matched against European exit relays.\n\nDrone dispatch standby recommended if secondary breach occurs on 194.165.16.100.`,
       },
     ],
   },
 };
 
 export const SERVER_NODES: Record<string, ServerNode> = {
+  // Mission 2 Server
   '198.51.100.42': {
     ip: '198.51.100.42',
     hostname: 'dropoff-node-09.darkhost.net',
@@ -183,6 +277,7 @@ export const SERVER_NODES: Record<string, ServerNode> = {
     ],
   },
 
+  // Mission 3 Server
   '203.0.113.88': {
     ip: '203.0.113.88',
     hostname: 'vault-core.aethelgard.corp',
@@ -191,7 +286,7 @@ export const SERVER_NODES: Record<string, ServerNode> = {
     requiredPort: 443,
     requiredToolId: 'ssl_zero_day_v2',
     triggersTrace: true,
-    traceSpeed: 2.2, // ~45 seconds base (slower with ProxyShield)
+    traceSpeed: 2.2,
     files: [
       {
         name: 'security_notice.txt',
@@ -206,15 +301,73 @@ export const SERVER_NODES: Record<string, ServerNode> = {
       {
         name: 'PROJECT_MIRROR_TARGETS.dec',
         size: '18.2 KB',
-        content: `=== AETHELGARD CORP // PROJECT MIRROR: PRIORITY WATCHLIST ===\nClassification: EYES ONLY (Director J. Sterling)\n\nTarget #001: "ZERO" (Former Aethelgard Lead Architect - Rogue)\nStatus: At large. Actively recruiting freelance operatives.\n\nTarget #002: OPERATIVE HANDLE [NEXUS_USER // YOU]\nLocation: Triangulating subnet...\nAssessment: High-level OSINT & intrusion capability. Responsible for Velox AI leak interception.\nDirective: TERMINATE DIGITAL ACCESS IMMEDIATELY.\n\n[END OF CHAPTER 1 FILE]`,
+        content: `=== AETHELGARD CORP // PROJECT MIRROR: PRIORITY WATCHLIST ===\nClassification: EYES ONLY (Director J. Sterling)\n\nTarget #001: "ZERO" (Former Aethelgard Lead Architect - Rogue)\nStatus: At large. Actively recruiting freelance operatives.\n\nTarget #002: OPERATIVE HANDLE [NEXUS_USER // YOU]\nLocation: Triangulating subnet...\nAssessment: High-level OSINT & intrusion capability. Responsible for Velox AI leak interception.\nDirective: TERMINATE DIGITAL ACCESS IMMEDIATELY.`,
         isMissionEvidence: true,
         evidenceId: 'evidence_project_mirror',
+      },
+    ],
+  },
+
+  // Mission 4 Server (Chapter 2: Satellite Relay)
+  '185.220.101.5': {
+    ip: '185.220.101.5',
+    hostname: 'sat-downlink-04.aethelgard-orbital.net',
+    organization: 'Aethelgard Orbital Telemetry & Defense Satellites',
+    securityLevel: 'MEDIUM',
+    requiredPort: 80,
+    requiredToolId: 'sat_uplink_hijack_v1',
+    triggersTrace: false,
+    traceSpeed: 0,
+    files: [
+      {
+        name: 'transponder_status.nmea',
+        size: '3.1 KB',
+        content: `GPGGA,014022.00,5954.882,N,01045.191,E,1,08,1.0,42.0,M\nORBITAL TRANSPONDER LOCK: SATCOM BEACON VALKYRIE-7\nSIGNAL QUALITY: 99.8% STABLE ENCRYPTED DUPLEX`,
+        clues: [ALL_CLUES.clue_sat_beacon_callsign],
+      },
+      {
+        name: 'uplink_intercept_log.txt',
+        size: '8.4 KB',
+        content: `=== SATELLITE INTERCEPT STREAM // 02:00 UTC ===\nENCRYPTED STREAM DESTINATION: Facility Delta High-Security Perimeter\nFACILITY CHIEF ON DUTY: Viktor Reyes (v.reyes@aethelgard.corp)\nTELEMETRY STREAM: Routing mass intercept metadata directly to central supercluster at 194.165.16.100.`,
+        isMissionEvidence: true,
+        evidenceId: 'evidence_sat_intercept',
+        clues: [ALL_CLUES.clue_officer_email, ALL_CLUES.clue_datacenter_core_ip],
+      },
+    ],
+  },
+
+  // Mission 6 Server (Chapter 2: Mainframe Supercluster)
+  '194.165.16.100': {
+    ip: '194.165.16.100',
+    hostname: 'mirror-core-cluster.facility-delta.aethelgard.corp',
+    organization: 'Project Mirror Central Supercomputing Cluster',
+    securityLevel: 'HIGH (ACTIVE TRACE)',
+    requiredPort: 8080,
+    requiredToolId: 'quantum_bypass_v3',
+    triggersTrace: true,
+    traceSpeed: 2.8,
+    files: [
+      {
+        name: 'supercluster_architecture.spec',
+        size: '12.0 KB',
+        content: `=== PROJECT MIRROR // AUTONOMOUS NEURAL SUPERCLUSTER ===\nOPERATING MODE: GLOBAL PREDICTIVE SURVEILLANCE\nEMERGENCY CORE PURGE TOKEN: TITAN-ZERO-PURGE\n\nInjecting this purge key via 'wipe_logs' or master execution payload causes complete unrecoverable cascading erasure across all Project Mirror nodes worldwide.`,
+        isMissionEvidence: true,
+        evidenceId: 'evidence_supercluster_spec',
+        clues: [ALL_CLUES.clue_core_firmware_key],
+      },
+      {
+        name: 'GLOBAL_CITIZEN_DOSSIERS.db',
+        size: '840.0 GB (METADATA EXCERPT)',
+        content: `=== AETHELGARD PROJECT MIRROR DATABASE EXCERPT ===\nTOTAL INDEXED PROFILES: 412,890,210 CITIZENS\nPREDICTIVE RISK SCORES ATTACHED TO ALL MAJOR INTERNET SERVICE PROVIDERS.\n\nSTATUS: FULLY OPERATIONAL.\nWARNING: TARGET #002 (YOU) IDENTIFIED AS CRITICAL SYSTEM THREAT.`,
+        isMissionEvidence: true,
+        evidenceId: 'evidence_global_dossiers',
       },
     ],
   },
 };
 
 export const SHOP_ITEMS: ShopItem[] = [
+  // Chapter 1 Items
   {
     id: 'ssh_breaker_v1',
     name: 'SSH-Breaker',
@@ -242,9 +395,32 @@ export const SHOP_ITEMS: ShopItem[] = [
     description: 'Routes terminal traffic through 7 encrypted onion nodes, cutting enemy Active Trace speed by 50%.',
     iconName: 'GlobeLock',
   },
+
+  // Chapter 2 Items
+  {
+    id: 'sat_uplink_hijack_v1',
+    name: 'SatCom Hijack Framework',
+    version: 'v1.1',
+    price: 600,
+    category: 'EXPLOIT',
+    description: 'Over-the-air RF packet injection framework targeting military orbital telemetry relays. Enables `crack 80` on satellite downlinks.',
+    iconName: 'Radio',
+  },
+  {
+    id: 'quantum_bypass_v3',
+    name: 'Quantum Core Exploit',
+    version: 'v3.0',
+    price: 1200,
+    category: 'EXPLOIT',
+    description: 'Military zero-day payload engineered by ZERO to breach Aethelgard Facility Delta\'s supercomputing cluster (`crack 8080`).',
+    iconName: 'Cpu',
+  },
 ];
 
 export const MISSIONS: Mission[] = [
+  // ==========================================
+  // CHAPTER 1
+  // ==========================================
   {
     id: 'mission_1',
     chapter: 1,
@@ -296,15 +472,15 @@ export const MISSIONS: Mission[] = [
     objectives: [
       {
         id: 'obj_m1_clues',
-        description: 'Open IntraWeb & click highlighted clues on Velox AI and Chirper (Email, Pet Name, Lucky Year)',
+        description: 'Find Marcus Cole\'s clues on IntraWeb (Work Email on Velox AI, Dog Name & Lucky Year on Chirper)',
       },
       {
         id: 'obj_m1_passweaver',
-        description: 'Use PassWeaver to combine Marcus\'s clues and crack his password',
+        description: 'Synthesize Marcus\'s clues in PassWeaver to crack his WebMail password',
       },
       {
         id: 'obj_m1_webmail',
-        description: 'Log into Marcus\'s WebMail on IntraWeb and click the Dead-Drop Server IP clue in his emails',
+        description: 'Sign into Marcus\'s WebMail on IntraWeb and discover the Dead-Drop Server IP in his emails',
       },
     ],
   },
@@ -416,7 +592,7 @@ export const MISSIONS: Mission[] = [
         sender: 'client',
         senderName: 'ZERO [ENCRYPTED]',
         timestamp: 'Now',
-        text: `Now you see why I reached out. 1,500 ◈ transferred to your wallet. Welcome to the resistance, Operator. Get your rig ready—Chapter 2 begins soon.`,
+        text: `Now you see why I reached out. 1,500 ◈ transferred to your wallet. You are now officially a ghost operative with me. Prepare yourself: Chapter 2 begins immediately.`,
       },
     ],
     objectives: [
@@ -431,6 +607,199 @@ export const MISSIONS: Mission[] = [
       {
         id: 'obj_m3_vault_breach',
         description: 'Breach 203.0.113.88 (`crack 443`), download `PROJECT_MIRROR_TARGETS.dec`, run `wipe_logs`, and `disconnect` before Trace hits 100%',
+      },
+    ],
+  },
+
+  // ==========================================
+  // CHAPTER 2: DEEP STATE MIRROR
+  // ==========================================
+  {
+    id: 'mission_4',
+    chapter: 2,
+    title: 'Operation 04: Orbital Eye',
+    clientName: 'ZERO [ENCRYPTED]',
+    clientHandle: '@zero_signal',
+    clientAvatar: 'ZR',
+    reward: 2000,
+    summary: 'Aethelgard is using an encrypted orbital satellite downlink (185.220.101.5) to track your IP across Europe. Acquire the SatCom Hijack Framework, breach Port 80, and intercept the Facility Delta telemetry stream.',
+    initialMessages: [
+      {
+        id: 'm4_1',
+        sender: 'client',
+        senderName: 'ZERO [ENCRYPTED]',
+        timestamp: 'Now',
+        text: `Operator, we have a major problem. Director Sterling realized his vault was touched. They haven't found your physical address yet, but they just re-tasked a military surveillance satellite (callsign VALKYRIE-7) to triangulate your uplink.`,
+      },
+      {
+        id: 'm4_2',
+        sender: 'client',
+        senderName: 'ZERO [ENCRYPTED]',
+        timestamp: 'Now',
+        text: `The orbital downlink runs through ground relay IP: 185.220.101.5 on Port 80. I've uploaded a specialized 'SatCom Hijack Framework v1.1' to the BlackMarket app (600 ◈).`,
+      },
+      {
+        id: 'm4_3',
+        sender: 'client',
+        senderName: 'ZERO [ENCRYPTED]',
+        timestamp: 'Now',
+        text: `Buy the framework, scan and crack 185.220.101.5, and exfiltrate 'uplink_intercept_log.txt'. We need to see which facility is coordinating the drone dispatch.`,
+      },
+    ],
+    completionMessages: [
+      {
+        id: 'm4_done_1',
+        sender: 'player',
+        senderName: 'OPERATOR',
+        timestamp: 'Now',
+        text: `I tapped into the satellite downlink (185.220.101.5) and grabbed uplink_intercept_log.txt. The feed is handled by Chief Viktor Reyes at Aethelgard Facility Delta. He's piping telemetry straight to a mainframe at 194.165.16.100!`,
+      },
+      {
+        id: 'm4_done_2',
+        sender: 'client',
+        senderName: 'ZERO [ENCRYPTED]',
+        timestamp: 'Now',
+        text: `Outstanding work. 2,000 ◈ sent to your wallet. Chief Viktor Reyes is the head of perimeter defense. If we want to take down that central supercluster, we must compromise Reyes next.`,
+      },
+    ],
+    objectives: [
+      {
+        id: 'obj_m4_buy_sat',
+        description: 'Purchase "SatCom Hijack Framework v1.1" (600 ◈) from BlackMarket',
+      },
+      {
+        id: 'obj_m4_crack_sat',
+        description: 'In Terminal, run `scan 185.220.101.5`, `crack 80`, and `connect 185.220.101.5`',
+      },
+      {
+        id: 'obj_m4_download_sat',
+        description: 'Run `download uplink_intercept_log.txt` to uncover Chief Viktor Reyes and the supercluster IP',
+      },
+    ],
+  },
+  {
+    id: 'mission_5',
+    chapter: 2,
+    title: 'Operation 05: The Gatekeeper',
+    clientName: 'ZERO [ENCRYPTED]',
+    clientHandle: '@zero_signal',
+    clientAvatar: 'ZR',
+    reward: 2500,
+    summary: 'Investigate Chief Security Officer Viktor Reyes on Chirper, synthesize his gatehouse pass in PassWeaver, compromise his WebMail (v.reyes@aethelgard.corp), and uncover the internal supercluster access architecture.',
+    initialMessages: [
+      {
+        id: 'm5_1',
+        sender: 'client',
+        senderName: 'ZERO [ENCRYPTED]',
+        timestamp: 'Now',
+        text: `Chief Viktor Reyes (@reyes_actual) controls physical and digital gatekeeping for Facility Delta. All supercluster firewall credentials pass through his terminal.`,
+      },
+      {
+        id: 'm5_2',
+        sender: 'client',
+        senderName: 'ZERO [ENCRYPTED]',
+        timestamp: 'Now',
+        text: `Search for "Viktor Reyes" on IntraWeb. Snoop his Chirper posts for his military unit callout and facility shift code, then run PassWeaver to crack his corporate inbox (v.reyes@aethelgard.corp).`,
+      },
+      {
+        id: 'm5_3',
+        sender: 'client',
+        senderName: 'ZERO [ENCRYPTED]',
+        timestamp: 'Now',
+        text: `Inside his mail, find the exact IP of Project Mirror's central supercluster (194.165.16.100) and pin the intelligence to your Clue Board.`,
+      },
+    ],
+    completionMessages: [
+      {
+        id: 'm5_done_1',
+        sender: 'player',
+        senderName: 'OPERATOR',
+        timestamp: 'Now',
+        text: `Infiltrated Viktor Reyes's mailbox. Project Mirror's central cluster is listening at IP 194.165.16.100 on Port 8080 under military lockdown. They have active drones on standby if we trigger a secondary alert.`,
+      },
+      {
+        id: 'm5_done_2',
+        sender: 'client',
+        senderName: 'ZERO [ENCRYPTED]',
+        timestamp: 'Now',
+        text: `2,500 ◈ transferred. We now have every piece of the puzzle. It's time for Operation 06: The final strike to purge Project Mirror forever.`,
+      },
+    ],
+    objectives: [
+      {
+        id: 'obj_m5_reyes_clues',
+        description: 'Find Viktor Reyes\'s clues on IntraWeb (Military Unit & Shift PIN on Chirper @reyes_actual)',
+      },
+      {
+        id: 'obj_m5_passweaver',
+        description: 'Synthesize Reyes\'s clues in PassWeaver to crack v.reyes@aethelgard.corp',
+      },
+      {
+        id: 'obj_m5_webmail',
+        description: 'Sign into Reyes\'s WebMail on IntraWeb and discover the Supercluster IP (194.165.16.100)',
+      },
+    ],
+  },
+  {
+    id: 'mission_6',
+    chapter: 2,
+    title: 'Operation 06: The Kill-Switch',
+    clientName: 'ZERO [ENCRYPTED]',
+    clientHandle: '@zero_signal',
+    clientAvatar: 'ZR',
+    reward: 5000,
+    summary: 'Equip the Quantum Core Exploit, breach Project Mirror\'s central supercluster (194.165.16.100) on Port 8080 under extreme Active Trace, download GLOBAL_CITIZEN_DOSSIERS.db, execute the firmware wipe, and escape cleanly.',
+    initialMessages: [
+      {
+        id: 'm6_1',
+        sender: 'client',
+        senderName: 'ZERO [ENCRYPTED]',
+        timestamp: 'Now',
+        text: `This is it, Operator. I've uploaded my masterpiece to the BlackMarket: 'Quantum Core Exploit v3.0' (1,200 ◈). This is the only binary capable of overriding the Port 8080 supercluster locks.`,
+      },
+      {
+        id: 'm6_2',
+        sender: 'client',
+        senderName: 'ZERO [ENCRYPTED]',
+        timestamp: 'Now',
+        text: `WARNING: The supercluster at 194.165.16.100 has the most aggressive Active Trace neural-grid ever built. Trace speed is fast. You MUST act with total precision.`,
+      },
+      {
+        id: 'm6_3',
+        sender: 'client',
+        senderName: 'ZERO [ENCRYPTED]',
+        timestamp: 'Now',
+        text: `Run 'crack 8080' and 'connect 194.165.16.100'. Download 'GLOBAL_CITIZEN_DOSSIERS.db' for public release, run 'wipe_logs' to trigger the emergency firmware purge, and 'disconnect' before the trace hits 100%!`,
+      },
+    ],
+    completionMessages: [
+      {
+        id: 'm6_done_1',
+        sender: 'player',
+        senderName: 'OPERATOR',
+        timestamp: 'Now',
+        text: `GLOBAL_CITIZEN_DOSSIERS.db exfiltrated! I triggered the TITAN-ZERO-PURGE firmware override and shredded the logs. Project Mirror's supercluster is collapsing worldwide!`,
+      },
+      {
+        id: 'm6_done_2',
+        sender: 'client',
+        senderName: 'ZERO [ENCRYPTED]',
+        timestamp: 'Now',
+        text: `Bounty paid: 5,000 ◈! Millions of citizen profiles are safe, our handles are erased from the surveillance grid, and Director Sterling's empire is shattered. You are legendary, Operator. End of Chapter 2.`,
+      },
+    ],
+    objectives: [
+      {
+        id: 'obj_m6_buy_quantum',
+        description: 'Purchase "Quantum Core Exploit v3.0" (1200 ◈) from BlackMarket',
+      },
+      {
+        id: 'obj_m6_breach_cluster',
+        description: 'In Terminal, execute `crack 8080` and `connect 194.165.16.100`',
+      },
+      {
+        id: 'obj_m6_purge_escape',
+        description: 'Download `GLOBAL_CITIZEN_DOSSIERS.db`, run `wipe_logs`, and `disconnect` before Trace hits 100%',
       },
     ],
   },

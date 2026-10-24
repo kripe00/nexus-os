@@ -9,6 +9,7 @@ import {
   KeyRound,
   Mail,
   MessageCircle,
+  Radio,
   ScanSearch,
   Search,
   ShieldAlert,
@@ -41,11 +42,11 @@ const SEARCH_INDEX: SearchResultItem[] = [
   {
     id: 'res_chirper_marcus',
     page: 'chirper',
-    title: 'Chirper Public Stream — @mcole_dev (Marcus Cole) & Verified Execs',
+    title: 'Chirper Public Stream — Verified Execs & Personnel',
     url: 'http://chirper.net/stream/public',
     snippet:
-      'Public microblogging feed featuring posts from Velox AI CTO @mcole_dev and Aethelgard VP @jsterling_exec.',
-    keywords: ['chirper', 'marcus', 'cole', 'mcole', 'social', 'julian', 'sterling', 'dog', 'posts'],
+      'Public microblogging feed featuring posts from Marcus Cole (@mcole_dev), Julian Sterling (@jsterling_exec), and Security Chief Viktor Reyes (@reyes_actual).',
+    keywords: ['chirper', 'marcus', 'cole', 'mcole', 'social', 'julian', 'sterling', 'reyes', 'viktor', 'dog', 'posts'],
   },
   {
     id: 'res_webmail',
@@ -54,16 +55,16 @@ const SEARCH_INDEX: SearchResultItem[] = [
     url: 'https://mail.nexus-relay.io/auth',
     snippet:
       'Encrypted webmail login portal for @velox-ai.io and @aethelgard.corp employee accounts.',
-    keywords: ['mail', 'webmail', 'email', 'inbox', 'login', 'velox', 'aethelgard'],
+    keywords: ['mail', 'webmail', 'email', 'inbox', 'login', 'velox', 'aethelgard', 'reyes', 'sterling'],
   },
   {
     id: 'res_aethelgard',
     page: 'aethelgard',
-    title: 'Aethelgard Defense Systems — Division 0451 Press Bulletin',
+    title: 'Aethelgard Defense Systems — Division 0451 & Orbital Operations',
     url: 'http://aethelgard.corp/div-0451/press.html',
     snippet:
-      'Director Julian Sterling appointed to lead Special Projects Division 0451 and Project Mirror neural acquisition.',
-    keywords: ['aethelgard', 'julian', 'sterling', '0451', 'mirror', 'defense', 'director'],
+      'Director Julian Sterling appointed to lead Special Projects Division 0451. Satellite tracking network and Facility Delta operations.',
+    keywords: ['aethelgard', 'julian', 'sterling', '0451', 'mirror', 'defense', 'director', 'sat', 'orbital', 'reyes'],
   },
 ];
 
@@ -103,8 +104,6 @@ export const IntraWebApp: React.FC = () => {
     }
   }, [webmailPrefillEmail, crackedEmails]);
 
-  // Subtle, Natural Investigation Clue Span!
-  // Looks like natural text unless hovered, already collected, or OSINT Inspector is active.
   const ClueSpan: React.FC<{ clueId: string; text: string }> = ({ clueId, text }) => {
     const collected = hasClue(clueId);
     return (
@@ -173,7 +172,6 @@ export const IntraWebApp: React.FC = () => {
   const filteredResults = SEARCH_INDEX.filter((item) => {
     const q = searchInput.trim().toLowerCase();
     if (!q) {
-      // Hide Aethelgard from default empty search until Mission 2/3 unless searched
       if (item.page === 'aethelgard' && currentMissionIndex < 1) return false;
       return true;
     }
@@ -187,7 +185,9 @@ export const IntraWebApp: React.FC = () => {
   const suggestedQueries =
     currentMissionIndex < 2
       ? ['Marcus Cole', 'Velox AI', 'Chirper', 'WebMail']
-      : ['Julian Sterling', 'Aethelgard Corp', 'Chirper', 'WebMail'];
+      : currentMissionIndex < 4
+      ? ['Julian Sterling', 'Aethelgard Corp', 'Chirper', 'WebMail']
+      : ['Viktor Reyes', 'Facility Delta', 'Aethelgard Corp', 'Chirper'];
 
   return (
     <WindowFrame
@@ -279,7 +279,7 @@ export const IntraWebApp: React.FC = () => {
                 <span>LOOKUP // OSINT DIRECTORY INDEX</span>
               </div>
               <p className="text-[11px] text-[#8b949e]">
-                Search corporate registries, public social feeds, and mail relays.
+                Search corporate registries, public social feeds, orbital telemetry, and mail relays.
               </p>
             </div>
 
@@ -293,7 +293,7 @@ export const IntraWebApp: React.FC = () => {
                     sound.playKey();
                     setSearchInput(e.target.value);
                   }}
-                  placeholder="Search target name, company, or handle (e.g. Marcus Cole)..."
+                  placeholder="Search target name, company, or handle (e.g. Viktor Reyes)..."
                   className="flex-1 px-3.5 py-2.5 bg-[#0b0d12] border border-[#282f3d] text-xs text-white focus:outline-none focus:border-[#58a6ff]"
                 />
                 {searchInput && (
@@ -425,6 +425,7 @@ export const IntraWebApp: React.FC = () => {
               <span className="text-[10px] text-[#6e7681]">Click details in posts to collect clues</span>
             </div>
 
+            {/* Marcus Cole Post 1 */}
             <div className="p-3.5 bg-[#0b0d11] border border-[#1e232c] space-y-2">
               <div className="flex items-center justify-between text-[11px] border-b border-[#161a22] pb-1.5">
                 <span className="font-bold text-[#79c0ff]">
@@ -438,6 +439,7 @@ export const IntraWebApp: React.FC = () => {
               </p>
             </div>
 
+            {/* Marcus Cole Post 2 */}
             <div className="p-3.5 bg-[#0b0d11] border border-[#1e232c] space-y-2">
               <div className="flex items-center justify-between text-[11px] border-b border-[#161a22] pb-1.5">
                 <span className="font-bold text-[#79c0ff]">
@@ -451,6 +453,7 @@ export const IntraWebApp: React.FC = () => {
               </p>
             </div>
 
+            {/* Julian Sterling Post (Mission 3) */}
             <div className="p-3.5 bg-[#0b0d11] border border-[#3a1d1d] space-y-2">
               <div className="flex items-center justify-between text-[11px] border-b border-[#241414] pb-1.5">
                 <span className="font-bold text-[#ff5555]">
@@ -460,6 +463,34 @@ export const IntraWebApp: React.FC = () => {
               </div>
               <p className="text-xs text-[#d4d7dc] leading-relaxed">
                 Taking my racing yacht <ClueSpan clueId="clue_julian_project" text="Hyperion" /> out into international waters this weekend. When you build global defense architecture, silence is a luxury.
+              </p>
+            </div>
+
+            {/* Viktor Reyes Post 1 (Mission 5) */}
+            <div className="p-3.5 bg-[#0b0d11] border border-[#1e2c38] space-y-2">
+              <div className="flex items-center justify-between text-[11px] border-b border-[#16212b] pb-1.5">
+                <span className="font-bold text-[#58a6ff]">
+                  Chief Viktor Reyes (@reyes_actual // Chief Security Officer)
+                </span>
+                <span className="text-[#6e7681]">Yesterday</span>
+              </div>
+              <p className="text-xs text-[#d4d7dc] leading-relaxed">
+                15 years out of service, but once you fly with special forces unit{' '}
+                <ClueSpan clueId="clue_reyes_unit" text="Phantom77" />, operational vigilance never leaves your blood. Perimeter check complete.
+              </p>
+            </div>
+
+            {/* Viktor Reyes Post 2 (Mission 5) */}
+            <div className="p-3.5 bg-[#0b0d11] border border-[#1e2c38] space-y-2">
+              <div className="flex items-center justify-between text-[11px] border-b border-[#16212b] pb-1.5">
+                <span className="font-bold text-[#58a6ff]">
+                  Chief Viktor Reyes (@reyes_actual // Chief Security Officer)
+                </span>
+                <span className="text-[#6e7681]">3 days ago</span>
+              </div>
+              <p className="text-xs text-[#d4d7dc] leading-relaxed">
+                Reminder to all Facility Delta gatehouse officers: Night rotation shift code is{' '}
+                <ClueSpan clueId="clue_reyes_pin" text="8821" />. Keep access strictly restricted to Level 4 badge holders.
               </p>
             </div>
           </div>
@@ -492,6 +523,21 @@ export const IntraWebApp: React.FC = () => {
                 Aethelgard Corp confirms the expansion of Special Projects Division{' '}
                 <ClueSpan clueId="clue_julian_badge" text="0451" />. All classified neural-grid acquisitions and Project Mirror dispatches are routed through Director Sterling's office at{' '}
                 <ClueSpan clueId="clue_julian_email" text="j.sterling@aethelgard.corp" />.
+              </p>
+            </div>
+
+            {/* Chapter 2: Orbital Satellite Network announcement */}
+            <div className="p-4 bg-[#0a070e] border border-[#26183a] space-y-2.5">
+              <div className="text-[10px] text-[#a371f7] uppercase tracking-widest flex items-center gap-1.5">
+                <Radio className="w-3.5 h-3.5" />
+                ORBITAL TELEMETRY DIVISION
+              </div>
+              <div className="text-xs font-bold text-white uppercase">
+                Satellite Downlink Constellation Active
+              </div>
+              <p className="text-xs text-[#c9d1d9] leading-relaxed">
+                Orbital relay telemetry is broadcast through dedicated regional ground station at IP{' '}
+                <ClueSpan clueId="clue_sat_relay_ip" text="185.220.101.5" />. Automated signals sync directly with Facility Delta's perimeter supercomputing core.
               </p>
             </div>
           </div>

@@ -57,6 +57,24 @@ export const WhisperChatApp: React.FC = () => {
         reply: `Understood, ZERO. I'll investigate Director Julian Sterling on IntraWeb, grab his Vault token, and breach 203.0.113.88 under trace.`,
       },
     ],
+    3: [
+      {
+        label: 'Accept Contract: "I\'ll acquire the SatCom Hijacker and tap the orbital downlink."',
+        reply: `I'm on it, ZERO. Buying SatCom Hijack Framework v1.1 from BlackMarket now to breach 185.220.101.5 and intercept their ground telemetry.`,
+      },
+    ],
+    4: [
+      {
+        label: 'Accept Contract: "I\'ll profile Chief Viktor Reyes and crack his gatehouse terminal."',
+        reply: `Understood. I'll investigate Chief Viktor Reyes (@reyes_actual) on Chirper, synthesize his gatehouse pass in PassWeaver, and compromise his inbox.`,
+      },
+    ],
+    5: [
+      {
+        label: 'Accept Contract: "Deploy the Quantum Core Exploit. Let\'s bring down Project Mirror."',
+        reply: `Acquiring Quantum Core Exploit v3.0 now. I'm breaching 194.165.16.100 on Port 8080, exfiltrating the citizen dossiers, and executing the emergency firmware purge!`,
+      },
+    ],
   };
 
   const reportOptions: Record<number, { label: string; report: string }> = {
@@ -77,6 +95,24 @@ export const WhisperChatApp: React.FC = () => {
       report:
         currentMission.completionMessages[0]?.text ||
         'Extracted PROJECT_MIRROR_TARGETS.dec and wiped all connection logs. My own handle is Target #002 on their watchlist!',
+    },
+    3: {
+      label: 'Transmit Satellite Intercept: Chief Viktor Reyes & Mainframe IP (+2000 ◈)',
+      report:
+        currentMission.completionMessages[0]?.text ||
+        'I tapped the orbital satellite downlink (185.220.101.5). Security Chief Viktor Reyes is routing surveillance feeds straight to 194.165.16.100!',
+    },
+    4: {
+      label: 'Transmit Gatehouse Credentials: Supercluster Port 8080 Unlocked (+2500 ◈)',
+      report:
+        currentMission.completionMessages[0]?.text ||
+        'Compromised Viktor Reyes\'s mailbox. Project Mirror\'s central cluster is listening at IP 194.165.16.100 on Port 8080 under military lockdown.',
+    },
+    5: {
+      label: 'Trigger Final Firmware Purge: Global Surveillance Grid Collapsed (+5000 ◈)',
+      report:
+        currentMission.completionMessages[0]?.text ||
+        'GLOBAL_CITIZEN_DOSSIERS.db exfiltrated! I triggered the TITAN-ZERO-PURGE firmware override and shredded the logs. Project Mirror\'s supercluster is destroyed!',
     },
   };
 
@@ -172,7 +208,7 @@ export const WhisperChatApp: React.FC = () => {
           <div className="flex items-center justify-between">
             <span className="text-[#56d364] font-bold text-[11px] flex items-center gap-1.5">
               <ShieldCheck className="w-4 h-4" />
-              CHAPTER 1 COMPLETE // ALL BOUNTIES CLAIMED
+              CAMPAIGN CLEARED // CHAPTER 1 & 2 EXECUTED // PROJECT MIRROR PURGED
             </span>
             <button
               onClick={() => openApp('files')}
