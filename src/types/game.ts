@@ -4,6 +4,7 @@ export type AppId =
   | 'passweaver'
   | 'terminal'
   | 'blackmarket'
+  | 'netshield'
   | 'files';
 
 export interface Clue {

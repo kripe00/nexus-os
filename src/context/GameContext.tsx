@@ -69,6 +69,14 @@ interface GameContextType {
   downloadServerFile: (file: ServerFile) => void;
   wipeServerLogs: (ip: string) => void;
 
+  // Counter-Hack & Defense System
+  underAttack: boolean;
+  firewallHealth: number;
+  honeypotActive: boolean;
+  capturedAttackerIp: string | null;
+  activateHoneypot: () => void;
+  repairFirewall: () => void;
+
   // Interactive Mission & Chat State Machine
   currentMissionIndex: number;
   missionStage: 'briefing' | 'accept_prompt' | 'investigating' | 'report_ready' | 'reporting' | 'completed';
@@ -131,6 +139,14 @@ const INITIAL_WINDOWS: Record<AppId, WindowState> = {
     zIndex: 13,
     position: { x: 230, y: 65 },
   },
+  netshield: {
+    id: 'netshield',
+    title: 'NetShield IDS',
+    isOpen: false,
+    isMinimized: false,
+    zIndex: 17,
+    position: { x: 200, y: 50 },
+  },
   files: {
     id: 'files',
     title: 'DataVault',
@@ -173,6 +189,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [traceActive, setTraceActive] = useState<boolean>(false);
   const [tracePercent, setTracePercent] = useState<number>(0);
   const [traceFailedAlert, setTraceFailedAlert] = useState<boolean>(false);
+
+  // Counter-Hack & Defense State
+  const [underAttack, setUnderAttack] = useState<boolean>(false);
+  const [firewallHealth, setFirewallHealth] = useState<number>(100);
+  const [honeypotActive, setHoneypotActive] = useState<boolean>(false);
+  const [capturedAttackerIp, setCapturedAttackerIp] = useState<string | null>(null);
 
   const [currentMissionIndex, setCurrentMissionIndex] = useState<number>(0);
   const [missionStage, setMissionStage] = useState<
@@ -301,7 +323,46 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, 4500);
   };
 
-  // Active Trace Timer Effect
+  // Active Attack Simulation during Operation 07 (or post-Operation 06)
+  useEffect(() => {
+    if (currentMissionIndex === 6 && !campaignFinished) {
+      setUnderAttack(true);
+    } else {
+      setUnderAttack(false);
+    }
+  }, [currentMissionIndex, campaignFinished]);
+
+  // Firewall health degradation when under attack
+  useEffect(() => {
+    if (!underAttack) return;
+    const interval = setInterval(() => {
+      setFirewallHealth((prev) => {
+        const decay = honeypotActive ? 0.8 : 2.2;
+        const next = Math.max(0, +(prev - decay).toFixed(1));
+        if (Math.floor(next) % 10 === 0) {
+          sound.playTraceTick(next < 30);
+        }
+        if (next <= 0) {
+          sound.playError();
+          addNotification('FIREWALL BREACHED', 'Hostile drone penetrated local ports! Reinforcing emergency circuit.', 'warning');
+          return 50; // Emergency recovery
+        }
+        return next;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [underAttack, honeypotActive]);
+
+  const activateHoneypot = () => {
+    setHoneypotActive(true);
+    setCapturedAttackerIp('141.98.11.200');
+    addNotification('Honeypot Active', 'Attacker isolated: 141.98.11.200 trapped!', 'mission');
+  };
+
+  const repairFirewall = () => {
+    setFirewallHealth((prev) => Math.min(100, prev + 35));
+    addNotification('Firewall Reinforced', 'Integrity restored +35%', 'mission');
+  };
   useEffect(() => {
     if (!traceActive) return;
 
@@ -397,6 +458,18 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           hasFile('evidence_global_dossiers') &&
           !logsDirtyOnServer['194.165.16.100'] &&
           connectedIp !== '194.165.16.100'
+        );
+
+      // Chapter 3 Objectives
+      case 'obj_m7_netshield_defense':
+        return honeypotActive && !!capturedAttackerIp;
+      case 'obj_m7_buy_override':
+        return ownedTools.includes('counter_sig_exploit_v1');
+      case 'obj_m7_counter_breach':
+        return (
+          hasFile('evidence_drone_override') &&
+          !logsDirtyOnServer['141.98.11.200'] &&
+          connectedIp !== '141.98.11.200'
         );
 
       default:
@@ -850,6 +923,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         connectToServer,
         downloadServerFile,
         wipeServerLogs,
+        underAttack,
+        firewallHealth,
+        honeypotActive,
+        capturedAttackerIp,
+        activateHoneypot,
+        repairFirewall,
         currentMissionIndex,
         missionStage,
         clientIsTyping,

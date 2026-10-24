@@ -75,6 +75,12 @@ export const WhisperChatApp: React.FC = () => {
         reply: `Acquiring Quantum Core Exploit v3.0 now. I'm breaching 194.165.16.100 on Port 8080, exfiltrating the citizen dossiers, and executing the emergency firmware purge!`,
       },
     ],
+    6: [
+      {
+        label: 'Accept Contract: "Firewall is holding! I\'m deploying NetShield honeypots to isolate the drone."',
+        reply: `Deploying NetShield honeypots now! I will trap drone #07's attack vector, reverse-exploit 141.98.11.200 on Port 9000, and inject the recall override!`,
+      },
+    ],
   };
 
   const reportOptions: Record<number, { label: string; report: string }> = {
@@ -113,6 +119,12 @@ export const WhisperChatApp: React.FC = () => {
       report:
         currentMission.completionMessages[0]?.text ||
         'GLOBAL_CITIZEN_DOSSIERS.db exfiltrated! I triggered the TITAN-ZERO-PURGE firmware override and shredded the logs. Project Mirror\'s supercluster is destroyed!',
+    },
+    6: {
+      label: 'Broadcast Recall Override: Combat Drone #07 Re-routed into Sterling\'s Yacht (+10000 ◈)',
+      report:
+        currentMission.completionMessages[0]?.text ||
+        'I trapped the drone SYN-flood in NetShield, reverse-hacked 141.98.11.200 on Port 9000, and injected OVERRIDE-GHOST-RECALL. The drone turned around and destroyed Director Sterling\'s command ship!',
     },
   };
 

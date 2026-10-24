@@ -17,6 +17,7 @@ import {
 import { BlackMarketApp } from './apps/BlackMarketApp';
 import { DataVaultApp } from './apps/DataVaultApp';
 import { IntraWebApp } from './apps/IntraWebApp';
+import { NetShieldApp } from './apps/NetShieldApp';
 import { PassWeaverApp } from './apps/PassWeaverApp';
 import { SmartTerminalApp } from './apps/SmartTerminalApp';
 import { WhisperChatApp } from './apps/WhisperChatApp';
@@ -42,6 +43,8 @@ const DesktopEnvironment: React.FC = () => {
     toggleMute,
     discoveredClues,
     downloadedFiles,
+    underAttack,
+    firewallHealth,
   } = useGame();
 
   const [clock, setClock] = useState<string>('23:42');
@@ -90,6 +93,12 @@ const DesktopEnvironment: React.FC = () => {
       id: 'blackmarket',
       label: 'BlackMarket',
       icon: <ShoppingBag className="w-6 h-6" />,
+    },
+    {
+      id: 'netshield',
+      label: 'NetShield IDS',
+      icon: <ShieldAlert className={`w-6 h-6 ${underAttack ? 'text-[#ff3b3b] animate-bounce' : ''}`} />,
+      badge: underAttack ? Math.round(firewallHealth) : undefined,
     },
     {
       id: 'files',
@@ -144,6 +153,7 @@ const DesktopEnvironment: React.FC = () => {
           <PassWeaverApp />
           <SmartTerminalApp />
           <BlackMarketApp />
+          <NetShieldApp />
           <DataVaultApp />
 
           {/* Toast Notifications */}

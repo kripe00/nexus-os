@@ -1,9 +1,7 @@
 import { Clue, EmailAccount, Mission, ServerNode, ShopItem } from '../types/game';
 
 export const ALL_CLUES: Record<string, Clue> = {
-  // ==========================================
   // CHAPTER 1 CLUES
-  // ==========================================
   clue_marcus_email: {
     id: 'clue_marcus_email',
     label: 'Work Email',
@@ -77,10 +75,7 @@ export const ALL_CLUES: Record<string, Clue> = {
     source: 'Julian Sterling WebMail',
   },
 
-  // ==========================================
-  // CHAPTER 2 CLUES (Deep State Mirror)
-  // ==========================================
-  // Mission 4: Orbital Uplink (Satellite Relay)
+  // CHAPTER 2 CLUES
   clue_sat_relay_ip: {
     id: 'clue_sat_relay_ip',
     label: 'Orbital Sat Relay IP',
@@ -105,8 +100,6 @@ export const ALL_CLUES: Record<string, Clue> = {
     category: 'credential',
     source: 'uplink_intercept_log.txt',
   },
-
-  // Mission 5: The Gatekeeper (Chief Viktor Reyes)
   clue_reyes_unit: {
     id: 'clue_reyes_unit',
     label: 'Military Unit Callout',
@@ -131,8 +124,6 @@ export const ALL_CLUES: Record<string, Clue> = {
     category: 'ip',
     source: 'Viktor Reyes WebMail Inbox',
   },
-
-  // Mission 6: The Kill-Switch (Mainframe Core Infiltration)
   clue_core_firmware_key: {
     id: 'clue_core_firmware_key',
     label: 'Supercluster Purge Key',
@@ -141,10 +132,27 @@ export const ALL_CLUES: Record<string, Clue> = {
     category: 'credential',
     source: 'supercluster_architecture.spec',
   },
+
+  // CHAPTER 3 CLUES (Counter-Strike & Retaliation)
+  clue_hunter_drone_ip: {
+    id: 'clue_hunter_drone_ip',
+    label: 'Aethelgard Strike Drone IP',
+    value: '141.98.11.200',
+    targetPerson: 'Aethelgard Hunter-Killer Drone Node',
+    category: 'ip',
+    source: 'NetShield Intrusion Forensics',
+  },
+  clue_counter_exploit_token: {
+    id: 'clue_counter_exploit_token',
+    label: 'Drone Root Payload',
+    value: 'OVERRIDE-GHOST-RECALL',
+    targetPerson: 'Hunter Drone Firmware',
+    category: 'code',
+    source: 'drone_telemetry_intercept.dump',
+  },
 };
 
 export const EMAIL_ACCOUNTS: Record<string, EmailAccount> = {
-  // Mission 1 Target
   'm.cole@velox-ai.io': {
     email: 'm.cole@velox-ai.io',
     ownerName: 'Marcus Cole (CTO, Velox AI)',
@@ -183,8 +191,6 @@ export const EMAIL_ACCOUNTS: Record<string, EmailAccount> = {
       },
     ],
   },
-
-  // Mission 3 Target
   'j.sterling@aethelgard.corp': {
     email: 'j.sterling@aethelgard.corp',
     ownerName: 'Julian Sterling (VP Special Projects, Aethelgard)',
@@ -212,8 +218,6 @@ export const EMAIL_ACCOUNTS: Record<string, EmailAccount> = {
       },
     ],
   },
-
-  // Mission 5 Target (Chapter 2)
   'v.reyes@aethelgard.corp': {
     email: 'v.reyes@aethelgard.corp',
     ownerName: 'Viktor Reyes (Chief Security Officer, Facility Delta)',
@@ -243,7 +247,6 @@ export const EMAIL_ACCOUNTS: Record<string, EmailAccount> = {
 };
 
 export const SERVER_NODES: Record<string, ServerNode> = {
-  // Mission 2 Server
   '198.51.100.42': {
     ip: '198.51.100.42',
     hostname: 'dropoff-node-09.darkhost.net',
@@ -276,8 +279,6 @@ export const SERVER_NODES: Record<string, ServerNode> = {
       },
     ],
   },
-
-  // Mission 3 Server
   '203.0.113.88': {
     ip: '203.0.113.88',
     hostname: 'vault-core.aethelgard.corp',
@@ -307,8 +308,6 @@ export const SERVER_NODES: Record<string, ServerNode> = {
       },
     ],
   },
-
-  // Mission 4 Server (Chapter 2: Satellite Relay)
   '185.220.101.5': {
     ip: '185.220.101.5',
     hostname: 'sat-downlink-04.aethelgard-orbital.net',
@@ -335,8 +334,6 @@ export const SERVER_NODES: Record<string, ServerNode> = {
       },
     ],
   },
-
-  // Mission 6 Server (Chapter 2: Mainframe Supercluster)
   '194.165.16.100': {
     ip: '194.165.16.100',
     hostname: 'mirror-core-cluster.facility-delta.aethelgard.corp',
@@ -364,10 +361,37 @@ export const SERVER_NODES: Record<string, ServerNode> = {
       },
     ],
   },
+  // CHAPTER 3 RETALIATION DRONE NODE
+  '141.98.11.200': {
+    ip: '141.98.11.200',
+    hostname: 'hunter-drone-07.aethelgard-blackops.net',
+    organization: 'Aethelgard Autonomous Counter-Intrusion Squad',
+    securityLevel: 'HIGH (ACTIVE TRACE)',
+    requiredPort: 9000,
+    requiredToolId: 'counter_sig_exploit_v1',
+    triggersTrace: true,
+    traceSpeed: 3.5,
+    files: [
+      {
+        name: 'drone_telemetry_intercept.dump',
+        size: '5.2 KB',
+        content: `=== AETHELGARD HUNTER-KILLER PROTOCOL #07 ===\nMISSION: PHYSICAL GPS TRIANGULATION OF OPERATOR NEXUS.\nTARGET IP: 10.88.4.19\nDISPATCH STATUS: DRONE AIRBORNE. RADAR LOCK 88%.\nOVERRIDE WEAKNESS: Unauthenticated telemetry port 9000.\nPAYLOAD: OVERRIDE-GHOST-RECALL`,
+        isMissionEvidence: true,
+        evidenceId: 'evidence_drone_override',
+        clues: [ALL_CLUES.clue_counter_exploit_token],
+      },
+      {
+        name: 'black_budget_slush_fund.key',
+        size: '1.4 KB',
+        content: `DIRECTOR STERLING PRIVATE ESCROW KEYS: $4,500,000 USD (COLD STORAGE COINBASE).\nRECOVERY PASSPHRASE: EXFILTRATED BY OPERATOR.`,
+        isMissionEvidence: true,
+        evidenceId: 'evidence_slush_fund',
+      },
+    ],
+  },
 };
 
 export const SHOP_ITEMS: ShopItem[] = [
-  // Chapter 1 Items
   {
     id: 'ssh_breaker_v1',
     name: 'SSH-Breaker',
@@ -395,8 +419,6 @@ export const SHOP_ITEMS: ShopItem[] = [
     description: 'Routes terminal traffic through 7 encrypted onion nodes, cutting enemy Active Trace speed by 50%.',
     iconName: 'GlobeLock',
   },
-
-  // Chapter 2 Items
   {
     id: 'sat_uplink_hijack_v1',
     name: 'SatCom Hijack Framework',
@@ -415,12 +437,29 @@ export const SHOP_ITEMS: ShopItem[] = [
     description: 'Military zero-day payload engineered by ZERO to breach Aethelgard Facility Delta\'s supercomputing cluster (`crack 8080`).',
     iconName: 'Cpu',
   },
+  // CHAPTER 3 DEFENSE & COUNTER-ATTACK ITEMS
+  {
+    id: 'netshield_ids_v1',
+    name: 'NetShield IDS & Honeypot',
+    version: 'v2.4',
+    price: 800,
+    category: 'STEALTH',
+    description: 'Hardware intrusion detection module with dynamic honeypots. Blocks incoming drone brute-force attacks and extracts remote attacker IP addresses.',
+    iconName: 'Shield',
+  },
+  {
+    id: 'counter_sig_exploit_v1',
+    name: 'Drone Sig-Override Payload',
+    version: 'v4.0',
+    price: 1500,
+    category: 'EXPLOIT',
+    description: 'Reverse-hijack payload targeting military combat drones on Port 9000. Re-routes drone navigation back to Aethelgard headquarters.',
+    iconName: 'Radio',
+  },
 ];
 
 export const MISSIONS: Mission[] = [
-  // ==========================================
   // CHAPTER 1
-  // ==========================================
   {
     id: 'mission_1',
     chapter: 1,
@@ -611,9 +650,7 @@ export const MISSIONS: Mission[] = [
     ],
   },
 
-  // ==========================================
-  // CHAPTER 2: DEEP STATE MIRROR
-  // ==========================================
+  // CHAPTER 2
   {
     id: 'mission_4',
     chapter: 2,
@@ -785,7 +822,7 @@ export const MISSIONS: Mission[] = [
         sender: 'client',
         senderName: 'ZERO [ENCRYPTED]',
         timestamp: 'Now',
-        text: `Bounty paid: 5,000 ◈! Millions of citizen profiles are safe, our handles are erased from the surveillance grid, and Director Sterling's empire is shattered. You are legendary, Operator. End of Chapter 2.`,
+        text: `Bounty paid: 5,000 ◈! Wait... SENSORS DETECT IMMEDIATE RETALIATION. Aethelgard has dispatched autonomous hunter drones to our subnet! Open NetShield immediately!`,
       },
     ],
     objectives: [
@@ -800,6 +837,71 @@ export const MISSIONS: Mission[] = [
       {
         id: 'obj_m6_purge_escape',
         description: 'Download `GLOBAL_CITIZEN_DOSSIERS.db`, run `wipe_logs`, and `disconnect` before Trace hits 100%',
+      },
+    ],
+  },
+
+  // CHAPTER 3: COUNTER-STRIKE & AIRBORNE RETALIATION
+  {
+    id: 'mission_7',
+    chapter: 3,
+    title: 'Operation 07: Red Alert — The Counter-Hack',
+    clientName: 'ZERO [ENCRYPTED]',
+    clientHandle: '@zero_signal',
+    clientAvatar: 'ZR',
+    reward: 10000,
+    summary: 'Aethelgard\'s autonomous combat drone is actively brute-forcing your local ports! Use NetShield to inspect the incoming attack, deploy a honeypot, reverse-track the drone to IP 141.98.11.200, and execute the override signal before your firewall collapses.',
+    initialMessages: [
+      {
+        id: 'm7_1',
+        sender: 'client',
+        senderName: 'ZERO [ENCRYPTED]',
+        timestamp: 'Now',
+        text: `[EMERGENCY PROTOCOL RED] Operator! Director Sterling launched a direct airborne retaliation unit: Combat Hunter-Drone #07! They are brute-forcing your local IP right now!`,
+      },
+      {
+        id: 'm7_2',
+        sender: 'client',
+        senderName: 'ZERO [ENCRYPTED]',
+        timestamp: 'Now',
+        text: `Open the new 'NetShield IDS' app on your desktop immediately! Watch your firewall integrity and deploy honeypots to capture the attacking drone's IP address (141.98.11.200).`,
+      },
+      {
+        id: 'm7_3',
+        sender: 'client',
+        senderName: 'ZERO [ENCRYPTED]',
+        timestamp: 'Now',
+        text: `Once you have the drone's IP, acquire the 'Drone Sig-Override Payload' (1,500 ◈) in BlackMarket, breach Port 9000 in Terminal, and inject the recall override before your firewall hits 0%!`,
+      },
+    ],
+    completionMessages: [
+      {
+        id: 'm7_done_1',
+        sender: 'player',
+        senderName: 'OPERATOR',
+        timestamp: 'Now',
+        text: `I trapped the drone's SYN-flood in NetShield, reverse-hacked 141.98.11.200 on Port 9000, and injected OVERRIDE-GHOST-RECALL. The drone turned around and crashed directly into Director Sterling's offshore yacht!`,
+      },
+      {
+        id: 'm7_done_2',
+        sender: 'client',
+        senderName: 'ZERO [ENCRYPTED]',
+        timestamp: 'Now',
+        text: `10,000 ◈ BOUNTY TRANSFERRED! Slush fund keys recovered. Aethelgard's leadership is completely neutralized, and the digital underground is free. You are the undisputed ghost of NexusOS. Campaign Victory!`,
+      },
+    ],
+    objectives: [
+      {
+        id: 'obj_m7_netshield_defense',
+        description: 'Open NetShield IDS and activate the Honeypot to trap the incoming drone attack and identify IP 141.98.11.200',
+      },
+      {
+        id: 'obj_m7_buy_override',
+        description: 'Purchase "Drone Sig-Override Payload" (1500 ◈) from BlackMarket',
+      },
+      {
+        id: 'obj_m7_counter_breach',
+        description: 'In Terminal, execute `scan 141.98.11.200`, `crack 9000`, download `drone_telemetry_intercept.dump`, and run `wipe_logs`',
       },
     ],
   },
