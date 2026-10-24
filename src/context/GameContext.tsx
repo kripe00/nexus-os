@@ -77,6 +77,10 @@ interface GameContextType {
   activateHoneypot: () => void;
   repairFirewall: () => void;
 
+  // Social Engineering & SpearPhishing Engine
+  successfulPhishes: string[];
+  markPhishSuccess: (targetId: string) => void;
+
   // Interactive Mission & Chat State Machine
   currentMissionIndex: number;
   missionStage: 'briefing' | 'accept_prompt' | 'investigating' | 'report_ready' | 'reporting' | 'completed';
@@ -147,6 +151,14 @@ const INITIAL_WINDOWS: Record<AppId, WindowState> = {
     zIndex: 17,
     position: { x: 200, y: 50 },
   },
+  spearphish: {
+    id: 'spearphish',
+    title: 'SpearPhish',
+    isOpen: false,
+    isMinimized: false,
+    zIndex: 15,
+    position: { x: 215, y: 60 },
+  },
   files: {
     id: 'files',
     title: 'DataVault',
@@ -195,6 +207,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [firewallHealth, setFirewallHealth] = useState<number>(100);
   const [honeypotActive, setHoneypotActive] = useState<boolean>(false);
   const [capturedAttackerIp, setCapturedAttackerIp] = useState<string | null>(null);
+
+  // SpearPhishing Engine State
+  const [successfulPhishes, setSuccessfulPhishes] = useState<string[]>([]);
 
   const [currentMissionIndex, setCurrentMissionIndex] = useState<number>(0);
   const [missionStage, setMissionStage] = useState<
@@ -362,6 +377,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const repairFirewall = () => {
     setFirewallHealth((prev) => Math.min(100, prev + 35));
     addNotification('Firewall Reinforced', 'Integrity restored +35%', 'mission');
+  };
+
+  const markPhishSuccess = (targetId: string) => {
+    if (!successfulPhishes.includes(targetId)) {
+      setSuccessfulPhishes((prev) => [...prev, targetId]);
+      addNotification('Target Compromised', 'Victim fell for your spear-phishing bait!', 'mission');
+    }
   };
   useEffect(() => {
     if (!traceActive) return;
@@ -929,6 +951,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         capturedAttackerIp,
         activateHoneypot,
         repairFirewall,
+        successfulPhishes,
+        markPhishSuccess,
         currentMissionIndex,
         missionStage,
         clientIsTyping,

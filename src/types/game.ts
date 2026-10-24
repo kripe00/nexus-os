@@ -5,6 +5,7 @@ export type AppId =
   | 'terminal'
   | 'blackmarket'
   | 'netshield'
+  | 'spearphish'
   | 'files';
 
 export interface Clue {

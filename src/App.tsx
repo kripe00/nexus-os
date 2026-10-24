@@ -3,6 +3,7 @@ import {
   AlertOctagon,
   Coins,
   Cpu,
+  Fish,
   FolderLock,
   Globe,
   KeyRound,
@@ -20,6 +21,7 @@ import { IntraWebApp } from './apps/IntraWebApp';
 import { NetShieldApp } from './apps/NetShieldApp';
 import { PassWeaverApp } from './apps/PassWeaverApp';
 import { SmartTerminalApp } from './apps/SmartTerminalApp';
+import { SpearPhishApp } from './apps/SpearPhishApp';
 import { WhisperChatApp } from './apps/WhisperChatApp';
 import { ClueBoardSidebar } from './components/ClueBoardSidebar';
 import { DesktopWallpaper } from './components/DesktopWallpaper';
@@ -83,6 +85,11 @@ const DesktopEnvironment: React.FC = () => {
       label: 'PassWeaver',
       icon: <KeyRound className="w-6 h-6" />,
       badge: discoveredClues.length >= 2 ? discoveredClues.length : undefined,
+    },
+    {
+      id: 'spearphish',
+      label: 'SpearPhish',
+      icon: <Fish className="w-6 h-6" />,
     },
     {
       id: 'terminal',
@@ -151,6 +158,7 @@ const DesktopEnvironment: React.FC = () => {
           <WhisperChatApp />
           <IntraWebApp />
           <PassWeaverApp />
+          <SpearPhishApp />
           <SmartTerminalApp />
           <BlackMarketApp />
           <NetShieldApp />

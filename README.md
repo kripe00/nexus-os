@@ -54,6 +54,7 @@ Every tool runs as a draggable, multi-window application inside the NEXUS deskto
 | **IntraWeb Browser** | `/bin/osint_net` | Features the **LookUp** search engine, corporate directories (*Velox AI*, *Aethelgard Corp*), public social feeds (*Chirper*), and **Nexus WebMail**. Includes a toggleable **OSINT Highlight** scanner. |
 | **Clue Board** | `SYS_SIDEBAR` | Persistent intelligence buffer on the right side of your screen. Clicking any pinned clue routes it directly into the relevant hacking tool (`PassWeaver`, `WebMail`, or `Terminal`). |
 | **PassWeaver** | `/bin/kdf_synth` | Heuristic credential synthesizer. Combine harvested personal details (pet names, lucky years, division codes) to brute-force target email passwords. |
+| **SpearPhish** | `/bin/social_eng` | Social engineering & phishing campaign builder. Craft bespoke email lures (veterinary notices, veteran honor rolls) with cloned portals to trick targets into submitting access tokens. |
 | **Smart Terminal** | `/bin/root_sh` | Hybrid command-line interface. Type real commands (`scan`, `crack`, `connect`, `ls`, `cat`, `download`, `wipe_logs`, `disconnect`) **or** use one-click tactical macro buttons. |
 | **BlackMarket** | `/tor/0day_dex` | Darknet exchange where you spend earned Crypto (`◈`) on intrusion suites (`SSH-Breaker v1.4`, `HyperSSL Zero-Day v2.0`) and stealth upgrades (`GhostRoute VPN`). |
 | **DataVault** | `/mnt/evidence` | Local encrypted storage viewer for inspecting exfiltrated server logs and classified dossiers. |
