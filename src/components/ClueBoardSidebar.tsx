@@ -1,0 +1,185 @@
+import React from 'react';
+import {
+  ArrowUpRight,
+  CheckSquare,
+  Crosshair,
+  Fingerprint,
+  Globe,
+  KeyRound,
+  Send,
+  Server,
+  Square,
+} from 'lucide-react';
+import { MISSIONS } from '../data/worldData';
+import { useGame } from '../context/GameContext';
+
+export const ClueBoardSidebar: React.FC = () => {
+  const {
+    currentMissionIndex,
+    missionStage,
+    discoveredClues,
+    crackedEmails,
+    isObjectiveComplete,
+    navigateBrowser,
+    sendClueToApp,
+    openApp,
+    campaignFinished,
+  } = useGame();
+
+  const currentMission = MISSIONS[currentMissionIndex] || MISSIONS[MISSIONS.length - 1];
+
+  return (
+    <aside className="w-[320px] h-[calc(100vh-2.75rem)] border-l border-[#1e232c] bg-[#090b0f]/95 flex flex-col z-30 select-none text-xs">
+      {/* Active Operation */}
+      <div className="p-4 border-b border-[#1e232c]">
+        <div className="flex items-center justify-between text-[11px] text-[#7c8594] mb-1.5">
+          <span className="flex items-center gap-1.5 text-[#58a6ff] font-semibold">
+            <Crosshair className="w-3.5 h-3.5" />
+            {campaignFinished ? 'CHAPTER 1 COMPLETE' : `OPERATION 0${currentMissionIndex + 1}`}
+          </span>
+          <span className="text-[#3fb950] font-bold">+{currentMission.reward} ◈</span>
+        </div>
+
+        <div className="text-sm font-bold text-white mb-2">
+          {currentMission.title.replace(/^Operation \d+:\s*/, '')}
+        </div>
+
+        {missionStage === 'briefing' || missionStage === 'accept_prompt' ? (
+          <div
+            onClick={() => openApp('whisper')}
+            className="p-3 bg-[#10151f] border border-[#58a6ff] text-[#79c0ff] cursor-pointer space-y-1"
+          >
+            <div className="font-bold text-white flex items-center justify-between">
+              <span>Incoming Contract in WhisperChat</span>
+              <ArrowUpRight className="w-3.5 h-3.5 text-[#58a6ff]" />
+            </div>
+            <p className="text-[11px] text-[#8b949e]">
+              Read {currentMission.clientName}'s messages and reply in WhisperChat to unlock objectives.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-1.5">
+            {currentMission.objectives.map((obj) => {
+              const done = isObjectiveComplete(obj.id);
+              return (
+                <div
+                  key={obj.id}
+                  className={`p-2 border text-[11px] leading-snug flex items-start gap-2 ${
+                    done
+                      ? 'bg-[#0b140e] border-[#1f3d28] text-[#56d364] line-through'
+                      : 'bg-[#0d1016] border-[#21262d] text-[#c9d1d9]'
+                  }`}
+                >
+                  {done ? (
+                    <CheckSquare className="w-3.5 h-3.5 text-[#3fb950] shrink-0 mt-0.5" />
+                  ) : (
+                    <Square className="w-3.5 h-3.5 text-[#58a6ff] shrink-0 mt-0.5" />
+                  )}
+                  <span>{obj.description}</span>
+                </div>
+              );
+            })}
+
+            {missionStage === 'report_ready' && (
+              <button
+                onClick={() => openApp('whisper')}
+                className="w-full mt-2 p-2.5 bg-[#238636] hover:bg-[#2ea043] text-white font-bold text-xs flex items-center justify-between cursor-pointer transition-colors"
+              >
+                <span>Report Findings in WhisperChat</span>
+                <Send className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Cracked Passwords */}
+      {crackedEmails.length > 0 && (
+        <div className="p-3.5 border-b border-[#1e232c] bg-[#0a120e]">
+          <div className="flex items-center gap-1.5 text-[11px] text-[#3fb950] font-semibold mb-2">
+            <KeyRound className="w-3.5 h-3.5" />
+            <span>Cracked Accounts ({crackedEmails.length})</span>
+          </div>
+          <div className="space-y-1.5">
+            {crackedEmails.map((email) => (
+              <div
+                key={email}
+                onClick={() => navigateBrowser('webmail', '', email)}
+                className="p-2 bg-[#060708] border border-[#238636] hover:border-[#3fb950] cursor-pointer flex items-center justify-between transition-colors"
+              >
+                <span className="text-[#56d364] font-bold text-[11px] truncate">{email}</span>
+                <span className="text-[10px] bg-[#238636] text-white px-2 py-0.5 font-bold shrink-0">
+                  Log in →
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* OSINT Clues with Direct Contextual App Routing */}
+      <div className="flex-1 overflow-y-auto p-4 flex flex-col">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-[11px] uppercase tracking-wider text-[#8b949e] font-bold flex items-center gap-1.5">
+            <Fingerprint className="w-3.5 h-3.5 text-[#58a6ff]" />
+            Clue Board ({discoveredClues.length})
+          </span>
+        </div>
+
+        {discoveredClues.length === 0 ? (
+          <div className="flex-1 border border-dashed border-[#21262d] bg-[#060708]/60 p-4 flex flex-col items-center justify-center text-center">
+            <Globe className="w-6 h-6 text-[#58a6ff] mb-2 opacity-75" />
+            <p className="text-[11px] text-[#8b949e] leading-relaxed mb-3">
+              Search for targets on <span className="text-white font-semibold">IntraWeb</span> and click underlined details to pin them here.
+            </p>
+            <button
+              onClick={() => navigateBrowser('search', 'Marcus Cole')}
+              className="px-3 py-1.5 bg-[#151921] border border-[#303947] text-[#e6edf3] hover:border-[#58a6ff] text-[11px] font-semibold cursor-pointer"
+            >
+              Search on IntraWeb
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {discoveredClues.map((clue) => {
+              const isIp = clue.category === 'ip';
+              const isEmail = clue.id.includes('email');
+              const actionLabel = isIp
+                ? 'Load IP in Terminal →'
+                : isEmail
+                ? 'Set Target in PassWeaver →'
+                : 'Add to PassWeaver →';
+
+              return (
+                <div
+                  key={clue.id}
+                  onClick={() => sendClueToApp(clue)}
+                  className="group p-2.5 bg-[#0d1016] border border-[#21262d] hover:border-[#58a6ff] cursor-pointer transition-colors"
+                >
+                  <div className="flex items-center justify-between text-[10px] text-[#6e7681] mb-0.5">
+                    <span className="text-[#79c0ff] font-semibold uppercase">
+                      {clue.label}
+                    </span>
+                    <span>{clue.targetPerson}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-white">{clue.value}</span>
+                    <span className="text-[10px] text-[#58a6ff] group-hover:underline flex items-center gap-1">
+                      {isIp ? (
+                        <Server className="w-3 h-3" />
+                      ) : (
+                        <KeyRound className="w-3 h-3" />
+                      )}
+                      {actionLabel}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </aside>
+  );
+};
