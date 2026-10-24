@@ -7,102 +7,184 @@
 ██║╚██╗██║██╔══╝   ██╔██╗ ██║   ██║╚════██║    ██║   ██║╚════██║
 ██║ ╚████║███████╗██╔╝ ██╗╚██████╔╝███████║    ╚██████╔╝███████║
 ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝     ╚═════╝ ╚══════╝
-[ TACTICAL OSINT & DIGITAL INTRUSION ENVIRONMENT // v4.09 ]
+[ TACTICAL OSINT & DIGITAL INTRUSION ENVIRONMENT // KERNEL v4.09 ]
 ```
 
-**An interactive digital detective and cyber-espionage game played inside a tactical desktop operating system.**
+**An authentic cyber-espionage and digital investigation game played inside a windowed, dark-mode tactical operating system.**
 
 </div>
 
 ---
 
-## ⚡ Om Spillet / What is NEXUS OS?
-
-I **NEXUS // OS** trer du inn i rollen som en uavhengig digital detektiv og freelance-hacker som opererer i det krypterte mørkenettet. Du trenger **ingen tekniske forkunnskaper** for å spille – all "hacking" i spillet er designet som tilfredsstillende, realistiske gåter der du bruker logikk, snoking og smarte verktøy for å overliste korrupte selskaper og militære overvåkingssystemer.
-
-Du starter med enkle oppdrag fra bekymrede gründere, men vikler deg raskt inn i en global konspirasjon ledet av det lyssky forsvarsselskapet **Aethelgard Corp** og deres masseovervåkingssystem **Project Mirror**.
+## Table of Contents
+1. [Game Overview & Setting](#-game-overview--setting)
+2. [Core Gameplay Loop & Mechanics](#-core-gameplay-loop--mechanics)
+3. [The Desktop Arsenal (Application Guide)](#-the-desktop-arsenal-application-guide)
+4. [Campaign Operations Guide (Chapters 1–3)](#-campaign-operations-guide-chapters-13)
+5. [Investigation Field Manual & Tactical Tips](#-investigation-field-manual--tactical-tips)
+6. [How to Launch the Rig](#-how-to-launch-the-rig)
 
 ---
 
-## 🎮 Kjerne-loopen: Slik spiller du
+## 🛰️ Game Overview & Setting
 
-Hvert oppdrag utfordrer deg til å kombinere informasjonsinnhenting, sosial manipulering og systeminfiltrasjon:
+In **NEXUS // OS**, you sit behind the screen of a freelance digital investigator operating in the encrypted underbelly of the global web. You need **zero real-world programming or cybersecurity knowledge** to play—every breach is engineered as an intuitive, immersive detective puzzle combining **OSINT (Open-Source Intelligence)**, **social engineering**, **credential synthesis**, and **command-line exploitation**.
+
+You begin taking mundane freelance contracts from tech founders who suspect their co-founders of foul play. However, as you trace unencrypted packets and forensic drop-off points, you stumble into a global predictive surveillance conspiracy orchestrated by sovereign defense contractor **Aethelgard Corp** and their clandestine panopticon initiative: **Project Mirror**.
+
+---
+
+## 🔄 Core Gameplay Loop & Mechanics
+
+Every operation in NEXUS // OS follows a multi-phase investigative lifecycle:
 
 ```text
-  [1. WHISPERCHAT]          [2. INTRAWEB & LOOKUP]        [3. SPEARPHISH / PASSWEAVER]
-Motta krypterte oppdrag  ──►  Søk opp målpersoner og    ──►  Manipuler målet via e-post
-fra klienter & varslere       klikk på ledetråder i teksten   eller knekk passord fra ledetråder
-                                                                      │
-  [6. DEREGISTRERING]       [5. AKTIV SPORING / TRACE]    [4. SMART TERMINAL]
-Rapporter bevis i chatten ◄── Last ned hemmelige filer  ◄──  Skann åpne porter, kjør zero-day
-og motta krypto-bounties      og slett loggene før 100%      exploits og ta over servere
+  ┌───────────────────────┐         ┌────────────────────────┐         ┌────────────────────────┐
+  │  1. BRIEFING & CHAT   │         │  2. RECON & OSINT      │         │  3. CREDENTIAL FORGERY │
+  │  Accept contract via  │───────► │  Search targets via    │───────► │  Synthesize passwords  │
+  │  WhisperChat relay    │         │  LookUp & Chirper feed │         │  or spear-phish targets│
+  └───────────────────────┘         └────────────────────────┘         └────────────────────────┘
+                                                                                    │
+  ┌───────────────────────┐         ┌────────────────────────┐                      │
+  │  6. ESCROW SETTLEMENT │         │  5. TRACE COUNTERMEAS. │                      │
+  │  Transmit proof &     │◄─────── │  Shred connection logs │◄─────────────────────┘
+  │  collect Crypto (◈)   │         │  before Active Trace   │         ┌────────────────────────┐
+  └───────────────────────┘         └────────────────────────┘         │  4. SERVER INTRUSION   │
+                                                ▲                      │  Scan ports, purchase  │
+                                                └──────────────────────│  0-days, mount root sh │
+                                                                       └────────────────────────┘
 ```
 
----
-
-## 🖥️ Verktøykassen i NEXUS OS
-
-Skrivebordet ditt inneholder en rekke spesialiserte apper:
-
-* **WhisperChat (`/bin/irc_relay`)**
-  * Din krypterte kommunikasjonskanal. Motta oppdrag i sanntid med skriveindikatorer, forhandle betaling, ta moralske valg og send inn beviser for å motta Crypto (`◈`).
-* **IntraWeb Browser (`/bin/osint_net`)**
-  * Operativsystemets innebygde nettleser. Bruk søkemotoren **LookUp** til å spore målpersoner på sosiale medier (*Chirper*), selskapers ansattkataloger (*Velox AI*, *Aethelgard Corp*), og logg inn på målenes e-postkasser via **Nexus WebMail**.
-* **Clue Board (Detektiv-tavlen)**
-  * Det permanente sidepanelet til høyre på skjermen. Når du klikker på viktige detaljer i nettsider eller e-poster (kjæledyr, bursdager, IP-adresser), lagres de her. Klikk på en ledetråd for å sende den direkte inn i riktig hackerverktøy!
-* **PassWeaver (`/bin/kdf_synth`)**
-  * Passord-syntetiserer. Kombiner personlige ledetråder du har samlet om et offer for å generere og knekke passordene deres.
-* **SpearPhish (`/bin/social_eng`)**
-  * Sosial manipulering og målrettet phishing. Forfalsk avsenderadresser (veterinærklinikker, militære pensjonsregistre), velg riktig agn basert på offerets svakheter, og lur dem til å gi fra seg hemmelige tilgangskoder.
-* **Smart Terminal (`/bin/root_sh`)**
-  * Hybrid kommandolinje for serverinfiltrasjon. Du kan enten skrive ekte kommandoer selv (`scan`, `crack`, `connect`, `ls`, `cat`, `download`, `wipe_logs`, `disconnect`) eller trykke direkte på smarte hurtigknapper.
-* **NetShield IDS (`/bin/firewall_ids`)**
-  * Taktisk forsvarsapp og brannmur. Når fienden forsvarer seg og angriper *din* datamaskin, må du forsterke brannmuren din, sette opp en honeypot-felle og spore angriperen tilbake for å utføre et motangrep.
-* **BlackMarket (`/tor/0day_dex`)**
-  * Darknet-butikk hvor du bruker opptjente krypto-penger (`◈`) til å kjøpe verktøy som `SSH-Breaker`, `HyperSSL Zero-Day`, `SatCom Hijack Framework`, `GhostRoute VPN` og `Quantum Core Exploit`.
-* **DataVault (`/mnt/evidence`)**
-  * Lokalt kryptert fillager hvor alle stjålne databaser, logger og bevisfiler du laster ned blir lagret og kan leses.
+1. **Contract Negotiation (`WhisperChat`):** Clients message you via encrypted relay with live typing streams. You choose how to respond, accept the operation, and receive objectives.
+2. **Reconnaissance & OSINT Harvesting (`IntraWeb`):** Use the built-in search engine to examine target dossiers, press releases, corporate directories, and social media posts. Clicking any critical text string (dog names, birth years, military callouts, IP addresses) pins it directly into your **Clue Board**.
+3. **Exploitation & Social Engineering (`PassWeaver` / `SpearPhish`):**
+   * Feed personal intelligence into `PassWeaver` to crack corporate webmail passwords through heuristic mask combinations.
+   * Or craft bespoke `SpearPhish` emails with forged sender headers and tailored lures to trick executives into voluntarily submitting credentials.
+4. **Server Intrusion (`Smart Terminal`):** Run port scans (`scan <ip>`), verify open security daemons, and crack vulnerable ports using modules bought from the `BlackMarket`.
+5. **High-Stakes Exfiltration & Active Trace:** Heavy corporate servers deploy neural counter-intrusion grids. When cracking secured nodes, a countdown timer begins. You must locate the classified archive (`ls`, `cat`, `download`), shred your forensic trails (`wipe_logs`), and sever the link (`disconnect`) before the trace hits 100%.
+6. **Active Defense (`NetShield IDS`):** When enemies counter-attack your workstation, monitor firewall health in real time, deploy honeypot traps to isolate hostile IP addresses, and launch direct reverse-exploits.
 
 ---
 
-## 📜 Kampanjen: 7 Sammenhengende Operasjoner
+## 🖥️ The Desktop Arsenal (Application Guide)
 
-### Kapittel 1: Ghost in the Machine
-* **Operasjon 01 — *Ghost in the Inbox***
-  * Elena Vance mistenker at medgründeren Marcus Cole skal stjele og selge selskapets AI-motor. Søk opp Marcus på IntraWeb, finn ut hva hunden hans heter og hva lykkeåret hans er, knekk WebMailen hans og finn den hemmelige server-IP-en.
-* **Operasjon 02 — *Dead Drop***
-  * Kjøp `SSH-Breaker` i BlackMarket, bryt deg inn på den hemmelige overføringsserveren (`198.51.100.42`) via Terminal, og finn ut hvem som kjøper kildekoden.
-* **Operasjon 03 — *Severance Package***
-  * Den mystiske varsleren `ZERO` tar kontakt. Infiltrer Aethelgard Corps interne hvelv (`203.0.113.88`) under aktiv sporing, last ned overvåkingslisten, og oppdag at du selv står oppført som Target #002.
+### 💬 WhisperChat (`/bin/irc_relay`)
+* **Role:** Encrypted point-to-point communication suite.
+* **Details:** Your clients (Elena Vance, the rogue architect ZERO) communicate here with real-time typing indicators. When an operation's objectives are complete, you must return to WhisperChat to transmit your cryptographic proof and collect your Crypto (`◈`) payout.
 
-### Kapittel 2: Deep State Mirror
-* **Operasjon 04 — *Orbital Eye***
-  * Aethelgard bruker overvåkingssatellitten *VALKYRIE-7* til å spore deg. Kjøp `SatCom Hijack Framework`, hack satellitt-downlinken (`185.220.101.5`) på Port 80, og avskjær telemetridataene.
-* **Operasjon 05 — *The Gatekeeper***
-  * Profiler Aethelgards militære sikkerhetssjef Viktor Reyes på Chirper. Lur ham via SpearPhish eller knekk e-posten hans i PassWeaver for å avdekke IP-adressen til Project Mirrors sentrale supercluster.
-* **Operasjon 06 — *The Kill-Switch***
-  * Kjøp `Quantum Core Exploit`. Infiltrer superclusteret (`194.165.16.100`) på Port 8080 under ekstrem aktiv sporing, last ned databasen over 400 millioner overvåkede borgere, og kjør en global firmware-sletting.
+### 🌐 IntraWeb Browser (`/bin/osint_net`)
+* **Role:** Full-featured in-game browser.
+* **Features:**
+  * **LookUp Search Engine:** Type names or keywords (`Marcus Cole`, `Velox AI`, `Viktor Reyes`, `Facility Delta`) or use query suggestion chips to index web nodes.
+  * **Corporate Portals:** Read internal press bulletins and executive rosters.
+  * **Chirper Social Stream:** Browse public social micro-posts to discover personal details that targets carelessly publish.
+  * **Nexus WebMail Gateway:** The web-based corporate email client where you authenticate into compromised executive inboxes to intercept drafts and classified attachments.
+  * **OSINT Scanner Toggle:** Switch on the tactical highlighter at the top of the browser to illuminate actionable strings within web pages.
 
-### Kapittel 3: Counter-Strike & Airborne Retaliation
-* **Operasjon 07 — *Red Alert: The Counter-Hack***
-  * Aethelgard svarer med et direkte motangrep: En autonom kampdrone angriper din egen IP! Åpne NetShield, overvåk brannmuren, aktiver en honeypot for å fange dronens IP (`141.98.11.200`), og send et overstyringssignal via Port 9000 som snur dronen mot fienden selv!
+### 📌 The Clue Board (`SYS_SIDEBAR`)
+* **Role:** Persistent intelligence dashboard on the right of your workspace.
+* **Interactive Routing:**
+  * Displays active operation directives and completed checklists.
+  * Lists every compromised corporate credential with a one-click auto-fill button into WebMail.
+  * Clicking an **IP Clue** immediately focuses `Smart Terminal` with the remote host set.
+  * Clicking an **Email Clue** loads the target into `PassWeaver`.
+  * Clicking **Personal Detail Clues** slots them straight into password synthesis inputs.
+
+### 🔑 PassWeaver (`/bin/kdf_synth`)
+* **Role:** Heuristic credential synthesizer.
+* **Details:** Select a target profile and two harvested OSINT tokens (e.g., Pet Name `Koda` + Lucky Year `1997`). Watch the synthesis engine calculate permutations in real time with audio feedback. A successful hash collision unlocks the target's plaintext WebMail password.
+
+### 🎣 SpearPhish (`/bin/social_eng`)
+* **Role:** Social engineering campaign designer.
+* **Details:** Allows you to forge sender email headers (e.g., veterinary hospitals, military pension offices). You must choose the subject line that targets the victim's psychological soft spots and select a malicious payload (cloned authentication portal vs. suspicious executable). If your recon is accurate, the target bites, handing over root tokens immediately.
+
+### 💻 Smart Terminal (`/bin/root_sh`)
+* **Role:** Hybrid command-line interface.
+* **Details:** Supports full manual command execution as well as one-click tactical macro buttons:
+  * `scan <ip>` — Executes SYN port scan and fingerprints security levels.
+  * `crack <port>` — Executes installed binary exploit against listening port (22, 80, 443, 8080, 9000).
+  * `connect <ip>` — Establishes SSH/encrypted tunnel into remote host filesystem.
+  * `ls` — Lists remote directory contents.
+  * `cat <filename>` — Dumps remote file contents to stdout.
+  * `download <filename>` — Exfiltrates file and extracts embedded clues to your DataVault.
+  * `wipe_logs` — Overwrites `/var/connection.log` (3 passes) to neutralize Active Trace.
+  * `disconnect` — Closes remote session cleanly.
+
+### 🛡️ NetShield IDS (`/bin/firewall_ids`)
+* **Role:** Workstation perimeter defense and intrusion detection.
+* **Details:** Shows your live firewall integrity gauge (100% → 0%). When hostile combat drones assault your local IP, your firewall decays under packet floods. Use manual reinforcement to buy time, deploy a dynamic honeypot trap to isolate the attacker's IP (`141.98.11.200`), and launch a counter-breach.
+
+### 🛒 BlackMarket (`/tor/0day_dex`)
+* **Role:** Darknet hardware and software repository.
+* **Inventory:**
+  * `SSH-Breaker v1.4` (`200 ◈`) — Brute-forces Port 22 on offshore drop-off relays.
+  * `HyperSSL Zero-Day v2.0` (`450 ◈`) — Bypasses Port 443 on hardened corporate vaults.
+  * `GhostRoute VPN Chain v3.1` (`250 ◈`) — Routes traffic through 7 onion nodes, halving enemy Active Trace speed.
+  * `SatCom Hijack Framework v1.1` (`600 ◈`) — Over-the-air RF packet injection for Port 80 orbital downlinks.
+  * `Quantum Core Exploit v3.0` (`1200 ◈`) — Military zero-day payload engineered to breach supercomputing clusters on Port 8080.
+  * `Drone Sig-Override Payload v4.0` (`1500 ◈`) — Reverse-hijack payload targeting combat drones on Port 9000.
+
+### 💾 DataVault (`/mnt/evidence`)
+* **Role:** Encrypted storage filesystem.
+* **Details:** All exfiltrated files, buyer manifests, citizen surveillance databases, and telemetry logs are decrypted and viewable here for forensic inspection.
 
 ---
 
-## 🚀 Slik starter du spillet
+## 📜 Campaign Operations Guide (Chapters 1–3)
 
-Sørg for at du har **Node.js** installert på maskinen din.
+### CHAPTER 1: Ghost in the Machine
+* **Operation 01 — *Ghost in the Inbox***
+  * *Client:* Elena Vance (CEO, Velox AI) | *Bounty:* `250 ◈`
+  * *Objective:* Investigate co-founder and CTO Marcus Cole. Search Velox AI's directory on LookUp for his work email, scour Chirper to find his Alaskan Malamute's name (`Koda`) and lucky year (`1997`), synthesize his password in PassWeaver, and uncover the offshore dead-drop IP hidden in his WebMail inbox.
+* **Operation 02 — *Dead Drop***
+  * *Client:* Elena Vance | *Bounty:* `500 ◈`
+  * *Objective:* Acquire `SSH-Breaker v1.4` from the BlackMarket, breach the offshore relay server (`198.51.100.42`) on Port 22 via Terminal, and exfiltrate the buyer manifest proving that military defense giant Aethelgard Corp bought the neural engine.
+* **Operation 03 — *Severance Package***
+  * *Client:* `ZERO [ENCRYPTED]` | *Bounty:* `1500 ◈`
+  * *Objective:* Infiltrate Aethelgard Corp's internal vault (`203.0.113.88`). Snoop Director Julian Sterling on Chirper (Yacht `Hyperion` + Division `0451`) to crack his inbox for the secondary vault token (`OMEGA-99-KEY`). Breach Port 443 under Active Trace, exfiltrate `PROJECT_MIRROR_TARGETS.dec`, wipe connection logs, and discover that your own handle is Target #002 on their priority watchlist.
+
+### CHAPTER 2: Deep State Mirror
+* **Operation 04 — *Orbital Eye***
+  * *Client:* `ZERO [ENCRYPTED]` | *Bounty:* `2000 ◈`
+  * *Objective:* Aethelgard re-tasks military surveillance satellite *VALKYRIE-7* to triangulate your exit node. Buy the `SatCom Hijack Framework v1.1`, breach orbital ground downlink `185.220.101.5` on Port 80, and exfiltrate the telemetry logs uncovering Facility Delta's coordinates.
+* **Operation 05 — *The Gatekeeper***
+  * *Client:* `ZERO [ENCRYPTED]` | *Bounty:* `2500 ◈`
+  * *Objective:* Profile Chief Security Officer Viktor Reyes (`@reyes_actual`) on Chirper. Harvest his military unit callout (`Phantom77`) and gatehouse shift code (`8821`), use PassWeaver or SpearPhish to breach his corporate inbox (`v.reyes@aethelgard.corp`), and extract the Project Mirror central supercluster IP (`194.165.16.100`).
+* **Operation 06 — *The Kill-Switch***
+  * *Client:* `ZERO [ENCRYPTED]` | *Bounty:* `5000 ◈`
+  * *Objective:* Arm yourself with the `Quantum Core Exploit v3.0`. Infiltrate the Project Mirror central supercluster on Port 8080 under violent Active Trace, download `GLOBAL_CITIZEN_DOSSIERS.db`, and execute `wipe_logs` to inject the unrecoverable firmware purge (`TITAN-ZERO-PURGE`).
+
+### CHAPTER 3: Counter-Strike & Airborne Retaliation
+* **Operation 07 — *Red Alert: The Counter-Hack***
+  * *Client:* `ZERO [ENCRYPTED]` | *Bounty:* `10000 ◈`
+  * *Objective:* Retaliation is instant: Director Sterling deploys autonomous combat hunter-drone #07 against your local IP! Watch your firewall decay in NetShield IDS, reinforce your buffers, activate the honeypot to trap the drone's true IP (`141.98.11.200`), purchase the `Drone Sig-Override Payload`, breach Port 9000 in Terminal, and broadcast `OVERRIDE-GHOST-RECALL` to crash the drone into Sterling's command ship!
+
+---
+
+## 💡 Investigation Field Manual & Tactical Tips
+
+* **Never disconnect while logs are dirty:** On servers marked with `HIGH (ACTIVE TRACE)`, disconnecting without running `wipe_logs` leaves forensic footprints and triggers an emergency security lockout.
+* **Invest in Stealth early:** Buying `GhostRoute VPN Chain` (`250 ◈`) from the BlackMarket permanently cuts all enemy Active Trace speeds by 50%, giving you crucial extra seconds during intense breaches.
+* **Use Cross-App Deep Linking:** You don't have to re-type IPs or target emails manually. Clicking any clue in your right-hand **Clue Board** automatically opens the correct application and pre-loads the data.
+* **Inspect Mode in IntraWeb:** If you're stuck looking for information on a page, toggle **OSINT Highlight: ON** in the top navigation bar to light up extractable data points.
+* **Procedural Synth Audio:** Keystrokes, port exploitation pulses, and incoming whisper messages feature authentic Web Audio synthesis. You can toggle audio on or off anytime via the bottom taskbar.
+
+---
+
+## 🚀 How to Launch the Rig
+
+Make sure you have **Node.js** (v18+) installed on your machine.
 
 ```bash
-# 1. Klon prosjektet
+# 1. Clone the repository
 git clone https://github.com/kripe00/nexus-os.git
 cd nexus-os
 
-# 2. Installer avhengigheter
+# 2. Install dependencies
 npm install
 
-# 3. Start spillserveren
+# 3. Spin up the local workstation
 npm run dev
 ```
 
-Åpne deretter **[http://localhost:5173](http://localhost:5173)** i nettleseren din!
+Open **[http://localhost:5173](http://localhost:5173)** in your browser and accept your first contract in WhisperChat.
