@@ -3,6 +3,7 @@ import { Cpu, Fingerprint, KeyRound, Lock, Unlock } from 'lucide-react';
 import { EMAIL_ACCOUNTS } from '../data/worldData';
 import { useGame } from '../context/GameContext';
 import { WindowFrame } from '../components/WindowFrame';
+import { SurveillanceAvatar, SurveillanceSubject } from '../components/SurveillanceAvatar';
 import { sound } from '../utils/sound';
 
 export const PassWeaverApp: React.FC = () => {
@@ -111,6 +112,12 @@ export const PassWeaverApp: React.FC = () => {
             {Object.values(EMAIL_ACCOUNTS).map((acc) => {
               const cracked = crackedEmails.includes(acc.email);
               const active = passWeaverTargetEmail === acc.email;
+              const subjectMap: Record<string, SurveillanceSubject> = {
+                'm.cole@velox-ai.io': 'marcus',
+                'j.sterling@aethelgard.corp': 'sterling',
+                'v.reyes@aethelgard.corp': 'reyes',
+              };
+              const subj = subjectMap[acc.email] || 'operator';
               return (
                 <button
                   key={acc.email}
@@ -122,22 +129,25 @@ export const PassWeaverApp: React.FC = () => {
                       text: `Pattern Hint: ${acc.hint}`,
                     });
                   }}
-                  className={`p-3 border text-left cursor-pointer transition-colors ${
+                  className={`p-2.5 border text-left cursor-pointer transition-colors flex items-center gap-3 ${
                     active
                       ? 'bg-[#151921] border-[#58a6ff] text-white'
                       : 'bg-[#07080a] border-[#1e232c] text-[#8b949e] hover:border-[#303947]'
                   }`}
                 >
-                  <div className="flex items-center justify-between text-xs font-bold mb-0.5">
-                    <span className="truncate">{acc.email}</span>
-                    {cracked ? (
-                      <Unlock className="w-3.5 h-3.5 text-[#3fb950] shrink-0" />
-                    ) : (
-                      <Lock className="w-3.5 h-3.5 text-[#6e7681] shrink-0" />
-                    )}
+                  <SurveillanceAvatar subject={subj} size="sm" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between text-xs font-bold mb-0.5">
+                      <span className="truncate">{acc.email}</span>
+                      {cracked ? (
+                        <Unlock className="w-3.5 h-3.5 text-[#3fb950] shrink-0" />
+                      ) : (
+                        <Lock className="w-3.5 h-3.5 text-[#6e7681] shrink-0" />
+                      )}
+                    </div>
+                    <div className="text-[10px] text-[#8b949e] truncate">{acc.ownerName}</div>
+                    <div className="text-[10px] text-[#79c0ff] mt-0.5 truncate">Hint: {acc.hint}</div>
                   </div>
-                  <div className="text-[10px] text-[#8b949e] truncate">{acc.ownerName}</div>
-                  <div className="text-[10px] text-[#79c0ff] mt-1">Hint: {acc.hint}</div>
                 </button>
               );
             })}

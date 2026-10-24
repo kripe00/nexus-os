@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { MISSIONS } from '../data/worldData';
 import { useGame } from '../context/GameContext';
+import { SurveillanceAvatar, SurveillanceSubject } from '../components/SurveillanceAvatar';
 import { WindowFrame } from '../components/WindowFrame';
 
 export const WhisperChatApp: React.FC = () => {
@@ -29,6 +30,7 @@ export const WhisperChatApp: React.FC = () => {
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const currentMission = MISSIONS[currentMissionIndex] || MISSIONS[MISSIONS.length - 1];
+  const clientSubject: SurveillanceSubject = currentMission.clientAvatar === 'EV' ? 'elena' : 'zero';
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -138,9 +140,7 @@ export const WhisperChatApp: React.FC = () => {
       {/* Header */}
       <div className="px-3.5 py-2.5 bg-[#0c0e13] border-b border-[#1e232c] flex items-center justify-between text-xs">
         <div className="flex items-center gap-3">
-          <div className="px-2.5 py-1.5 bg-[#151921] border border-[#303947] text-[#e6edf3] font-bold text-xs">
-            [{currentMission.clientAvatar}]
-          </div>
+          <SurveillanceAvatar subject={clientSubject} size="md" />
           <div>
             <div className="flex items-center gap-2">
               <span className="font-bold text-white uppercase">{currentMission.clientName}</span>
@@ -182,23 +182,30 @@ export const WhisperChatApp: React.FC = () => {
           return (
             <div
               key={msg.id}
-              className={`p-3 border-l-2 ${
+              className={`p-3 border-l-2 flex items-start gap-2.5 ${
                 isPlayer
                   ? 'bg-[#0b130e] border-[#3fb950]'
                   : 'bg-[#0b0d12] border-[#58a6ff]'
               }`}
             >
-              <div className="flex items-center justify-between text-[10px] mb-1">
-                <span
-                  className={`font-bold uppercase ${
-                    isPlayer ? 'text-[#56d364]' : 'text-[#79c0ff]'
-                  }`}
-                >
-                  {msg.senderName}
-                </span>
-                <span className="text-[#565e6c]">{msg.timestamp}</span>
+              <SurveillanceAvatar
+                subject={isPlayer ? 'operator' : clientSubject}
+                size="sm"
+                className="mt-0.5 shrink-0"
+              />
+              <div className="flex-1 overflow-hidden">
+                <div className="flex items-center justify-between text-[10px] mb-1">
+                  <span
+                    className={`font-bold uppercase ${
+                      isPlayer ? 'text-[#56d364]' : 'text-[#79c0ff]'
+                    }`}
+                  >
+                    {msg.senderName}
+                  </span>
+                  <span className="text-[#565e6c]">{msg.timestamp}</span>
+                </div>
+                <div className="text-[#d4d7dc] leading-relaxed">{msg.text}</div>
               </div>
-              <div className="text-[#d4d7dc] leading-relaxed">{msg.text}</div>
             </div>
           );
         })}

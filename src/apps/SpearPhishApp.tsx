@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { WindowFrame } from '../components/WindowFrame';
+import { SurveillanceAvatar, SurveillanceSubject } from '../components/SurveillanceAvatar';
 import { sound } from '../utils/sound';
 
 interface PhishTemplate {
@@ -219,6 +220,7 @@ export const SpearPhishApp: React.FC = () => {
             {PHISH_TARGETS.map((t) => {
               const active = selectedTargetId === t.id;
               const completed = successfulPhishes.includes(t.id);
+              const subjectKey: SurveillanceSubject = t.id === 'phish_reyes' ? 'reyes' : 'marcus';
               return (
                 <button
                   key={t.id}
@@ -229,23 +231,26 @@ export const SpearPhishApp: React.FC = () => {
                     setSelectedLureId(null);
                     setPhishResult(null);
                   }}
-                  className={`p-3 text-left border cursor-pointer transition-colors ${
+                  className={`p-2.5 text-left border cursor-pointer transition-colors flex items-center gap-3 ${
                     active
                       ? 'bg-[#151921] border-[#58a6ff] text-white'
                       : 'bg-[#090b0e] border-[#1e232c] text-[#8b949e] hover:border-[#303947]'
                   }`}
                 >
-                  <div className="flex items-center justify-between text-xs font-bold mb-0.5">
-                    <span className="truncate">{t.targetName}</span>
-                    {completed ? (
-                      <span className="text-[#3fb950] text-[10px] flex items-center gap-1 font-semibold">
-                        <UserCheck className="w-3 h-3" /> HOOKED
-                      </span>
-                    ) : (
-                      <span className="text-[#6e7681] text-[10px]">READY</span>
-                    )}
+                  <SurveillanceAvatar subject={subjectKey} size="sm" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between text-xs font-bold mb-0.5">
+                      <span className="truncate">{t.targetName}</span>
+                      {completed ? (
+                        <span className="text-[#3fb950] text-[10px] flex items-center gap-1 font-semibold shrink-0">
+                          <UserCheck className="w-3 h-3" /> HOOKED
+                        </span>
+                      ) : (
+                        <span className="text-[#6e7681] text-[10px] shrink-0">READY</span>
+                      )}
+                    </div>
+                    <div className="text-[10px] text-[#79c0ff] truncate">{t.targetEmail}</div>
                   </div>
-                  <div className="text-[10px] text-[#79c0ff] truncate">{t.targetEmail}</div>
                 </button>
               );
             })}

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { EMAIL_ACCOUNTS } from '../data/worldData';
 import { IntraWebPage, useGame } from '../context/GameContext';
+import { SurveillanceAvatar } from '../components/SurveillanceAvatar';
 import { WindowFrame } from '../components/WindowFrame';
 import { sound } from '../utils/sound';
 
@@ -376,38 +377,44 @@ export const IntraWebApp: React.FC = () => {
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="p-3.5 bg-[#080a0e] border border-[#1e232c]">
-                <div className="text-xs font-bold text-white uppercase">
-                  Elena Vance — CEO
+              <div className="p-3.5 bg-[#080a0e] border border-[#1e232c] flex gap-3">
+                <SurveillanceAvatar subject="elena" size="md" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-bold text-white uppercase">
+                    Elena Vance — CEO
+                  </div>
+                  <div className="text-[10px] text-[#58a6ff] mb-2">
+                    Co-Founder & Chief Executive
+                  </div>
+                  <p className="text-[11px] text-[#8b949e] leading-relaxed mb-2">
+                    Former MIT cryptography researcher. Oversees Series-A capital and ethics board.
+                  </p>
+                  <div className="text-[10px] text-[#6e7681]">Contact: elena@velox-ai.io</div>
                 </div>
-                <div className="text-[10px] text-[#58a6ff] mb-2">
-                  Co-Founder & Chief Executive
-                </div>
-                <p className="text-[11px] text-[#8b949e] leading-relaxed mb-2">
-                  Former MIT cryptography researcher. Oversees Series-A capital and ethics board.
-                </p>
-                <div className="text-[10px] text-[#6e7681]">Contact: elena@velox-ai.io</div>
               </div>
 
-              <div className="p-3.5 bg-[#080a0e] border border-[#282f3d]">
-                <div className="text-xs font-bold text-white uppercase">
-                  Marcus Cole — CTO
-                </div>
-                <div className="text-[10px] text-[#58a6ff] mb-2">
-                  Co-Founder & Chief Technology Officer
-                </div>
-                <p className="text-[11px] text-[#8b949e] leading-relaxed mb-2">
-                  Lead architect of the Velox v4 Neural Engine. Often posts updates on{' '}
-                  <button
-                    onClick={() => navigateBrowser('chirper')}
-                    className="text-[#58a6ff] underline cursor-pointer"
-                  >
-                    Chirper (@mcole_dev)
-                  </button>
-                  .
-                </p>
-                <div className="text-[11px] text-[#d4d7dc]">
-                  Work Email: <ClueSpan clueId="clue_marcus_email" text="m.cole@velox-ai.io" />
+              <div className="p-3.5 bg-[#080a0e] border border-[#282f3d] flex gap-3">
+                <SurveillanceAvatar subject="marcus" size="md" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-bold text-white uppercase">
+                    Marcus Cole — CTO
+                  </div>
+                  <div className="text-[10px] text-[#58a6ff] mb-2">
+                    Co-Founder & Chief Technology Officer
+                  </div>
+                  <p className="text-[11px] text-[#8b949e] leading-relaxed mb-2">
+                    Lead architect of the Velox v4 Neural Engine. Often posts updates on{' '}
+                    <button
+                      onClick={() => navigateBrowser('chirper')}
+                      className="text-[#58a6ff] underline cursor-pointer"
+                    >
+                      Chirper (@mcole_dev)
+                    </button>
+                    .
+                  </p>
+                  <div className="text-[11px] text-[#d4d7dc]">
+                    Work Email: <ClueSpan clueId="clue_marcus_email" text="m.cole@velox-ai.io" />
+                  </div>
                 </div>
               </div>
             </div>
@@ -426,72 +433,87 @@ export const IntraWebApp: React.FC = () => {
             </div>
 
             {/* Marcus Cole Post 1 */}
-            <div className="p-3.5 bg-[#0b0d11] border border-[#1e232c] space-y-2">
-              <div className="flex items-center justify-between text-[11px] border-b border-[#161a22] pb-1.5">
-                <span className="font-bold text-[#79c0ff]">
-                  Marcus Cole (@mcole_dev)
-                </span>
-                <span className="text-[#6e7681]">2 days ago</span>
+            <div className="p-3.5 bg-[#0b0d11] border border-[#1e232c] flex gap-3">
+              <SurveillanceAvatar subject="marcus" size="sm" />
+              <div className="flex-1 min-w-0 space-y-2">
+                <div className="flex items-center justify-between text-[11px] border-b border-[#161a22] pb-1.5">
+                  <span className="font-bold text-[#79c0ff]">
+                    Marcus Cole (@mcole_dev)
+                  </span>
+                  <span className="text-[#6e7681]">2 days ago</span>
+                </div>
+                <p className="text-xs text-[#d4d7dc] leading-relaxed">
+                  Nothing beats late-night debugging sessions with my Alaskan Malamute{' '}
+                  <ClueSpan clueId="clue_marcus_dog" text="Koda" /> sleeping right under my standing desk. Best coding partner in the world.
+                </p>
               </div>
-              <p className="text-xs text-[#d4d7dc] leading-relaxed">
-                Nothing beats late-night debugging sessions with my Alaskan Malamute{' '}
-                <ClueSpan clueId="clue_marcus_dog" text="Koda" /> sleeping right under my standing desk. Best coding partner in the world.
-              </p>
             </div>
 
             {/* Marcus Cole Post 2 */}
-            <div className="p-3.5 bg-[#0b0d11] border border-[#1e232c] space-y-2">
-              <div className="flex items-center justify-between text-[11px] border-b border-[#161a22] pb-1.5">
-                <span className="font-bold text-[#79c0ff]">
-                  Marcus Cole (@mcole_dev)
-                </span>
-                <span className="text-[#6e7681]">5 days ago</span>
+            <div className="p-3.5 bg-[#0b0d11] border border-[#1e232c] flex gap-3">
+              <SurveillanceAvatar subject="marcus" size="sm" />
+              <div className="flex-1 min-w-0 space-y-2">
+                <div className="flex items-center justify-between text-[11px] border-b border-[#161a22] pb-1.5">
+                  <span className="font-bold text-[#79c0ff]">
+                    Marcus Cole (@mcole_dev)
+                  </span>
+                  <span className="text-[#6e7681]">5 days ago</span>
+                </div>
+                <p className="text-xs text-[#d4d7dc] leading-relaxed">
+                  Cleaning out my garage and found my first Linux workstation from{' '}
+                  <ClueSpan clueId="clue_marcus_year" text="1997" />. Still my lucky year—I use it on everything!
+                </p>
               </div>
-              <p className="text-xs text-[#d4d7dc] leading-relaxed">
-                Cleaning out my garage and found my first Linux workstation from{' '}
-                <ClueSpan clueId="clue_marcus_year" text="1997" />. Still my lucky year—I use it on everything!
-              </p>
             </div>
 
             {/* Julian Sterling Post (Mission 3) */}
-            <div className="p-3.5 bg-[#0b0d11] border border-[#3a1d1d] space-y-2">
-              <div className="flex items-center justify-between text-[11px] border-b border-[#241414] pb-1.5">
-                <span className="font-bold text-[#ff5555]">
-                  Julian Sterling (@jsterling_exec // VP Aethelgard Corp)
-                </span>
-                <span className="text-[#6e7681]">1 week ago</span>
+            <div className="p-3.5 bg-[#0b0d11] border border-[#3a1d1d] flex gap-3">
+              <SurveillanceAvatar subject="sterling" size="sm" />
+              <div className="flex-1 min-w-0 space-y-2">
+                <div className="flex items-center justify-between text-[11px] border-b border-[#241414] pb-1.5">
+                  <span className="font-bold text-[#ff5555]">
+                    Julian Sterling (@jsterling_exec // VP Aethelgard Corp)
+                  </span>
+                  <span className="text-[#6e7681]">1 week ago</span>
+                </div>
+                <p className="text-xs text-[#d4d7dc] leading-relaxed">
+                  Taking my racing yacht <ClueSpan clueId="clue_julian_project" text="Hyperion" /> out into international waters this weekend. When you build global defense architecture, silence is a luxury.
+                </p>
               </div>
-              <p className="text-xs text-[#d4d7dc] leading-relaxed">
-                Taking my racing yacht <ClueSpan clueId="clue_julian_project" text="Hyperion" /> out into international waters this weekend. When you build global defense architecture, silence is a luxury.
-              </p>
             </div>
 
             {/* Viktor Reyes Post 1 (Mission 5) */}
-            <div className="p-3.5 bg-[#0b0d11] border border-[#1e2c38] space-y-2">
-              <div className="flex items-center justify-between text-[11px] border-b border-[#16212b] pb-1.5">
-                <span className="font-bold text-[#58a6ff]">
-                  Chief Viktor Reyes (@reyes_actual // Chief Security Officer)
-                </span>
-                <span className="text-[#6e7681]">Yesterday</span>
+            <div className="p-3.5 bg-[#0b0d11] border border-[#1e2c38] flex gap-3">
+              <SurveillanceAvatar subject="reyes" size="sm" />
+              <div className="flex-1 min-w-0 space-y-2">
+                <div className="flex items-center justify-between text-[11px] border-b border-[#16212b] pb-1.5">
+                  <span className="font-bold text-[#58a6ff]">
+                    Chief Viktor Reyes (@reyes_actual // Chief Security Officer)
+                  </span>
+                  <span className="text-[#6e7681]">Yesterday</span>
+                </div>
+                <p className="text-xs text-[#d4d7dc] leading-relaxed">
+                  15 years out of service, but once you fly with special forces unit{' '}
+                  <ClueSpan clueId="clue_reyes_unit" text="Phantom77" />, operational vigilance never leaves your blood. Perimeter check complete.
+                </p>
               </div>
-              <p className="text-xs text-[#d4d7dc] leading-relaxed">
-                15 years out of service, but once you fly with special forces unit{' '}
-                <ClueSpan clueId="clue_reyes_unit" text="Phantom77" />, operational vigilance never leaves your blood. Perimeter check complete.
-              </p>
             </div>
 
             {/* Viktor Reyes Post 2 (Mission 5) */}
-            <div className="p-3.5 bg-[#0b0d11] border border-[#1e2c38] space-y-2">
-              <div className="flex items-center justify-between text-[11px] border-b border-[#16212b] pb-1.5">
-                <span className="font-bold text-[#58a6ff]">
-                  Chief Viktor Reyes (@reyes_actual // Chief Security Officer)
-                </span>
-                <span className="text-[#6e7681]">3 days ago</span>
+            <div className="p-3.5 bg-[#0b0d11] border border-[#1e2c38] flex gap-3">
+              <SurveillanceAvatar subject="reyes" size="sm" />
+              <div className="flex-1 min-w-0 space-y-2">
+                <div className="flex items-center justify-between text-[11px] border-b border-[#16212b] pb-1.5">
+                  <span className="font-bold text-[#58a6ff]">
+                    Chief Viktor Reyes (@reyes_actual // Chief Security Officer)
+                  </span>
+                  <span className="text-[#6e7681]">3 days ago</span>
+                </div>
+                <p className="text-xs text-[#d4d7dc] leading-relaxed">
+                  Reminder to all Facility Delta gatehouse officers: Night rotation shift code is{' '}
+                  <ClueSpan clueId="clue_reyes_pin" text="8821" />. Keep access strictly restricted to Level 4 badge holders.
+                </p>
               </div>
-              <p className="text-xs text-[#d4d7dc] leading-relaxed">
-                Reminder to all Facility Delta gatehouse officers: Night rotation shift code is{' '}
-                <ClueSpan clueId="clue_reyes_pin" text="8821" />. Keep access strictly restricted to Level 4 badge holders.
-              </p>
             </div>
           </div>
         )}
@@ -514,16 +536,19 @@ export const IntraWebApp: React.FC = () => {
               </span>
             </div>
 
-            <div className="p-4 bg-[#070505] border border-[#291212] space-y-2.5">
-              <div className="text-xs font-bold text-white uppercase">
-                Director Julian Sterling Appointed to Head Division{' '}
-                <ClueSpan clueId="clue_julian_badge" text="0451" />
+            <div className="p-4 bg-[#070505] border border-[#291212] flex gap-3.5">
+              <SurveillanceAvatar subject="sterling" size="md" />
+              <div className="flex-1 min-w-0 space-y-2">
+                <div className="text-xs font-bold text-white uppercase">
+                  Director Julian Sterling Appointed to Head Division{' '}
+                  <ClueSpan clueId="clue_julian_badge" text="0451" />
+                </div>
+                <p className="text-xs text-[#c9d1d9] leading-relaxed">
+                  Aethelgard Corp confirms the expansion of Special Projects Division{' '}
+                  <ClueSpan clueId="clue_julian_badge" text="0451" />. All classified neural-grid acquisitions and Project Mirror dispatches are routed through Director Sterling's office at{' '}
+                  <ClueSpan clueId="clue_julian_email" text="j.sterling@aethelgard.corp" />.
+                </p>
               </div>
-              <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                Aethelgard Corp confirms the expansion of Special Projects Division{' '}
-                <ClueSpan clueId="clue_julian_badge" text="0451" />. All classified neural-grid acquisitions and Project Mirror dispatches are routed through Director Sterling's office at{' '}
-                <ClueSpan clueId="clue_julian_email" text="j.sterling@aethelgard.corp" />.
-              </p>
             </div>
 
             {/* Chapter 2: Orbital Satellite Network announcement */}
