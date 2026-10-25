@@ -877,9 +877,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const dismissTraceAlert = () => setTraceFailedAlert(false);
 
+  useEffect(() => {
+    sound.setTraceMusic(traceActive || underAttack);
+  }, [traceActive, underAttack]);
+
   const toggleMute = () => {
-    sound.muted = !isMuted;
-    setIsMuted(!isMuted);
+    const nowMuted = sound.toggleMute();
+    setIsMuted(nowMuted);
   };
 
   const resetGame = () => {

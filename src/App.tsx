@@ -8,6 +8,7 @@ import {
   Globe,
   KeyRound,
   MessageSquare,
+  Music,
   Radio,
   RotateCcw,
   ShieldAlert,
@@ -30,6 +31,7 @@ import { ClueBoardSidebar } from './components/ClueBoardSidebar';
 import { DesktopWallpaper } from './components/DesktopWallpaper';
 import { GameProvider, useGame } from './context/GameContext';
 import { AppId } from './types/game';
+import { sound } from './utils/sound';
 
 const DesktopEnvironment: React.FC = () => {
   const {
@@ -66,6 +68,21 @@ const DesktopEnvironment: React.FC = () => {
     updateClock();
     const timer = setInterval(updateClock, 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  // Seamlessly unlock and start ambient music on first user click
+  useEffect(() => {
+    const handleFirstInteraction = () => {
+      sound.startMusic();
+      window.removeEventListener('pointerdown', handleFirstInteraction);
+      window.removeEventListener('keydown', handleFirstInteraction);
+    };
+    window.addEventListener('pointerdown', handleFirstInteraction);
+    window.addEventListener('keydown', handleFirstInteraction);
+    return () => {
+      window.removeEventListener('pointerdown', handleFirstInteraction);
+      window.removeEventListener('keydown', handleFirstInteraction);
+    };
   }, []);
 
   const apps: {
@@ -318,6 +335,22 @@ const DesktopEnvironment: React.FC = () => {
           >
             <Tv className="w-3.5 h-3.5" />
             <span className="text-[10px]">CRT</span>
+          </button>
+
+          {/* OST Track Status Indicator */}
+          <button
+            onClick={toggleMute}
+            title={isMuted ? 'Click to Unmute Soundtrack' : 'OST Playing. Click to Mute'}
+            className="h-8 px-2.5 bg-[#111620] border border-[#21262d] text-[10px] text-[#79c0ff] font-mono flex items-center gap-1.5 cursor-pointer hover:border-[#58a6ff] transition-colors"
+          >
+            <Music className={`w-3.5 h-3.5 ${isMuted ? 'text-[#6e7681]' : 'text-[#58a6ff] animate-pulse'}`} />
+            <span className="hidden md:inline truncate max-w-[135px]">
+              {isMuted
+                ? 'OST: MUTED'
+                : traceActive || underAttack
+                ? 'ACTIVE INTRUSION'
+                : 'SILENT PERIMETER'}
+            </span>
           </button>
 
           <button

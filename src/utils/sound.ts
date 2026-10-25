@@ -4,6 +4,67 @@
 class SoundEngine {
   private ctx: AudioContext | null = null;
   public muted: boolean = false;
+  private ambientAudio: HTMLAudioElement | null = null;
+  private traceAudio: HTMLAudioElement | null = null;
+  private musicStarted: boolean = false;
+  private isTraceMusicActive: boolean = false;
+
+  public initMusic() {
+    if (typeof window === 'undefined') return;
+    if (!this.ambientAudio) {
+      this.ambientAudio = new Audio('/audio/ambient_theme.mp3');
+      this.ambientAudio.loop = true;
+      this.ambientAudio.volume = 0.32;
+    }
+    if (!this.traceAudio) {
+      this.traceAudio = new Audio('/audio/active_trace_theme.mp3');
+      this.traceAudio.loop = true;
+      this.traceAudio.volume = 0.42;
+    }
+  }
+
+  public startMusic() {
+    if (this.muted) return;
+    this.initMusic();
+    this.musicStarted = true;
+    if (this.isTraceMusicActive) {
+      this.traceAudio?.play().catch(() => {});
+    } else {
+      this.ambientAudio?.play().catch(() => {});
+    }
+  }
+
+  public setTraceMusic(active: boolean) {
+    this.isTraceMusicActive = active;
+    if (!this.musicStarted || this.muted) return;
+    this.initMusic();
+
+    if (active) {
+      this.ambientAudio?.pause();
+      if (this.traceAudio) {
+        this.traceAudio.currentTime = 0;
+        this.traceAudio.play().catch(() => {});
+      }
+    } else {
+      this.traceAudio?.pause();
+      this.ambientAudio?.play().catch(() => {});
+    }
+  }
+
+  public toggleMute(): boolean {
+    this.muted = !this.muted;
+    if (this.muted) {
+      this.ambientAudio?.pause();
+      this.traceAudio?.pause();
+    } else if (this.musicStarted) {
+      if (this.isTraceMusicActive) {
+        this.traceAudio?.play().catch(() => {});
+      } else {
+        this.ambientAudio?.play().catch(() => {});
+      }
+    }
+    return this.muted;
+  }
 
   private getContext(): AudioContext | null {
     if (this.muted) return null;
