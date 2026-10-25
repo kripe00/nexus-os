@@ -52,6 +52,7 @@ const DesktopEnvironment: React.FC = () => {
 
   const [clock, setClock] = useState<string>('23:42');
   const [crtMode, setCrtMode] = useState<boolean>(true);
+  const [startMenuOpen, setStartMenuOpen] = useState<boolean>(false);
 
   useEffect(() => {
     const updateClock = () => {
@@ -149,7 +150,7 @@ const DesktopEnvironment: React.FC = () => {
         {/* Main Desktop Surface */}
         <main className="flex-1 h-full relative overflow-hidden">
           {/* Desktop Shortcut Icons (Classic OS Grid on Left) */}
-          <div className="p-5 grid grid-cols-1 gap-3 w-28">
+          <div className="p-5 grid grid-cols-1 gap-3 w-28 relative z-20 select-none">
             {apps.map((app) => (
               <button
                 key={app.id}
@@ -208,11 +209,56 @@ const DesktopEnvironment: React.FC = () => {
       {/* Single Unified Bottom OS Taskbar (Full Width) */}
       <footer className="h-11 px-3 bg-[#0b0e14] border-t border-[#1e232c] flex items-center justify-between z-40 select-none text-xs">
         {/* Left: OS Brand Button + Open Windows */}
-        <div className="flex items-center gap-2 overflow-x-auto">
-          <div className="px-3 py-1.5 bg-[#151921] border border-[#303947] text-[#e6edf3] font-bold flex items-center gap-2 mr-1">
+        <div className="flex items-center gap-2 overflow-x-auto relative">
+          <button
+            onClick={() => setStartMenuOpen(!startMenuOpen)}
+            title="Nexus OS Menu"
+            className={`h-8 px-3 border font-bold flex items-center gap-2 mr-1 cursor-pointer transition-colors ${
+              startMenuOpen
+                ? 'bg-[#1f6feb] border-[#58a6ff] text-white'
+                : 'bg-[#151921] border-[#303947] text-[#e6edf3] hover:border-[#58a6ff]'
+            }`}
+          >
             <Cpu className="w-4 h-4 text-[#58a6ff]" />
             <span>NEXUS</span>
-          </div>
+          </button>
+
+          {/* Start Menu Quick Launcher */}
+          {startMenuOpen && (
+            <div className="absolute bottom-11 left-0 w-64 bg-[#0c0f16] border border-[#303947] p-2 shadow-[0_16px_50px_rgba(0,0,0,0.95)] z-50 space-y-1 text-xs">
+              <div className="px-2 py-1.5 border-b border-[#21262d] text-[10px] uppercase font-bold text-[#8b949e] flex items-center justify-between">
+                <span>SYSTEM APPLICATIONS</span>
+                <span className="text-[#3fb950]">v6.4</span>
+              </div>
+              <div className="grid grid-cols-1 gap-1 pt-1">
+                {apps.map((app) => {
+                  const isOpen = windows[app.id].isOpen;
+                  return (
+                    <button
+                      key={app.id}
+                      onClick={() => {
+                        openApp(app.id);
+                        setStartMenuOpen(false);
+                      }}
+                      className={`p-2 flex items-center justify-between border cursor-pointer transition-colors ${
+                        isOpen
+                          ? 'bg-[#161c26] border-[#3b4659] text-white'
+                          : 'bg-[#08090d] border-[#1e232c] hover:border-[#58a6ff] text-[#c9d1d9]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-[#58a6ff] [&>svg]:w-4 [&>svg]:h-4">{app.icon}</span>
+                        <span className="font-semibold text-[11px]">{app.label}</span>
+                      </div>
+                      <span className={`text-[10px] font-mono ${isOpen ? 'text-[#3fb950]' : 'text-[#6e7681]'}`}>
+                        {isOpen ? 'ACTIVE' : 'LAUNCH'}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {openAppsList.map((app) => {
             const win = windows[app.id];

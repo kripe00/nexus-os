@@ -66,7 +66,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
         isActive
           ? 'border-[#4a5870] shadow-[0_24px_70px_rgba(0,0,0,0.95)]'
           : 'border-[#1e232c] opacity-95'
-      } flex flex-col overflow-hidden transition-colors relative`}
+      } flex flex-col overflow-hidden transition-colors`}
     >
       {/* Active Tactical HUD Corner Brackets */}
       {isActive && (

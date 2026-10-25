@@ -1,11 +1,11 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { ALL_CLUES, EMAIL_ACCOUNTS, MISSIONS, SERVER_NODES, SHOP_ITEMS } from '../data/worldData';
 import { AppId, ChatMessage, Clue, ServerFile } from '../types/game';
 import { sound } from '../utils/sound';
 
 export type IntraWebPage = 'search' | 'velox' | 'chirper' | 'aethelgard' | 'webmail';
 
-interface WindowState {
+export interface WindowState {
   id: AppId;
   title: string;
   isOpen: boolean;
@@ -176,7 +176,7 @@ const GameContext = createContext<GameContextType | null>(null);
 export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [windows, setWindows] = useState<Record<AppId, WindowState>>(INITIAL_WINDOWS);
   const [activeApp, setActiveApp] = useState<AppId>('whisper');
-  const [, setTopZ] = useState<number>(25);
+  const topZRef = useRef<number>(30);
 
   // Cross-App Deep-Link states
   const [browserPage, setBrowserPage] = useState<IntraWebPage>('search');
@@ -619,14 +619,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const focusApp = (id: AppId) => {
-    setTopZ((z) => {
-      const nextZ = z + 1;
-      setWindows((prev) => ({
-        ...prev,
-        [id]: { ...prev[id], zIndex: nextZ, isMinimized: false },
-      }));
-      return nextZ;
-    });
+    topZRef.current += 1;
+    const nextZ = topZRef.current;
+    setWindows((prev) => ({
+      ...prev,
+      [id]: { ...prev[id], zIndex: nextZ, isMinimized: false },
+    }));
     setActiveApp(id);
     if (id === 'whisper') {
       setUnreadMessages(0);
@@ -635,14 +633,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const openApp = (id: AppId) => {
     sound.playClick();
-    setTopZ((z) => {
-      const nextZ = z + 1;
-      setWindows((prev) => ({
-        ...prev,
-        [id]: { ...prev[id], isOpen: true, isMinimized: false, zIndex: nextZ },
-      }));
-      return nextZ;
-    });
+    topZRef.current += 1;
+    const nextZ = topZRef.current;
+    setWindows((prev) => ({
+      ...prev,
+      [id]: { ...prev[id], isOpen: true, isMinimized: false, zIndex: nextZ },
+    }));
     setActiveApp(id);
     if (id === 'whisper') {
       setUnreadMessages(0);
