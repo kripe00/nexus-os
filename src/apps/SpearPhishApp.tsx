@@ -149,7 +149,7 @@ export const SpearPhishApp: React.FC = () => {
 
     setSending(true);
     setPhishResult(null);
-    sound.playKey();
+    sound.playPhishSent();
 
     const subject = activeTarget.subjectOptions.find((s) => s.id === selectedSubjectId);
     const lure = activeTarget.lureOptions.find((l) => l.id === selectedLureId);

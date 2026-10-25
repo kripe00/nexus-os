@@ -51,7 +51,7 @@ export const NetShieldApp: React.FC = () => {
     setTimeout(() => {
       activateHoneypot();
       setDeployingHoneypot(false);
-      sound.playSuccess();
+      sound.playHoneypotTrap();
       if (!discoveredClues.some((c) => c.id === 'clue_hunter_drone_ip')) {
         discoverClue('clue_hunter_drone_ip');
       }

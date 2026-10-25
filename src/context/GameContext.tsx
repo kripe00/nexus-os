@@ -94,6 +94,19 @@ interface GameContextType {
   areAllObjectivesComplete: () => boolean;
   campaignFinished: boolean;
 
+  // Operator Authentication (SQLite Backend Session)
+  currentUser: { id: string; username: string } | null;
+  login: (username: string, pass: string) => Promise<{ success: boolean; error?: string }>;
+  register: (username: string, pass: string) => Promise<{ success: boolean; error?: string }>;
+  guestLogin: () => void;
+  logout: () => void;
+
+  // Audio Mixer Channels
+  musicVolume: number;
+  setMusicVolume: (vol: number) => void;
+  sfxVolume: number;
+  setSfxVolume: (vol: number) => void;
+
   // Notifications / Toasts
   notifications: { id: string; title: string; message: string; type: 'clue' | 'mission' | 'warning' }[];
   addNotification: (title: string, message: string, type?: 'clue' | 'mission' | 'warning') => void;
@@ -177,14 +190,17 @@ const INITIAL_WINDOWS: Record<AppId, WindowState> = {
   },
 };
 
-const STORAGE_KEY = 'nexus_os_save_v2';
-
 const GameContext = createContext<GameContextType | null>(null);
 
 export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [windows, setWindows] = useState<Record<AppId, WindowState>>(INITIAL_WINDOWS);
   const [activeApp, setActiveApp] = useState<AppId>('whisper');
   const topZRef = useRef<number>(30);
+
+  // Operator Account & Backend Session
+  const [currentUser, setCurrentUser] = useState<{ id: string; username: string } | null>(null);
+  const [musicVolume, setMusicVolumeState] = useState<number>(0.70);
+  const [sfxVolume, setSfxVolumeState] = useState<number>(0.80);
 
   // Cross-App Deep-Link states
   const [browserPage, setBrowserPage] = useState<IntraWebPage>('search');
@@ -235,36 +251,134 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   >([]);
   const [isMuted, setIsMuted] = useState<boolean>(false);
 
-  // Load saved state on mount
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const saved = JSON.parse(raw);
-        if (typeof saved.crypto === 'number') setCrypto(saved.crypto);
-        if (Array.isArray(saved.ownedTools)) setOwnedTools(saved.ownedTools);
-        if (Array.isArray(saved.discoveredClues)) setDiscoveredClues(saved.discoveredClues);
-        if (Array.isArray(saved.crackedEmails)) setCrackedEmails(saved.crackedEmails);
-        if (Array.isArray(saved.loggedIntoEmails)) setLoggedIntoEmails(saved.loggedIntoEmails);
-        if (Array.isArray(saved.scannedIps)) setScannedIps(saved.scannedIps);
-        if (saved.crackedPorts) setCrackedPorts(saved.crackedPorts);
-        if (Array.isArray(saved.downloadedFiles)) setDownloadedFiles(saved.downloadedFiles);
-        if (typeof saved.currentMissionIndex === 'number') setCurrentMissionIndex(saved.currentMissionIndex);
-        if (saved.missionStage) setMissionStage(saved.missionStage);
-        if (Array.isArray(saved.completedMissionIds)) setCompletedMissionIds(saved.completedMissionIds);
-        if (Array.isArray(saved.chatHistory) && saved.chatHistory.length > 0) {
-          setChatHistory(saved.chatHistory);
-        }
-        if (typeof saved.campaignFinished === 'boolean') setCampaignFinished(saved.campaignFinished);
-      }
-    } catch {}
-    setLoadedFromSave(true);
-  }, []);
+  const applySavedState = (saved: any) => {
+    if (!saved) return;
+    if (typeof saved.crypto === 'number') setCrypto(saved.crypto);
+    if (Array.isArray(saved.ownedTools)) setOwnedTools(saved.ownedTools);
+    if (Array.isArray(saved.discoveredClues)) setDiscoveredClues(saved.discoveredClues);
+    if (Array.isArray(saved.crackedEmails)) setCrackedEmails(saved.crackedEmails);
+    if (Array.isArray(saved.loggedIntoEmails)) setLoggedIntoEmails(saved.loggedIntoEmails);
+    if (Array.isArray(saved.scannedIps)) setScannedIps(saved.scannedIps);
+    if (saved.crackedPorts) setCrackedPorts(saved.crackedPorts);
+    if (Array.isArray(saved.downloadedFiles)) setDownloadedFiles(saved.downloadedFiles);
+    if (typeof saved.currentMissionIndex === 'number') setCurrentMissionIndex(saved.currentMissionIndex);
+    if (saved.missionStage) setMissionStage(saved.missionStage);
+    if (Array.isArray(saved.completedMissionIds)) setCompletedMissionIds(saved.completedMissionIds);
+    if (Array.isArray(saved.chatHistory) && saved.chatHistory.length > 0) {
+      setChatHistory(saved.chatHistory);
+    }
+    if (typeof saved.campaignFinished === 'boolean') setCampaignFinished(saved.campaignFinished);
+  };
 
-  // Save state on change
-  useEffect(() => {
-    if (!loadedFromSave) return;
+  const applyAudioSettings = (audio: { musicVolume?: number; sfxVolume?: number; muted?: boolean }) => {
+    if (!audio) return;
+    if (typeof audio.musicVolume === 'number') {
+      setMusicVolumeState(audio.musicVolume);
+      sound.setMusicVolume(audio.musicVolume);
+    }
+    if (typeof audio.sfxVolume === 'number') {
+      setSfxVolumeState(audio.sfxVolume);
+      sound.setSfxVolume(audio.sfxVolume);
+    }
+    if (typeof audio.muted === 'boolean') {
+      sound.muted = audio.muted;
+      setIsMuted(audio.muted);
+    }
+  };
+
+  const setMusicVolume = (vol: number) => {
+    setMusicVolumeState(vol);
+    sound.setMusicVolume(vol);
+    if (currentUser && !currentUser.id.startsWith('guest_')) {
+      fetch('/api/audio', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: currentUser.id,
+          musicVolume: vol,
+          sfxVolume,
+          muted: sound.muted,
+        }),
+      }).catch(() => {});
+    }
+  };
+
+  const setSfxVolume = (vol: number) => {
+    setSfxVolumeState(vol);
+    sound.setSfxVolume(vol);
+    if (currentUser && !currentUser.id.startsWith('guest_')) {
+      fetch('/api/audio', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: currentUser.id,
+          musicVolume,
+          sfxVolume: vol,
+          muted: sound.muted,
+        }),
+      }).catch(() => {});
+    }
+  };
+
+  const login = async (username: string, pass: string) => {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password: pass }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      return { success: false, error: data.error };
+    }
+    setCurrentUser(data.user);
+    if (data.save) {
+      applySavedState(data.save);
+    }
+    if (data.audio) {
+      applyAudioSettings(data.audio);
+    }
+    setLoadedFromSave(true);
+    return { success: true };
+  };
+
+  const register = async (username: string, pass: string) => {
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password: pass }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      return { success: false, error: data.error };
+    }
+    setCurrentUser(data.user);
+    if (data.audio) {
+      applyAudioSettings(data.audio);
+    }
+    setLoadedFromSave(true);
+    return { success: true };
+  };
+
+  const guestLogin = async () => {
     try {
+      const res = await fetch('/api/auth/guest', { method: 'POST' });
+      const data = await res.json();
+      setCurrentUser(data.user);
+    } catch {
+      setCurrentUser({ id: 'guest_local', username: 'GUEST_OPERATOR' });
+    }
+    setLoadedFromSave(true);
+  };
+
+  const logout = () => {
+    setCurrentUser(null);
+    setLoadedFromSave(false);
+  };
+
+  // Sync state changes with SQLite backend (debounced)
+  useEffect(() => {
+    if (!loadedFromSave || !currentUser || currentUser.id.startsWith('guest_')) return;
+    const timeout = setTimeout(() => {
       const data = {
         crypto,
         ownedTools,
@@ -280,10 +394,16 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         chatHistory,
         campaignFinished,
       };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch {}
+      fetch('/api/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentUser.id, state: data }),
+      }).catch(() => {});
+    }, 600);
+    return () => clearTimeout(timeout);
   }, [
     loadedFromSave,
+    currentUser,
     crypto,
     ownedTools,
     discoveredClues,
@@ -797,7 +917,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       sound.playError();
       return false;
     }
-    sound.playSuccess();
+    sound.playCryptoCoin();
     setCrypto((c) => c - item.price);
     setOwnedTools((prev) => [...prev, itemId]);
     addNotification('Tool Installed', `${item.name} ${item.version} ready in Terminal`, 'mission');
@@ -887,7 +1007,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const resetGame = () => {
-    localStorage.removeItem(STORAGE_KEY);
+    if (currentUser && !currentUser.id.startsWith('guest_')) {
+      fetch('/api/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentUser.id, state: null }),
+      }).catch(() => {});
+    }
     setCrypto(50);
     setOwnedTools([]);
     setDiscoveredClues([]);
@@ -914,6 +1040,15 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return (
     <GameContext.Provider
       value={{
+        currentUser,
+        login,
+        register,
+        guestLogin,
+        logout,
+        musicVolume,
+        setMusicVolume,
+        sfxVolume,
+        setSfxVolume,
         windows,
         activeApp,
         openApp,

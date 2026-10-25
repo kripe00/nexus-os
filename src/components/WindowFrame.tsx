@@ -1,7 +1,8 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Minus, X } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { AppId } from '../types/game';
+import { sound } from '../utils/sound';
 
 interface WindowFrameProps {
   id: AppId;
@@ -21,12 +22,25 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
 }) => {
   const { windows, activeApp, focusApp, closeApp, minimizeApp, moveWindow } = useGame();
   const win = windows[id];
+  const isActive = activeApp === id;
   const [dragging, setDragging] = useState(false);
   const dragOffset = useRef({ x: 0, y: 0 });
 
   if (!win.isOpen || win.isMinimized) return null;
 
-  const isActive = activeApp === id;
+  useEffect(() => {
+    sound.playWindowOpen();
+  }, []);
+
+  const handleClose = () => {
+    sound.playWindowClose();
+    closeApp(id);
+  };
+
+  const handleMinimize = () => {
+    sound.playWindowClose();
+    minimizeApp(id);
+  };
 
   const handleMouseDown = (e: React.MouseEvent) => {
     focusApp(id);
@@ -98,14 +112,14 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
 
         <div className="flex items-center gap-1 shrink-0" onMouseDown={(e) => e.stopPropagation()}>
           <button
-            onClick={() => minimizeApp(id)}
+            onClick={handleMinimize}
             title="Minimize"
             className="w-6 h-6 flex items-center justify-center text-[#8b949e] hover:text-white hover:bg-[#21262d] cursor-pointer transition-colors"
           >
             <Minus className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={() => closeApp(id)}
+            onClick={handleClose}
             title="Close"
             className="w-6 h-6 flex items-center justify-center text-[#8b949e] hover:bg-[#ff3b3b] hover:text-white cursor-pointer transition-colors"
           >

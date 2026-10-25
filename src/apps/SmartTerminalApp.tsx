@@ -103,7 +103,7 @@ export const SmartTerminalApp: React.FC = () => {
     const cmdLine = rawCmd.trim();
     if (!cmdLine) return;
 
-    sound.playKey();
+    sound.playTerminalExec();
     const promptPrefix = connectedIp ? `root@${connectedIp}:~#` : `operator@nexus:~#`;
     appendLog('cmd', `${promptPrefix} ${cmdLine}`);
 

@@ -7,14 +7,17 @@ import {
   FolderLock,
   Globe,
   KeyRound,
+  LogOut,
   MessageSquare,
   Music,
   Radio,
   RotateCcw,
   ShieldAlert,
   ShoppingBag,
+  Sliders,
   Terminal,
   Tv,
+  User,
   Volume2,
   VolumeX,
 } from 'lucide-react';
@@ -27,8 +30,10 @@ import { PassWeaverApp } from './apps/PassWeaverApp';
 import { SmartTerminalApp } from './apps/SmartTerminalApp';
 import { SpearPhishApp } from './apps/SpearPhishApp';
 import { WhisperChatApp } from './apps/WhisperChatApp';
+import { AudioMixerPopover } from './components/AudioMixerPopover';
 import { ClueBoardSidebar } from './components/ClueBoardSidebar';
 import { DesktopWallpaper } from './components/DesktopWallpaper';
+import { OperatorLoginScreen } from './components/OperatorLoginScreen';
 import { GameProvider, useGame } from './context/GameContext';
 import { AppId } from './types/game';
 import { sound } from './utils/sound';
@@ -52,11 +57,17 @@ const DesktopEnvironment: React.FC = () => {
     downloadedFiles,
     underAttack,
     firewallHealth,
+    currentUser,
+    login,
+    register,
+    guestLogin,
+    logout,
   } = useGame();
 
   const [clock, setClock] = useState<string>('23:42');
   const [crtMode, setCrtMode] = useState<boolean>(true);
   const [startMenuOpen, setStartMenuOpen] = useState<boolean>(false);
+  const [audioMixerOpen, setAudioMixerOpen] = useState<boolean>(false);
 
   useEffect(() => {
     const updateClock = () => {
@@ -144,6 +155,15 @@ const DesktopEnvironment: React.FC = () => {
 
   // Only apps that are currently open show up in the bottom taskbar!
   const openAppsList = apps.filter((a) => windows[a.id].isOpen);
+
+  if (!currentUser) {
+    return (
+      <div className="relative w-screen h-screen overflow-hidden bg-[#060708]">
+        {crtMode && <div className="crt-overlay absolute inset-0 z-40 pointer-events-none" />}
+        <OperatorLoginScreen onLogin={login} onRegister={register} onGuest={guestLogin} />
+      </div>
+    );
+  }
 
   return (
     <div
@@ -337,13 +357,17 @@ const DesktopEnvironment: React.FC = () => {
             <span className="text-[10px]">CRT</span>
           </button>
 
-          {/* OST Track Status Indicator */}
+          {/* Tactical Audio Mixer Popover Toggle */}
           <button
-            onClick={toggleMute}
-            title={isMuted ? 'Click to Unmute Soundtrack' : 'OST Playing. Click to Mute'}
-            className="h-8 px-2.5 bg-[#111620] border border-[#21262d] text-[10px] text-[#79c0ff] font-mono flex items-center gap-1.5 cursor-pointer hover:border-[#58a6ff] transition-colors"
+            onClick={() => setAudioMixerOpen(!audioMixerOpen)}
+            title="Tactical Audio Mixer (Music & SFX Volume)"
+            className={`h-8 px-2.5 bg-[#111620] border text-[10px] font-mono flex items-center gap-1.5 cursor-pointer transition-colors ${
+              audioMixerOpen
+                ? 'border-[#58a6ff] text-white bg-[#171c26]'
+                : 'border-[#21262d] text-[#79c0ff] hover:border-[#58a6ff]'
+            }`}
           >
-            <Music className={`w-3.5 h-3.5 ${isMuted ? 'text-[#6e7681]' : 'text-[#58a6ff] animate-pulse'}`} />
+            <Sliders className="w-3.5 h-3.5 text-[#58a6ff]" />
             <span className="hidden md:inline truncate max-w-[145px]">
               {isMuted
                 ? 'OST: MUTED'
@@ -360,6 +384,23 @@ const DesktopEnvironment: React.FC = () => {
           >
             {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
           </button>
+
+          {/* Operator Badge & Logout */}
+          <div className="h-8 px-2.5 bg-[#111620] border border-[#21262d] text-[11px] font-mono text-[#c9d1d9] flex items-center gap-2">
+            <User className="w-3.5 h-3.5 text-[#3fb950]" />
+            <span className="text-[#3fb950] font-bold truncate max-w-[90px]">{currentUser.username}</span>
+            <button
+              onClick={() => {
+                if (window.confirm(`Log out operator session (${currentUser.username})?`)) {
+                  logout();
+                }
+              }}
+              title="Log Out Operator Session"
+              className="text-[#8b949e] hover:text-[#ff5555] ml-0.5 cursor-pointer"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          </div>
 
           <button
             onClick={() => {
@@ -378,6 +419,11 @@ const DesktopEnvironment: React.FC = () => {
           </div>
         </div>
       </footer>
+
+      {/* Audio Mixer Popover */}
+      {audioMixerOpen && (
+        <AudioMixerPopover onClose={() => setAudioMixerOpen(false)} />
+      )}
 
       {/* Trace Reached 100% Modal */}
       {traceFailedAlert && (
