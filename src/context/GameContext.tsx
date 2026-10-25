@@ -373,6 +373,21 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Auto-resume active session on initial mount
+  useEffect(() => {
+    fetch('/api/auth/session')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.user) {
+          setCurrentUser(data.user);
+          if (data.save) applySavedState(data.save);
+          if (data.audio) applyAudioSettings(data.audio);
+          setLoadedFromSave(true);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const login = async (username: string, pass: string) => {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
@@ -424,13 +439,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
+    fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
     setCurrentUser(null);
     setLoadedFromSave(false);
   };
 
   // Sync state changes with SQLite backend (debounced)
   useEffect(() => {
-    if (!loadedFromSave || !currentUser || currentUser.id.startsWith('guest_')) return;
+    if (!loadedFromSave || !currentUser) return;
     const timeout = setTimeout(() => {
       const data = {
         crypto,
@@ -446,13 +462,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         completedMissionIds,
         chatHistory,
         campaignFinished,
+        activeProxyChain,
       };
       fetch('/api/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: currentUser.id, state: data }),
       }).catch(() => {});
-    }, 600);
+    }, 400);
     return () => clearTimeout(timeout);
   }, [
     loadedFromSave,
@@ -470,6 +487,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     completedMissionIds,
     chatHistory,
     campaignFinished,
+    activeProxyChain,
   ]);
 
   // Step-by-step Briefing Message Streamer (when missionStage === 'briefing')
@@ -612,7 +630,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       case 'obj_m1_clues':
         return (
           hasClueId('clue_marcus_email') ||
-          hasClueId('clue_dropoff_ip')
+          hasClueId('clue_dropoff_ip') ||
+          (hasClueId('clue_marcus_dog') && hasClueId('clue_marcus_year'))
         );
       case 'obj_m1_passweaver':
         return (
@@ -1015,14 +1034,19 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const discoverClue = (clueId: string) => {
     const clue = ALL_CLUES[clueId];
-    if (!clue) return;
-    if (discoveredClues.some((c) => c.id === clueId)) {
-      sound.playClick();
+    if (!clue) {
+      console.warn(`[NEXUS] Clue not found in ALL_CLUES for ID: ${clueId}`);
       return;
     }
-    sound.playClueFound();
-    setDiscoveredClues((prev) => [...prev, clue]);
-    addNotification(`Clue Found: ${clue.label}`, `"${clue.value}" pinned to Clue Board`, 'clue');
+    setDiscoveredClues((prev) => {
+      if (prev.some((c) => c.id === clueId)) {
+        sound.playClick();
+        return prev;
+      }
+      sound.playClueFound();
+      addNotification(`Clue Found: ${clue.label}`, `"${clue.value}" pinned to Clue Board`, 'clue');
+      return [...prev, clue];
+    });
   };
 
   const hasClue = (clueId: string) => discoveredClues.some((c) => c.id === clueId);

@@ -14,6 +14,63 @@ function hashPassword(password) {
   return crypto.createHash('sha256').update(password).digest('hex');
 }
 
+// Session helpers for active operator
+function setActiveSession(userId) {
+  try {
+    db.prepare(`
+      INSERT INTO active_session (id, user_id, updated_at)
+      VALUES (1, ?, CURRENT_TIMESTAMP)
+      ON CONFLICT(id) DO UPDATE SET
+        user_id = excluded.user_id,
+        updated_at = CURRENT_TIMESTAMP
+    `).run(userId);
+  } catch (err) {
+    console.error('Failed to set active session:', err);
+  }
+}
+
+function clearActiveSession() {
+  try {
+    db.prepare('DELETE FROM active_session WHERE id = 1').run();
+  } catch (err) {}
+}
+
+// 0. Get Active Session (auto-resume on reload)
+app.get('/api/auth/session', (req, res) => {
+  try {
+    const sessionRow = db.prepare('SELECT user_id FROM active_session WHERE id = 1').get();
+    if (!sessionRow || !sessionRow.user_id) {
+      return res.json({ user: null });
+    }
+    const user = db.prepare('SELECT id, username FROM users WHERE id = ?').get(sessionRow.user_id);
+    if (!user) {
+      return res.json({ user: null });
+    }
+    const saveRow = db.prepare('SELECT state_json FROM game_saves WHERE user_id = ?').get(user.id);
+    let save = null;
+    if (saveRow && saveRow.state_json) {
+      try {
+        save = JSON.parse(saveRow.state_json);
+      } catch {}
+    }
+    const audioRow = db.prepare('SELECT * FROM audio_settings WHERE user_id = ?').get(user.id);
+    const audio = audioRow
+      ? { musicVolume: audioRow.music_volume, sfxVolume: audioRow.sfx_volume, muted: Boolean(audioRow.muted) }
+      : { musicVolume: 0.70, sfxVolume: 0.80, muted: false };
+
+    return res.json({ user, save, audio });
+  } catch (err) {
+    console.error('Session retrieval error:', err);
+    return res.json({ user: null });
+  }
+});
+
+// Logout
+app.post('/api/auth/logout', (req, res) => {
+  clearActiveSession();
+  return res.json({ success: true });
+});
+
 // 1. Register Operator
 app.post('/api/auth/register', (req, res) => {
   try {
@@ -46,6 +103,8 @@ app.post('/api/auth/register', (req, res) => {
       0.80,
       0
     );
+
+    setActiveSession(id);
 
     return res.status(201).json({
       user: { id, username: cleanUsername },
@@ -96,6 +155,8 @@ app.post('/api/auth/login', (req, res) => {
         }
       : { musicVolume: 0.70, sfxVolume: 0.80, muted: false };
 
+    setActiveSession(user.id);
+
     return res.json({
       user: { id: user.id, username: user.username },
       save,
@@ -107,14 +168,39 @@ app.post('/api/auth/login', (req, res) => {
   }
 });
 
-// 3. Guest Operator Quick Login (in-memory or temporary DB session)
+// 3. Guest Operator Quick Login (persisted in SQLite for seamless play)
 app.post('/api/auth/guest', (req, res) => {
   const guestId = `guest_${Math.floor(1000 + Math.random() * 9000)}`;
-  return res.json({
-    user: { id: guestId, username: `OPERATOR_${guestId.slice(-4)}` },
-    save: null,
-    audio: { musicVolume: 0.70, sfxVolume: 0.80, muted: false },
-  });
+  const cleanUsername = `OPERATOR_${guestId.slice(-4)}`;
+
+  try {
+    db.prepare(`
+      INSERT INTO users (id, username, password_hash)
+      VALUES (?, ?, ?)
+      ON CONFLICT(id) DO NOTHING
+    `).run(guestId, cleanUsername, 'guest_auth');
+
+    db.prepare(`
+      INSERT INTO audio_settings (user_id, music_volume, sfx_volume, muted)
+      VALUES (?, ?, ?, ?)
+      ON CONFLICT(user_id) DO NOTHING
+    `).run(guestId, 0.70, 0.80, 0);
+
+    setActiveSession(guestId);
+
+    return res.json({
+      user: { id: guestId, username: cleanUsername },
+      save: null,
+      audio: { musicVolume: 0.70, sfxVolume: 0.80, muted: false },
+    });
+  } catch (err) {
+    console.error('Guest creation error:', err);
+    return res.json({
+      user: { id: guestId, username: cleanUsername },
+      save: null,
+      audio: { musicVolume: 0.70, sfxVolume: 0.80, muted: false },
+    });
+  }
 });
 
 // 4. Save Game State
@@ -123,11 +209,6 @@ app.post('/api/save', (req, res) => {
     const { userId, state } = req.body;
     if (!userId || !state) {
       return res.status(400).json({ error: 'userId and state required.' });
-    }
-
-    // Don't persist guests permanently to database
-    if (userId.startsWith('guest_')) {
-      return res.json({ success: true, guest: true });
     }
 
     const stateJson = JSON.stringify(state);

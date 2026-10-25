@@ -69,6 +69,42 @@ const SEARCH_INDEX: SearchResultItem[] = [
   },
 ];
 
+const ClueSpan: React.FC<{ clueId: string; text: string }> = ({ clueId, text }) => {
+  const { hasClue, discoverClue } = useGame();
+  const collected = hasClue(clueId);
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    discoverClue(clueId);
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      onMouseDown={(e) => e.stopPropagation()}
+      title={
+        collected
+          ? 'Clue collected and pinned to Clue Board'
+          : 'Click to collect and pin this detail to your OSINT Clue Board'
+      }
+      className={`inline-flex items-center gap-1.5 px-2 py-0.5 my-0.5 font-mono text-xs text-left cursor-pointer transition-all select-none ${
+        collected
+          ? 'bg-[#0e2114] text-[#3fb950] border border-[#238636] font-bold shadow-[0_0_8px_rgba(63,185,80,0.25)]'
+          : 'bg-[#0f1724] text-[#79c0ff] border border-dashed border-[#58a6ff] hover:bg-[#1a293f] hover:text-white font-medium shadow-[0_0_8px_rgba(88,166,255,0.2)]'
+      }`}
+    >
+      {collected ? (
+        <Check className="w-3.5 h-3.5 text-[#3fb950] shrink-0" />
+      ) : (
+        <Fingerprint className="w-3.5 h-3.5 text-[#58a6ff] shrink-0 animate-pulse" />
+      )}
+      <span>{text}</span>
+    </button>
+  );
+};
+
 export const IntraWebApp: React.FC = () => {
   const {
     browserPage,
@@ -104,33 +140,6 @@ export const IntraWebApp: React.FC = () => {
       }
     }
   }, [webmailPrefillEmail, crackedEmails]);
-
-  const ClueSpan: React.FC<{ clueId: string; text: string }> = ({ clueId, text }) => {
-    const collected = hasClue(clueId);
-    return (
-      <span
-        onClick={() => discoverClue(clueId)}
-        title={
-          collected
-            ? 'Clue pinned to Clue Board'
-            : 'Click to pin this detail to your OSINT Clue Board'
-        }
-        className={`inline-flex items-center gap-1 px-1 transition-all cursor-pointer ${
-          collected
-            ? 'bg-[#0b1610] text-[#56d364] border-b border-[#3fb950] font-semibold'
-            : inspectMode
-            ? 'bg-[#132036] text-[#79c0ff] border border-[#58a6ff] font-semibold'
-            : 'text-[#e6edf3] border-b border-dotted border-[#58a6ff]/70 hover:bg-[#132036] hover:text-[#79c0ff]'
-        }`}
-      >
-        {collected && <Check className="w-3 h-3 text-[#3fb950] shrink-0" />}
-        {!collected && inspectMode && (
-          <Fingerprint className="w-3 h-3 text-[#58a6ff] shrink-0" />
-        )}
-        <span>{text}</span>
-      </span>
-    );
-  };
 
   const handleWebMailLogin = (e: React.FormEvent) => {
     e.preventDefault();
