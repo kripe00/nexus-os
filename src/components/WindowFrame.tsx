@@ -25,12 +25,17 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
   const isActive = activeApp === id;
   const [dragging, setDragging] = useState(false);
   const dragOffset = useRef({ x: 0, y: 0 });
-
-  if (!win.isOpen || win.isMinimized) return null;
+  const prevOpenRef = useRef(win.isOpen && !win.isMinimized);
 
   useEffect(() => {
-    sound.playWindowOpen();
-  }, []);
+    const isCurrentlyVisible = win.isOpen && !win.isMinimized;
+    if (isCurrentlyVisible && !prevOpenRef.current) {
+      sound.playWindowOpen();
+    }
+    prevOpenRef.current = isCurrentlyVisible;
+  }, [win.isOpen, win.isMinimized]);
+
+  if (!win.isOpen || win.isMinimized) return null;
 
   const handleClose = () => {
     sound.playWindowClose();
