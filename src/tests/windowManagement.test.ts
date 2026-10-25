@@ -14,6 +14,7 @@ describe('Window Management Logic', () => {
       netshield: { id: 'netshield', title: 'NetShield IDS', isOpen: false, isMinimized: false, zIndex: 17, position: { x: 200, y: 50 } },
       spearphish: { id: 'spearphish', title: 'SpearPhish', isOpen: false, isMinimized: false, zIndex: 15, position: { x: 215, y: 60 } },
       packetsniffer: { id: 'packetsniffer', title: 'PacketSniffer', isOpen: false, isMinimized: false, zIndex: 18, position: { x: 240, y: 45 } },
+      georelay: { id: 'georelay', title: 'GeoRelay', isOpen: false, isMinimized: false, zIndex: 18, position: { x: 190, y: 48 } },
       files: { id: 'files', title: 'DataVault', isOpen: false, isMinimized: false, zIndex: 12, position: { x: 260, y: 85 } },
     };
 
@@ -60,6 +61,7 @@ describe('Window Management Logic', () => {
       netshield: { id: 'netshield', title: 'NetShield IDS', isOpen: false, isMinimized: false, zIndex: 17, position: { x: 200, y: 50 } },
       spearphish: { id: 'spearphish', title: 'SpearPhish', isOpen: false, isMinimized: false, zIndex: 15, position: { x: 215, y: 60 } },
       packetsniffer: { id: 'packetsniffer', title: 'PacketSniffer', isOpen: false, isMinimized: false, zIndex: 18, position: { x: 240, y: 45 } },
+      georelay: { id: 'georelay', title: 'GeoRelay', isOpen: false, isMinimized: false, zIndex: 18, position: { x: 190, y: 48 } },
       files: { id: 'files', title: 'DataVault', isOpen: false, isMinimized: false, zIndex: 12, position: { x: 260, y: 85 } },
     };
 
@@ -83,5 +85,14 @@ describe('Window Management Logic', () => {
 
     expect(targetX).toBe(450);
     expect(targetY).toBe(273);
+  });
+
+  it('correctly calculates proxy hop dampening against active traces', () => {
+    const calcDampener = (hops: number) => Math.max(0.25, 1 - hops * 0.2);
+
+    expect(calcDampener(0)).toBe(1.0); // 0% reduction
+    expect(calcDampener(2)).toBe(0.6); // 40% reduction
+    expect(calcDampener(4)).toBe(0.25); // Max 75% reduction
+    expect(calcDampener(5)).toBe(0.25); // Clamped at 0.25
   });
 });

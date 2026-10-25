@@ -11,6 +11,7 @@ import {
   MessageSquare,
   Minimize2,
   Music,
+  Network,
   Radio,
   RotateCcw,
   ShieldAlert,
@@ -24,6 +25,7 @@ import {
 } from 'lucide-react';
 import { BlackMarketApp } from './apps/BlackMarketApp';
 import { DataVaultApp } from './apps/DataVaultApp';
+import { GeoRelayApp } from './apps/GeoRelayApp';
 import { IntraWebApp } from './apps/IntraWebApp';
 import { NetShieldApp } from './apps/NetShieldApp';
 import { PacketSnifferApp } from './apps/PacketSnifferApp';
@@ -73,6 +75,7 @@ const DesktopEnvironment: React.FC = () => {
     inspectedFile,
     setInspectedFile,
     connectToServer,
+    activeProxyChain,
   } = useGame();
 
   const [clock, setClock] = useState<string>('23:42');
@@ -213,6 +216,12 @@ const DesktopEnvironment: React.FC = () => {
       icon: <Radio className="w-6 h-6 text-[#58a6ff]" />,
     },
     {
+      id: 'georelay',
+      label: 'GeoRelay',
+      icon: <Network className="w-6 h-6 text-[#58a6ff]" />,
+      badge: activeProxyChain.length > 0 ? activeProxyChain.length : undefined,
+    },
+    {
       id: 'files',
       label: 'DataVault',
       icon: <FolderLock className="w-6 h-6" />,
@@ -295,6 +304,7 @@ const DesktopEnvironment: React.FC = () => {
           <BlackMarketApp />
           <NetShieldApp />
           <PacketSnifferApp />
+          <GeoRelayApp />
           <DataVaultApp />
 
           {/* Toast Notifications */}

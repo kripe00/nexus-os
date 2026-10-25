@@ -460,6 +460,30 @@ class SoundEngine {
       osc.stop(ctx.currentTime + 0.04);
     } catch {}
   }
+
+  // Tactical Proxy Route Hop chirp
+  playRouteHop() {
+    const ctx = this.getContext();
+    if (!ctx) return;
+    try {
+      const notes = [620, 932.33];
+      notes.forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        const start = ctx.currentTime + i * 0.04;
+        osc.frequency.setValueAtTime(freq, start);
+
+        gain.gain.setValueAtTime(0.05 * this.sfxVolume, start);
+        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.06);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(start);
+        osc.stop(start + 0.07);
+      });
+    } catch {}
+  }
 }
 
 export const sound = new SoundEngine();

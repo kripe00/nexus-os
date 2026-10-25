@@ -7,7 +7,20 @@ export type AppId =
   | 'netshield'
   | 'spearphish'
   | 'packetsniffer'
+  | 'georelay'
   | 'files';
+
+export interface GeoRelayNode {
+  id: string;
+  ip: string;
+  city: string;
+  country: string;
+  lat: number;
+  lng: number;
+  organization: string;
+  role: 'home' | 'relay' | 'target';
+  pingMs: number;
+}
 
 export interface CapturedPacket {
   id: string;

@@ -44,6 +44,10 @@ interface GameContextType {
   executeTerminalCommand: (cmd: string) => void;
   setTerminalCommandToRun: (cmd: string | null) => void;
 
+  // GeoRelay Proxy Topology
+  activeProxyChain: string[];
+  toggleProxyNode: (nodeId: string) => void;
+
   // Cross-App Deep Linking (Clue Board -> App actions)
   browserPage: IntraWebPage;
   browserSearchQuery: string;
@@ -200,6 +204,14 @@ const INITIAL_WINDOWS: Record<AppId, WindowState> = {
     zIndex: 18,
     position: { x: 240, y: 45 },
   },
+  georelay: {
+    id: 'georelay',
+    title: 'GeoRelay // Network Topology',
+    isOpen: false,
+    isMinimized: false,
+    zIndex: 18,
+    position: { x: 190, y: 48 },
+  },
   files: {
     id: 'files',
     title: 'DataVault',
@@ -254,6 +266,27 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // SpearPhishing Engine State
   const [successfulPhishes, setSuccessfulPhishes] = useState<string[]>([]);
+
+  // GeoRelay Multi-Hop Proxy Chain
+  const [activeProxyChain, setActiveProxyChain] = useState<string[]>([
+    'node_zurich',
+    'node_montreal',
+  ]);
+
+  const toggleProxyNode = (nodeId: string) => {
+    sound.playRouteHop();
+    setActiveProxyChain((prev) => {
+      if (prev.includes(nodeId)) {
+        return prev.filter((id) => id !== nodeId);
+      } else {
+        if (prev.length >= 4) {
+          addNotification('Proxy Circuit Full', 'Maximum 4 relay hops active simultaneously.', 'warning');
+          return prev;
+        }
+        return [...prev, nodeId];
+      }
+    });
+  };
 
   const [currentMissionIndex, setCurrentMissionIndex] = useState<number>(0);
   const [missionStage, setMissionStage] = useState<
@@ -537,7 +570,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!traceActive) return;
 
     const hasVpn = ownedTools.includes('proxy_shield_v1');
-    const speedMultiplier = hasVpn ? 0.5 : 1.0;
+    const proxyDampener = Math.max(0.25, 1 - activeProxyChain.length * 0.2);
+    const speedMultiplier = (hasVpn ? 0.5 : 1.0) * proxyDampener;
     const baseSpeed = 2.0 * speedMultiplier;
 
     const interval = setInterval(() => {
@@ -567,7 +601,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, 500);
 
     return () => clearInterval(interval);
-  }, [traceActive, ownedTools]);
+  }, [traceActive, ownedTools, activeProxyChain]);
 
   // Objective Evaluation Helper
   const isObjectiveComplete = (objId: string): boolean => {
@@ -1231,6 +1265,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         notifications,
         addNotification,
         resetGame,
+        activeProxyChain,
+        toggleProxyNode,
         isMuted,
         toggleMute,
       }}
