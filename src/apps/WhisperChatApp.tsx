@@ -318,6 +318,15 @@ export const WhisperChatApp: React.FC = () => {
                     Log into WebMail
                   </button>
                 )}
+              {currentMissionIndex === 0 && (
+                <button
+                  onClick={() => openApp('packetsniffer')}
+                  className="px-3 py-1.5 bg-[#0e1624] border border-[#23456b] hover:border-[#58a6ff] text-[#79c0ff] font-bold text-[11px] cursor-pointer flex items-center gap-1"
+                >
+                  <Radio className="w-3.5 h-3.5 text-[#58a6ff]" />
+                  Open PacketSniffer (WireTap)
+                </button>
+              )}
               {currentMissionIndex >= 1 && (
                 <button
                   onClick={() => openApp('terminal')}

@@ -173,6 +173,28 @@ class SoundEngine {
       osc.stop(ctx.currentTime + 0.09);
     } catch {}
   }
+
+  // Network Packet Sniff & Capture chirp
+  playPacketChirp() {
+    const ctx = this.getContext();
+    if (!ctx) return;
+    try {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(1400, ctx.currentTime);
+      osc.frequency.linearRampToValueAtTime(2200, ctx.currentTime + 0.03);
+      osc.frequency.exponentialRampToValueAtTime(700, ctx.currentTime + 0.07);
+
+      gain.gain.setValueAtTime(0.045, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.07);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.075);
+    } catch {}
+  }
 }
 
 export const sound = new SoundEngine();

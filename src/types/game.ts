@@ -6,7 +6,31 @@ export type AppId =
   | 'blackmarket'
   | 'netshield'
   | 'spearphish'
+  | 'packetsniffer'
   | 'files';
+
+export interface CapturedPacket {
+  id: string;
+  subnetId: string;
+  timestamp: string;
+  sourceIp: string;
+  destIp: string;
+  protocol: 'HTTP' | 'SMTP' | 'TELNET' | 'DNS' | 'RF_RAW';
+  summary: string;
+  payloadPreview: string;
+  rawHex: string;
+  containsCredential?: boolean;
+  extractedClueId?: string;
+  credentialSnippet?: string;
+}
+
+export interface SnifferSubnet {
+  id: string;
+  name: string;
+  subnetCidr: string;
+  description: string;
+  packets: CapturedPacket[];
+}
 
 export interface Clue {
   id: string;

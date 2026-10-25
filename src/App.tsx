@@ -8,6 +8,7 @@ import {
   Globe,
   KeyRound,
   MessageSquare,
+  Radio,
   RotateCcw,
   ShieldAlert,
   ShoppingBag,
@@ -20,6 +21,7 @@ import { BlackMarketApp } from './apps/BlackMarketApp';
 import { DataVaultApp } from './apps/DataVaultApp';
 import { IntraWebApp } from './apps/IntraWebApp';
 import { NetShieldApp } from './apps/NetShieldApp';
+import { PacketSnifferApp } from './apps/PacketSnifferApp';
 import { PassWeaverApp } from './apps/PassWeaverApp';
 import { SmartTerminalApp } from './apps/SmartTerminalApp';
 import { SpearPhishApp } from './apps/SpearPhishApp';
@@ -111,6 +113,11 @@ const DesktopEnvironment: React.FC = () => {
       badge: underAttack ? Math.round(firewallHealth) : undefined,
     },
     {
+      id: 'packetsniffer',
+      label: 'PacketSniffer',
+      icon: <Radio className="w-6 h-6 text-[#58a6ff]" />,
+    },
+    {
       id: 'files',
       label: 'DataVault',
       icon: <FolderLock className="w-6 h-6" />,
@@ -180,6 +187,7 @@ const DesktopEnvironment: React.FC = () => {
           <SmartTerminalApp />
           <BlackMarketApp />
           <NetShieldApp />
+          <PacketSnifferApp />
           <DataVaultApp />
 
           {/* Toast Notifications */}

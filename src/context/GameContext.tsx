@@ -159,6 +159,14 @@ const INITIAL_WINDOWS: Record<AppId, WindowState> = {
     zIndex: 15,
     position: { x: 215, y: 60 },
   },
+  packetsniffer: {
+    id: 'packetsniffer',
+    title: 'PacketSniffer // WireTap',
+    isOpen: false,
+    isMinimized: false,
+    zIndex: 18,
+    position: { x: 240, y: 45 },
+  },
   files: {
     id: 'files',
     title: 'DataVault',
@@ -429,12 +437,15 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     switch (objId) {
       case 'obj_m1_clues':
         return (
-          hasClueId('clue_marcus_email') &&
-          hasClueId('clue_marcus_dog') &&
-          hasClueId('clue_marcus_year')
+          hasClueId('clue_marcus_email') ||
+          hasClueId('clue_dropoff_ip')
         );
       case 'obj_m1_passweaver':
-        return crackedEmails.includes('m.cole@velox-ai.io');
+        return (
+          crackedEmails.includes('m.cole@velox-ai.io') ||
+          hasClueId('clue_dropoff_ip') ||
+          successfulPhishes.includes('phish_marcus')
+        );
       case 'obj_m1_webmail':
         return hasClueId('clue_dropoff_ip');
 

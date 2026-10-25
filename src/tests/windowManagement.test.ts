@@ -13,6 +13,7 @@ describe('Window Management Logic', () => {
       blackmarket: { id: 'blackmarket', title: 'BlackMarket', isOpen: false, isMinimized: false, zIndex: 13, position: { x: 230, y: 65 } },
       netshield: { id: 'netshield', title: 'NetShield IDS', isOpen: false, isMinimized: false, zIndex: 17, position: { x: 200, y: 50 } },
       spearphish: { id: 'spearphish', title: 'SpearPhish', isOpen: false, isMinimized: false, zIndex: 15, position: { x: 215, y: 60 } },
+      packetsniffer: { id: 'packetsniffer', title: 'PacketSniffer', isOpen: false, isMinimized: false, zIndex: 18, position: { x: 240, y: 45 } },
       files: { id: 'files', title: 'DataVault', isOpen: false, isMinimized: false, zIndex: 12, position: { x: 260, y: 85 } },
     };
 
