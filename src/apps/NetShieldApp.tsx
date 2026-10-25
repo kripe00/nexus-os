@@ -113,6 +113,91 @@ export const NetShieldApp: React.FC = () => {
           </div>
         </div>
 
+        {/* Tactical Airspace & Intrusion Radar Grid */}
+        <div className="p-3.5 bg-[#080b10] border border-[#1e232c] grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+          {/* Circular Radar Sweep Screen */}
+          <div className="md:col-span-5 flex flex-col items-center justify-center p-2.5 bg-[#05070a] border border-[#1b222c] relative overflow-hidden">
+            <div className="relative w-36 h-36 flex items-center justify-center">
+              {/* Range rings */}
+              <div className="absolute inset-0 rounded-full border border-[#2a3648]/40" />
+              <div className="absolute inset-4 rounded-full border border-[#2a3648]/40" />
+              <div className="absolute inset-8 rounded-full border border-[#2a3648]/40" />
+              <div className="absolute inset-12 rounded-full border border-[#2a3648]/40" />
+              <div className="absolute left-0 right-0 top-1/2 h-[1px] bg-[#2a3648]/30" />
+              <div className="absolute top-0 bottom-0 left-1/2 w-[1px] bg-[#2a3648]/30" />
+
+              {/* Sweeping radar beam */}
+              <div className="absolute inset-0 animate-radar-sweep pointer-events-none">
+                <div
+                  className="w-1/2 h-1/2 absolute top-0 left-1/2"
+                  style={{
+                    background:
+                      'conic-gradient(from 0deg at 0% 100%, rgba(88, 166, 255, 0.45) 0deg, rgba(88, 166, 255, 0) 50deg)',
+                  }}
+                />
+              </div>
+
+              {/* Threat Contact Blip */}
+              {underAttack && (
+                <div className="absolute top-6 right-8 flex flex-col items-center">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#ff3b3b] animate-blip-pulse" />
+                  <span className="text-[8px] font-bold text-[#ff5555] font-mono mt-0.5">
+                    HOSTILE #07
+                  </span>
+                </div>
+              )}
+
+              {/* Honeypot Trap Lock Indicator */}
+              {honeypotActive && (
+                <div className="absolute top-5 right-7 border border-[#58a6ff] w-8 h-8 flex items-center justify-center pointer-events-none">
+                  <span className="text-[7px] text-[#79c0ff] font-bold uppercase">LOCKED</span>
+                </div>
+              )}
+
+              {/* Center point */}
+              <div className="w-1.5 h-1.5 bg-[#58a6ff] rounded-full z-10" />
+            </div>
+            <div className="mt-2 text-[10px] text-[#8b949e] font-mono flex items-center justify-between w-full px-1">
+              <span>RANGE: 500KM</span>
+              <span className={underAttack ? 'text-[#ff5555] font-bold' : 'text-[#3fb950]'}>
+                {underAttack ? 'THREAT DETECTED' : 'CLEAR'}
+              </span>
+            </div>
+          </div>
+
+          {/* Right Radar Telemetry Stats */}
+          <div className="md:col-span-7 space-y-2 text-[11px]">
+            <div className="flex items-center justify-between border-b border-[#181d26] pb-1">
+              <span className="text-[#8b949e]">SURVEILLANCE RADAR:</span>
+              <span className="text-[#58a6ff] font-mono">PULSE-DOPPLER 9.4 GHz</span>
+            </div>
+            <div className="flex items-center justify-between border-b border-[#181d26] pb-1">
+              <span className="text-[#8b949e]">AIRBORNE THREAT:</span>
+              <span
+                className={`font-mono font-bold ${
+                  underAttack ? 'text-[#ff5555]' : 'text-[#3fb950]'
+                }`}
+              >
+                {underAttack ? 'AETHELGARD STRIKE DRONE' : 'NONE DETECTED'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between border-b border-[#181d26] pb-1">
+              <span className="text-[#8b949e]">PACKET REJECTION RATE:</span>
+              <span className="text-white font-mono">99.4% (STATEFUL INSPECTION)</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-[#8b949e]">HONEYPOT STATUS:</span>
+              <span
+                className={`font-mono font-bold ${
+                  honeypotActive ? 'text-[#3fb950]' : 'text-[#8b949e]'
+                }`}
+              >
+                {honeypotActive ? 'ARMED // TRAP ACTIVE' : 'STANDBY'}
+              </span>
+            </div>
+          </div>
+        </div>
+
         {/* Firewall Integrity Gauge */}
         <div className="p-4 bg-[#0b0d12] border border-[#1e232c] space-y-2.5">
           <div className="flex items-center justify-between text-xs">

@@ -213,16 +213,29 @@ export const PassWeaverApp: React.FC = () => {
 
         {/* Live Synthesis Animation Bar */}
         {crackingProgress !== null && (
-          <div className="p-3 bg-[#0d121c] border border-[#58a6ff] space-y-2">
+          <div className="p-3.5 bg-[#0b1019] border border-[#58a6ff] space-y-2.5">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-[#79c0ff] font-bold">
-                TESTING CANDIDATE: <span className="text-white">{candidatePreview}</span>
+              <span className="text-[#79c0ff] font-bold flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#58a6ff] animate-ping" />
+                <span>FORGING HASH PERMUTATION:</span>
+                <span className="text-white font-mono bg-[#141b26] px-2 py-0.5 border border-[#2b3a4e]">
+                  {candidatePreview}
+                </span>
               </span>
-              <span className="text-[#58a6ff] font-bold">{crackingProgress}%</span>
+              <span className="text-[#58a6ff] font-mono font-bold">{crackingProgress}%</span>
             </div>
-            <div className="w-full h-2 bg-[#060708] border border-[#282f3d]">
+
+            {/* Cipher Tumbler Sub-stream */}
+            <div className="font-mono text-[10px] text-[#8b949e] bg-[#06080d] p-2 border border-[#1b2330] flex items-center justify-between overflow-hidden">
+              <span className="text-[#79c0ff] animate-pulse">
+                [PBKDF2-HMAC-SHA256] :: SALT 0x{(crackingProgress * 1337).toString(16).toUpperCase()}
+              </span>
+              <span className="text-[#56d364]">ENTROPY: 52.4 BITS</span>
+            </div>
+
+            <div className="w-full h-2.5 bg-[#060708] border border-[#282f3d] overflow-hidden">
               <div
-                className="h-full bg-[#58a6ff] transition-all duration-150"
+                className="h-full bg-gradient-to-r from-[#1f6feb] to-[#58a6ff] transition-all duration-150"
                 style={{ width: `${crackingProgress}%` }}
               />
             </div>

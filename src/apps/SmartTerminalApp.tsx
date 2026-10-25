@@ -427,7 +427,7 @@ export const SmartTerminalApp: React.FC = () => {
       </div>
 
       {/* Raw Terminal Output */}
-      <div className="flex-1 overflow-y-auto p-3.5 text-xs space-y-1.5 bg-[#040506]">
+      <div className="flex-1 overflow-y-auto p-3.5 text-xs space-y-1.5 bg-[#040506] tactical-scanlines">
         {logs.map((line) => {
           const colorMap: Record<LogLine['type'], string> = {
             cmd: 'text-white font-bold',
@@ -450,12 +450,19 @@ export const SmartTerminalApp: React.FC = () => {
         {busyTask && (
           <div className="p-2.5 bg-[#0b1018] border border-[#58a6ff] space-y-1.5 my-2">
             <div className="flex justify-between text-[11px] text-[#79c0ff] font-bold">
-              <span>{busyTask.label}</span>
-              <span>{busyTask.progress}%</span>
+              <span className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#58a6ff] animate-ping" />
+                <span>{busyTask.label}</span>
+              </span>
+              <span className="font-mono">{busyTask.progress}%</span>
+            </div>
+            <div className="font-mono text-[9px] text-[#8b949e] flex justify-between">
+              <span>OFFSET 0x{(busyTask.progress * 420).toString(16).padStart(4, '0')}</span>
+              <span className="text-[#56d364]">[PAYLOAD BUFFER INJECTED]</span>
             </div>
             <div className="w-full h-1.5 bg-black border border-[#282f3d]">
               <div
-                className="h-full bg-[#58a6ff] transition-all duration-150"
+                className="h-full bg-gradient-to-r from-[#1f6feb] to-[#58a6ff] transition-all duration-150"
                 style={{ width: `${busyTask.progress}%` }}
               />
             </div>

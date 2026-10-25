@@ -12,6 +12,7 @@ import {
   ShieldAlert,
   ShoppingBag,
   Terminal,
+  Tv,
   Volume2,
   VolumeX,
 } from 'lucide-react';
@@ -50,6 +51,7 @@ const DesktopEnvironment: React.FC = () => {
   } = useGame();
 
   const [clock, setClock] = useState<string>('23:42');
+  const [crtMode, setCrtMode] = useState<boolean>(true);
 
   useEffect(() => {
     const updateClock = () => {
@@ -124,6 +126,21 @@ const DesktopEnvironment: React.FC = () => {
         traceActive ? 'trace-danger-frame border-2 border-[#ff3b3b]' : ''
       }`}
     >
+      {/* Optional CRT Monitor Phosphor & Scanlines Overlay */}
+      {crtMode && <div className="crt-overlay absolute inset-0 z-40 pointer-events-none" />}
+
+      {/* Top Threat Banner when Active Trace is live */}
+      {traceActive && (
+        <div className="h-6 bg-[#ff3b3b] text-white font-mono font-bold text-[10px] tracking-widest uppercase flex items-center justify-center gap-3 animate-pulse z-50 shrink-0">
+          <ShieldAlert className="w-3.5 h-3.5" />
+          <span>
+            CRITICAL ALERT // COUNTER-INTRUSION TRACE AT {tracePercent.toFixed(0)}% // DISCONNECT OR
+            RUN 'wipe_logs'
+          </span>
+          <ShieldAlert className="w-3.5 h-3.5" />
+        </div>
+      )}
+
       {/* Clean Desktop Wallpaper */}
       <DesktopWallpaper />
 
@@ -234,6 +251,19 @@ const DesktopEnvironment: React.FC = () => {
           >
             <Coins className="w-3.5 h-3.5 text-[#58a6ff]" />
             <span>{crypto} ◈</span>
+          </button>
+
+          <button
+            onClick={() => setCrtMode(!crtMode)}
+            title={crtMode ? 'Disable CRT Scanlines' : 'Enable CRT Scanlines'}
+            className={`h-8 px-2.5 bg-[#111620] border text-xs cursor-pointer flex items-center gap-1.5 transition-colors ${
+              crtMode
+                ? 'border-[#58a6ff] text-[#58a6ff] font-bold'
+                : 'border-[#21262d] text-[#8b949e] hover:text-white'
+            }`}
+          >
+            <Tv className="w-3.5 h-3.5" />
+            <span className="text-[10px]">CRT</span>
           </button>
 
           <button

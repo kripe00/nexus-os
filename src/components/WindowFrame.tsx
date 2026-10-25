@@ -62,12 +62,22 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
         top: win.position.y,
         zIndex: win.zIndex,
       }}
-      className={`fixed ${width} ${height} max-w-[calc(100vw-340px)] max-h-[calc(100vh-64px)] bg-[#0b0d12] border ${
+      className={`fixed ${width} ${height} max-w-[calc(100vw-340px)] max-h-[calc(100vh-64px)] bg-[#0b0d12] border animate-window-in ${
         isActive
-          ? 'border-[#3b4659] shadow-[0_24px_70px_rgba(0,0,0,0.9)]'
+          ? 'border-[#4a5870] shadow-[0_24px_70px_rgba(0,0,0,0.95)]'
           : 'border-[#1e232c] opacity-95'
-      } flex flex-col overflow-hidden transition-colors`}
+      } flex flex-col overflow-hidden transition-colors relative`}
     >
+      {/* Active Tactical HUD Corner Brackets */}
+      {isActive && (
+        <>
+          <span className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-[#58a6ff] pointer-events-none z-30" />
+          <span className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-[#58a6ff] pointer-events-none z-30" />
+          <span className="absolute bottom-0 left-0 w-2 h-2 border-b-2 border-l-2 border-[#58a6ff] pointer-events-none z-30" />
+          <span className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-[#58a6ff] pointer-events-none z-30" />
+        </>
+      )}
+
       {/* Clean Window Header */}
       <div
         onMouseDown={handleMouseDown}

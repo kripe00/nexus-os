@@ -23,6 +23,14 @@
   background-size: 100% 3px;
 }
 
+/* CRT Screen Effect overlay */
+.crt-overlay {
+  pointer-events: none;
+  background: radial-gradient(circle at center, transparent 65%, rgba(0, 0, 0, 0.45) 100%),
+              linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.22) 50%);
+  background-size: 100% 100%, 100% 3px;
+}
+
 /* Custom ultra-thin industrial scrollbars */
 ::-webkit-scrollbar {
   width: 4px;
@@ -42,11 +50,69 @@
   background: #58a6ff;
 }
 
+/* Smooth tactical window entrance */
+@keyframes window-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-window-in {
+  animation: window-in 0.16s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Tactical radar sweep animation */
+@keyframes radar-sweep {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.animate-radar-sweep {
+  animation: radar-sweep 4s linear infinite;
+  transform-origin: center;
+}
+
+/* Threat blip pulse */
+@keyframes blip-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.6); opacity: 0.3; }
+}
+
+.animate-blip-pulse {
+  animation: blip-pulse 1.2s ease-in-out infinite;
+}
+
+/* Phosphor text flicker */
+@keyframes phosphor-flicker {
+  0%, 100% { opacity: 1; }
+  92% { opacity: 1; }
+  93% { opacity: 0.88; }
+  94% { opacity: 1; }
+  97% { opacity: 0.94; }
+  98% { opacity: 1; }
+}
+
+.animate-flicker {
+  animation: phosphor-flicker 5s infinite;
+}
+
+/* Active Trace Danger Pulsing Frame */
 @keyframes trace-strobe {
-  0%, 100% { border-color: #ff3b3b; background-color: rgba(255, 59, 59, 0.05); }
-  50% { border-color: #4a1010; background-color: transparent; }
+  0%, 100% {
+    box-shadow: inset 0 0 45px rgba(255, 59, 59, 0.35), 0 0 20px rgba(255, 59, 59, 0.4);
+    border-color: #ff3b3b;
+  }
+  50% {
+    box-shadow: inset 0 0 15px rgba(255, 59, 59, 0.1), 0 0 5px rgba(255, 59, 59, 0.15);
+    border-color: #631717;
+  }
 }
 
 .trace-danger-frame {
-  animation: trace-strobe 0.9s infinite steps(2, start);
+  animation: trace-strobe 1s infinite ease-in-out;
 }
