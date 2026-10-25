@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import {
   Activity,
+  Binary,
   Check,
+  Copy,
   Cpu,
   Filter,
   Fingerprint,
+  Globe,
+  KeyRound,
   Radio,
   Search,
   ShieldAlert,
@@ -18,7 +22,14 @@ import { WindowFrame } from '../components/WindowFrame';
 import { sound } from '../utils/sound';
 
 export const PacketSnifferApp: React.FC = () => {
-  const { discoveredClues, discoverClue, openApp } = useGame();
+  const {
+    discoveredClues,
+    discoverClue,
+    openApp,
+    showContextMenu,
+    executeTerminalCommand,
+    addNotification,
+  } = useGame();
 
   const [selectedSubnetId, setSelectedSubnetId] = useState<string>('velox_subnet');
   const [protocolFilter, setProtocolFilter] = useState<string>('ALL');
@@ -63,6 +74,59 @@ export const PacketSnifferApp: React.FC = () => {
     if (!clueId) return;
     sound.playClueFound();
     discoverClue(clueId);
+  };
+
+  const handlePacketContextMenu = (e: React.MouseEvent, pkt: CapturedPacket) => {
+    showContextMenu(e, [
+      {
+        header: `// TARGET RECON: ${pkt.destIp}`,
+        items: [
+          {
+            label: `Scan ${pkt.destIp} in Terminal`,
+            icon: <Terminal className="w-3.5 h-3.5" />,
+            shortcut: 'SCAN',
+            onClick: () => executeTerminalCommand(`scan ${pkt.destIp}`),
+          },
+          {
+            label: `Connect to ${pkt.destIp}`,
+            icon: <Globe className="w-3.5 h-3.5" />,
+            shortcut: 'SSH',
+            onClick: () => executeTerminalCommand(`connect ${pkt.destIp}`),
+          },
+          {
+            label: 'Copy Destination IP',
+            icon: <Copy className="w-3.5 h-3.5" />,
+            shortcut: 'IP',
+            onClick: () => {
+              navigator.clipboard.writeText(pkt.destIp);
+              addNotification('IP Copied', `${pkt.destIp} copied to clipboard`, 'clue');
+            },
+          },
+        ],
+      },
+      {
+        header: '// PACKET PAYLOAD',
+        items: [
+          {
+            label: 'Copy Payload Hex',
+            icon: <Binary className="w-3.5 h-3.5" />,
+            onClick: () => {
+              navigator.clipboard.writeText(pkt.rawHex);
+              addNotification('Hex Copied', `Hex payload of ${pkt.id} copied`, 'clue');
+            },
+          },
+          ...(pkt.containsCredential && pkt.extractedClueId
+            ? [
+                {
+                  label: 'Extract Credential to Clue Board',
+                  icon: <KeyRound className="w-3.5 h-3.5" />,
+                  onClick: () => handleExtractClue(pkt.extractedClueId),
+                },
+              ]
+            : []),
+        ],
+      },
+    ]);
   };
 
   return (
@@ -180,6 +244,7 @@ export const PacketSnifferApp: React.FC = () => {
                   <div
                     key={pkt.id}
                     onClick={() => handleSelectPacket(pkt)}
+                    onContextMenu={(e) => handlePacketContextMenu(e, pkt)}
                     className={`p-2 cursor-pointer transition-colors ${
                       isSelected
                         ? 'bg-[#141b26] border-l-2 border-[#58a6ff]'

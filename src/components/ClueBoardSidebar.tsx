@@ -2,6 +2,7 @@ import React from 'react';
 import {
   ArrowUpRight,
   CheckSquare,
+  Copy,
   Crosshair,
   Fingerprint,
   Globe,
@@ -9,9 +10,11 @@ import {
   Send,
   Server,
   Square,
+  Terminal,
 } from 'lucide-react';
 import { MISSIONS } from '../data/worldData';
 import { useGame } from '../context/GameContext';
+import { Clue } from '../types/game';
 
 export const ClueBoardSidebar: React.FC = () => {
   const {
@@ -24,7 +27,64 @@ export const ClueBoardSidebar: React.FC = () => {
     sendClueToApp,
     openApp,
     campaignFinished,
+    showContextMenu,
+    executeTerminalCommand,
+    addNotification,
   } = useGame();
+
+  const handleClueContextMenu = (e: React.MouseEvent, clue: Clue) => {
+    if (clue.category === 'ip') {
+      showContextMenu(e, [
+        {
+          header: `// TARGET HOST: ${clue.value}`,
+          items: [
+            {
+              label: `Run "scan ${clue.value}" in Terminal`,
+              icon: <Terminal className="w-3.5 h-3.5" />,
+              shortcut: 'SCAN',
+              onClick: () => executeTerminalCommand(`scan ${clue.value}`),
+            },
+            {
+              label: `Mount Root Shell (connect ${clue.value})`,
+              icon: <Server className="w-3.5 h-3.5" />,
+              shortcut: 'SSH',
+              onClick: () => executeTerminalCommand(`connect ${clue.value}`),
+            },
+            {
+              label: 'Copy Host IP',
+              icon: <Copy className="w-3.5 h-3.5" />,
+              shortcut: 'IP',
+              onClick: () => {
+                navigator.clipboard.writeText(clue.value);
+                addNotification('Target Copied', `${clue.value} copied to clipboard`, 'clue');
+              },
+            },
+          ],
+        },
+      ]);
+    } else {
+      showContextMenu(e, [
+        {
+          header: `// INTEL: ${clue.label.toUpperCase()}`,
+          items: [
+            {
+              label: 'Load into PassWeaver',
+              icon: <KeyRound className="w-3.5 h-3.5" />,
+              onClick: () => sendClueToApp(clue),
+            },
+            {
+              label: 'Copy Value to Clipboard',
+              icon: <Copy className="w-3.5 h-3.5" />,
+              onClick: () => {
+                navigator.clipboard.writeText(clue.value);
+                addNotification('Clue Copied', `${clue.value} copied to clipboard`, 'clue');
+              },
+            },
+          ],
+        },
+      ]);
+    }
+  };
 
   const currentMission = MISSIONS[currentMissionIndex] || MISSIONS[MISSIONS.length - 1];
 
@@ -154,6 +214,7 @@ export const ClueBoardSidebar: React.FC = () => {
                 <div
                   key={clue.id}
                   onClick={() => sendClueToApp(clue)}
+                  onContextMenu={(e) => handleClueContextMenu(e, clue)}
                   className="group p-2.5 bg-[#0d1016] border border-[#21262d] hover:border-[#58a6ff] cursor-pointer transition-colors"
                 >
                   <div className="flex items-center justify-between text-[10px] text-[#6e7681] mb-0.5">

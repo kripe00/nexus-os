@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Minus, X } from 'lucide-react';
+import { Layers, Maximize2, Minus, X } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { AppId } from '../types/game';
 import { sound } from '../utils/sound';
@@ -20,7 +20,17 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
   height = 'h-[490px]',
   children,
 }) => {
-  const { windows, activeApp, focusApp, closeApp, minimizeApp, moveWindow } = useGame();
+  const {
+    windows,
+    activeApp,
+    focusApp,
+    closeApp,
+    minimizeApp,
+    moveWindow,
+    centerWindow,
+    sendToBack,
+    showContextMenu,
+  } = useGame();
   const win = windows[id];
   const isActive = activeApp === id;
   const [dragging, setDragging] = useState(false);
@@ -45,6 +55,45 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
   const handleMinimize = () => {
     sound.playWindowClose();
     minimizeApp(id);
+  };
+
+  const handleHeaderContextMenu = (e: React.MouseEvent) => {
+    showContextMenu(e, [
+      {
+        header: `// WINDOW: ${win.title.toUpperCase()}`,
+        items: [
+          {
+            label: 'Center on Screen',
+            icon: <Maximize2 className="w-3.5 h-3.5" />,
+            shortcut: 'CENTER',
+            onClick: () => centerWindow(id),
+          },
+          {
+            label: 'Send to Back',
+            icon: <Layers className="w-3.5 h-3.5" />,
+            shortcut: 'BACK',
+            onClick: () => sendToBack(id),
+          },
+          {
+            label: 'Minimize Window',
+            icon: <Minus className="w-3.5 h-3.5" />,
+            shortcut: 'MIN',
+            onClick: handleMinimize,
+          },
+        ],
+      },
+      {
+        items: [
+          {
+            label: 'Close Window',
+            icon: <X className="w-3.5 h-3.5" />,
+            shortcut: 'CLOSE',
+            danger: true,
+            onClick: handleClose,
+          },
+        ],
+      },
+    ]);
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -100,6 +149,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       {/* Clean Window Header */}
       <div
         onMouseDown={handleMouseDown}
+        onContextMenu={handleHeaderContextMenu}
         className={`h-9 px-3.5 flex items-center justify-between border-b select-none text-xs ${
           dragging ? 'cursor-grabbing' : 'cursor-grab'
         } ${

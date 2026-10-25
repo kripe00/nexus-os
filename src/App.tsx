@@ -9,6 +9,7 @@ import {
   KeyRound,
   LogOut,
   MessageSquare,
+  Minimize2,
   Music,
   Radio,
   RotateCcw,
@@ -32,7 +33,9 @@ import { SpearPhishApp } from './apps/SpearPhishApp';
 import { WhisperChatApp } from './apps/WhisperChatApp';
 import { AudioMixerPopover } from './components/AudioMixerPopover';
 import { ClueBoardSidebar } from './components/ClueBoardSidebar';
+import { ContextMenu } from './components/ContextMenu';
 import { DesktopWallpaper } from './components/DesktopWallpaper';
+import { HexInspectorModal } from './components/HexInspectorModal';
 import { OperatorLoginScreen } from './components/OperatorLoginScreen';
 import { GameProvider, useGame } from './context/GameContext';
 import { AppId } from './types/game';
@@ -62,12 +65,76 @@ const DesktopEnvironment: React.FC = () => {
     register,
     guestLogin,
     logout,
+    minimizeAll,
+    resetWindowPositions,
+    contextMenu,
+    showContextMenu,
+    hideContextMenu,
+    inspectedFile,
+    setInspectedFile,
+    connectToServer,
   } = useGame();
 
   const [clock, setClock] = useState<string>('23:42');
   const [crtMode, setCrtMode] = useState<boolean>(true);
   const [startMenuOpen, setStartMenuOpen] = useState<boolean>(false);
   const [audioMixerOpen, setAudioMixerOpen] = useState<boolean>(false);
+
+  const handleDesktopContextMenu = (e: React.MouseEvent) => {
+    showContextMenu(e, [
+      {
+        header: '// SYSTEM OPERATIONS',
+        items: [
+          {
+            label: 'Launch Terminal',
+            icon: <Terminal className="w-3.5 h-3.5" />,
+            shortcut: 'CTRL+T',
+            onClick: () => openApp('terminal'),
+          },
+          {
+            label: 'Minimize All Windows',
+            icon: <Minimize2 className="w-3.5 h-3.5" />,
+            shortcut: 'WIN+D',
+            onClick: minimizeAll,
+          },
+          {
+            label: 'Reset Window Grid',
+            icon: <RotateCcw className="w-3.5 h-3.5" />,
+            shortcut: 'RESET',
+            onClick: resetWindowPositions,
+          },
+        ],
+      },
+      {
+        header: '// DISPLAY & AUDIO',
+        items: [
+          {
+            label: crtMode ? 'Disable CRT Scanlines' : 'Enable CRT Scanlines',
+            icon: <Tv className="w-3.5 h-3.5" />,
+            shortcut: 'CRT',
+            onClick: () => setCrtMode(!crtMode),
+          },
+          {
+            label: 'Tactical Audio Mixer',
+            icon: <Sliders className="w-3.5 h-3.5" />,
+            shortcut: 'MIXER',
+            onClick: () => setAudioMixerOpen(true),
+          },
+        ],
+      },
+      {
+        header: '// EMERGENCY OVERRIDE',
+        items: [
+          {
+            label: 'Emergency Disconnect / Killswitch',
+            icon: <ShieldAlert className="w-3.5 h-3.5" />,
+            danger: true,
+            onClick: () => connectToServer(null),
+          },
+        ],
+      },
+    ]);
+  };
 
   useEffect(() => {
     const updateClock = () => {
@@ -192,7 +259,10 @@ const DesktopEnvironment: React.FC = () => {
       {/* Upper Desktop Area + Right Sidebar */}
       <div className="flex-1 flex overflow-hidden relative z-10">
         {/* Main Desktop Surface */}
-        <main className="flex-1 h-full relative overflow-hidden">
+        <main
+          onContextMenu={handleDesktopContextMenu}
+          className="flex-1 h-full relative overflow-hidden"
+        >
           {/* Desktop Shortcut Icons (Classic OS Grid on Left) */}
           <div className="p-5 grid grid-cols-1 gap-3 w-28 relative z-20 select-none">
             {apps.map((app) => (
@@ -423,6 +493,14 @@ const DesktopEnvironment: React.FC = () => {
       {/* Audio Mixer Popover */}
       {audioMixerOpen && (
         <AudioMixerPopover onClose={() => setAudioMixerOpen(false)} />
+      )}
+
+      {/* Global Tactical Context Menu */}
+      <ContextMenu menu={contextMenu} onClose={hideContextMenu} />
+
+      {/* Raw Hex & Metadata Inspector */}
+      {inspectedFile && (
+        <HexInspectorModal file={inspectedFile} onClose={() => setInspectedFile(null)} />
       )}
 
       {/* Trace Reached 100% Modal */}

@@ -1,17 +1,70 @@
 import React, { useState } from 'react';
-import { FileCode, FolderLock, HardDrive, ShieldCheck } from 'lucide-react';
+import { Binary, Copy, FileCode, FolderLock, HardDrive, ShieldCheck, Terminal, Trash2 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { WindowFrame } from '../components/WindowFrame';
+import { ServerFile } from '../types/game';
 import { sound } from '../utils/sound';
 
 export const DataVaultApp: React.FC = () => {
-  const { downloadedFiles, openApp } = useGame();
+  const {
+    downloadedFiles,
+    openApp,
+    showContextMenu,
+    deleteDownloadedFile,
+    setInspectedFile,
+    executeTerminalCommand,
+    addNotification,
+  } = useGame();
   const [selectedFile, setSelectedFile] = useState<string | null>(
     downloadedFiles[0]?.name || null
   );
 
   const active =
     downloadedFiles.find((f) => f.name === selectedFile) || downloadedFiles[0] || null;
+
+  const handleFileContextMenu = (e: React.MouseEvent, file: ServerFile) => {
+    showContextMenu(e, [
+      {
+        header: `// FILE: ${file.name.toUpperCase()}`,
+        items: [
+          {
+            label: 'Inspect Raw Hex & Metadata',
+            icon: <Binary className="w-3.5 h-3.5" />,
+            shortcut: 'HEX',
+            onClick: () => setInspectedFile(file),
+          },
+          {
+            label: 'Copy Payload to Clipboard',
+            icon: <Copy className="w-3.5 h-3.5" />,
+            shortcut: 'COPY',
+            onClick: () => {
+              navigator.clipboard.writeText(file.content);
+              addNotification('Payload Copied', `${file.name} content copied to clipboard`, 'clue');
+            },
+          },
+          {
+            label: `Dump in Terminal (cat)`,
+            icon: <Terminal className="w-3.5 h-3.5" />,
+            shortcut: 'EXEC',
+            onClick: () => executeTerminalCommand(`cat ${file.name}`),
+          },
+        ],
+      },
+      {
+        items: [
+          {
+            label: 'Shred & Zero-Fill File',
+            icon: <Trash2 className="w-3.5 h-3.5" />,
+            danger: true,
+            shortcut: 'SHRED',
+            onClick: () => {
+              deleteDownloadedFile(file.name);
+            },
+          },
+        ],
+      },
+    ]);
+  };
 
   return (
     <WindowFrame
@@ -28,7 +81,7 @@ export const DataVaultApp: React.FC = () => {
               /mnt/datavault IS EMPTY
             </div>
             <p className="text-xs text-[#8b949e] max-w-md mb-4 leading-relaxed">
-              Remote files exfiltrated via the <span className="text-[#56d364] font-bold">download</span> command in SMARTTERM are mounted here for inspection.
+              Remote files exfiltrated via the <span className="text-[#56d364] font-bold">download</span> command in SMARTTERM are mounted here for inspection. Right-click files for deep inspection or shredding.
             </p>
             <button
               onClick={() => openApp('terminal')}
@@ -53,6 +106,7 @@ export const DataVaultApp: React.FC = () => {
                       sound.playClick();
                       setSelectedFile(file.name);
                     }}
+                    onContextMenu={(e) => handleFileContextMenu(e, file)}
                     className={`w-full p-2.5 text-left border cursor-pointer flex items-start gap-2 transition-colors ${
                       isSelected
                         ? 'bg-[#151921] text-white border-[#58a6ff] font-bold'
@@ -70,7 +124,12 @@ export const DataVaultApp: React.FC = () => {
             </div>
 
             {/* File Hex / Plaintext Dump */}
-            <div className="col-span-7 p-4 bg-[#050608] overflow-y-auto flex flex-col">
+            <div
+              className="col-span-7 p-4 bg-[#050608] overflow-y-auto flex flex-col"
+              onContextMenu={(e) => {
+                if (active) handleFileContextMenu(e, active);
+              }}
+            >
               {active && (
                 <>
                   <div className="flex items-center justify-between border-b border-[#1e232c] pb-2 mb-3">
@@ -79,7 +138,7 @@ export const DataVaultApp: React.FC = () => {
                         FILE: {active.name}
                       </div>
                       <div className="text-[10px] text-[#6e7681]">
-                        BYTES: {active.size} // ENCODING: UTF-8
+                        BYTES: {active.size} // RIGHT-CLICK FOR ACTIONS
                       </div>
                     </div>
                     {active.isMissionEvidence && (

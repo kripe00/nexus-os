@@ -36,6 +36,8 @@ export const SmartTerminalApp: React.FC = () => {
     downloadServerFile,
     wipeServerLogs,
     openApp,
+    terminalCommandToRun,
+    setTerminalCommandToRun,
   } = useGame();
 
   const [input, setInput] = useState('');
@@ -362,6 +364,13 @@ export const SmartTerminalApp: React.FC = () => {
     }
     setInput('');
   };
+
+  useEffect(() => {
+    if (terminalCommandToRun) {
+      executeCommand(terminalCommandToRun);
+      setTerminalCommandToRun(null);
+    }
+  }, [terminalCommandToRun]);
 
   const activeNode = SERVER_NODES[connectedIp || terminalSelectedIp];
   const isSelectedPortCracked =

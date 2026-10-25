@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { ALL_CLUES, EMAIL_ACCOUNTS, MISSIONS, SERVER_NODES, SHOP_ITEMS } from '../data/worldData';
 import { AppId, ChatMessage, Clue, ServerFile } from '../types/game';
+import { ContextMenuGroup, ContextMenuState } from '../components/ContextMenu';
 import { sound } from '../utils/sound';
 
 export type IntraWebPage = 'search' | 'velox' | 'chirper' | 'aethelgard' | 'webmail';
@@ -23,6 +24,25 @@ interface GameContextType {
   minimizeApp: (id: AppId) => void;
   focusApp: (id: AppId) => void;
   moveWindow: (id: AppId, x: number, y: number) => void;
+  minimizeAll: () => void;
+  resetWindowPositions: () => void;
+  centerWindow: (id: AppId) => void;
+  sendToBack: (id: AppId) => void;
+
+  // Context Menu System
+  contextMenu: ContextMenuState;
+  showContextMenu: (e: React.MouseEvent, groups: ContextMenuGroup[]) => void;
+  hideContextMenu: () => void;
+
+  // DataVault File Operations
+  deleteDownloadedFile: (fileName: string) => void;
+  inspectedFile: ServerFile | null;
+  setInspectedFile: (file: ServerFile | null) => void;
+
+  // Terminal Automation & Macro
+  terminalCommandToRun: string | null;
+  executeTerminalCommand: (cmd: string) => void;
+  setTerminalCommandToRun: (cmd: string | null) => void;
 
   // Cross-App Deep Linking (Clue Board -> App actions)
   browserPage: IntraWebPage;
@@ -805,6 +825,91 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }));
   };
 
+  const minimizeAll = () => {
+    sound.playWindowClose();
+    setWindows((prev) => {
+      const next = { ...prev };
+      (Object.keys(next) as AppId[]).forEach((key) => {
+        if (next[key].isOpen) {
+          next[key] = { ...next[key], isMinimized: true };
+        }
+      });
+      return next;
+    });
+  };
+
+  const resetWindowPositions = () => {
+    sound.playClick();
+    setWindows((prev) => {
+      const next = { ...prev };
+      (Object.keys(next) as AppId[]).forEach((key) => {
+        next[key] = {
+          ...next[key],
+          position: INITIAL_WINDOWS[key].position,
+          isMinimized: false,
+        };
+      });
+      return next;
+    });
+    addNotification('Window Layout Reset', 'All windows aligned to tactical grid positions.', 'mission');
+  };
+
+  const centerWindow = (id: AppId) => {
+    sound.playClick();
+    const screenW = window.innerWidth;
+    const screenH = window.innerHeight;
+    const availableW = Math.max(400, screenW - 340);
+    const targetX = Math.max(16, Math.floor((availableW - 680) / 2));
+    const targetY = Math.max(16, Math.floor((screenH - 490 - 44) / 2));
+    moveWindow(id, targetX, targetY);
+    focusApp(id);
+  };
+
+  const sendToBack = (id: AppId) => {
+    sound.playClick();
+    setWindows((prev) => ({
+      ...prev,
+      [id]: { ...prev[id], zIndex: 10 },
+    }));
+  };
+
+  const deleteDownloadedFile = (fileName: string) => {
+    sound.playClick();
+    setDownloadedFiles((prev) => prev.filter((f) => f.name !== fileName));
+    addNotification('File Shredded', `${fileName} securely purged with zeros.`, 'warning');
+  };
+
+  const [terminalCommandToRun, setTerminalCommandToRun] = useState<string | null>(null);
+  const [inspectedFile, setInspectedFile] = useState<ServerFile | null>(null);
+
+  const executeTerminalCommand = (cmd: string) => {
+    sound.playTerminalExec();
+    setTerminalCommandToRun(cmd);
+    openApp('terminal');
+  };
+
+  const [contextMenu, setContextMenu] = useState<ContextMenuState>({
+    isOpen: false,
+    x: 0,
+    y: 0,
+    groups: [],
+  });
+
+  const showContextMenu = (e: React.MouseEvent, groups: ContextMenuGroup[]) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setContextMenu({
+      isOpen: true,
+      x: e.clientX,
+      y: e.clientY,
+      groups,
+    });
+  };
+
+  const hideContextMenu = () => {
+    setContextMenu((prev) => ({ ...prev, isOpen: false }));
+  };
+
   // Deep-linking helper for IntraWeb Browser
   const navigateBrowser = (page: IntraWebPage, query?: string, prefillEmail?: string) => {
     setBrowserPage(page);
@@ -1056,6 +1161,19 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         minimizeApp,
         focusApp,
         moveWindow,
+        minimizeAll,
+        resetWindowPositions,
+        centerWindow,
+        sendToBack,
+        contextMenu,
+        showContextMenu,
+        hideContextMenu,
+        deleteDownloadedFile,
+        inspectedFile,
+        setInspectedFile,
+        terminalCommandToRun,
+        executeTerminalCommand,
+        setTerminalCommandToRun,
         browserPage,
         browserSearchQuery,
         webmailPrefillEmail,

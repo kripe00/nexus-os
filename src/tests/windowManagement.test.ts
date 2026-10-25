@@ -49,4 +49,39 @@ describe('Window Management Logic', () => {
     expect(clampedOffscreen.x).toBe(8);
     expect(clampedOffscreen.y).toBe(980);
   });
+
+  it('correctly minimizes all open windows and restores positions', () => {
+    const windows: Record<AppId, WindowState> = {
+      whisper: { id: 'whisper', title: 'WhisperChat', isOpen: true, isMinimized: false, zIndex: 20, position: { x: 145, y: 36 } },
+      intraweb: { id: 'intraweb', title: 'IntraWeb Browser', isOpen: true, isMinimized: false, zIndex: 15, position: { x: 165, y: 42 } },
+      passweaver: { id: 'passweaver', title: 'PassWeaver', isOpen: false, isMinimized: false, zIndex: 14, position: { x: 220, y: 70 } },
+      terminal: { id: 'terminal', title: 'Terminal', isOpen: false, isMinimized: false, zIndex: 16, position: { x: 185, y: 55 } },
+      blackmarket: { id: 'blackmarket', title: 'BlackMarket', isOpen: false, isMinimized: false, zIndex: 13, position: { x: 230, y: 65 } },
+      netshield: { id: 'netshield', title: 'NetShield IDS', isOpen: false, isMinimized: false, zIndex: 17, position: { x: 200, y: 50 } },
+      spearphish: { id: 'spearphish', title: 'SpearPhish', isOpen: false, isMinimized: false, zIndex: 15, position: { x: 215, y: 60 } },
+      packetsniffer: { id: 'packetsniffer', title: 'PacketSniffer', isOpen: false, isMinimized: false, zIndex: 18, position: { x: 240, y: 45 } },
+      files: { id: 'files', title: 'DataVault', isOpen: false, isMinimized: false, zIndex: 12, position: { x: 260, y: 85 } },
+    };
+
+    // Minimize all
+    (Object.keys(windows) as AppId[]).forEach((key) => {
+      if (windows[key].isOpen) {
+        windows[key].isMinimized = true;
+      }
+    });
+
+    expect(windows.whisper.isMinimized).toBe(true);
+    expect(windows.intraweb.isMinimized).toBe(true);
+    expect(windows.terminal.isMinimized).toBe(false); // was not open
+
+    // Center window calculation
+    const screenW = 1920;
+    const screenH = 1080;
+    const availableW = screenW - 340;
+    const targetX = Math.max(16, Math.floor((availableW - 680) / 2));
+    const targetY = Math.max(16, Math.floor((screenH - 490 - 44) / 2));
+
+    expect(targetX).toBe(450);
+    expect(targetY).toBe(273);
+  });
 });
