@@ -344,11 +344,11 @@ const DesktopEnvironment: React.FC = () => {
             className="h-8 px-2.5 bg-[#111620] border border-[#21262d] text-[10px] text-[#79c0ff] font-mono flex items-center gap-1.5 cursor-pointer hover:border-[#58a6ff] transition-colors"
           >
             <Music className={`w-3.5 h-3.5 ${isMuted ? 'text-[#6e7681]' : 'text-[#58a6ff] animate-pulse'}`} />
-            <span className="hidden md:inline truncate max-w-[135px]">
+            <span className="hidden md:inline truncate max-w-[145px]">
               {isMuted
                 ? 'OST: MUTED'
                 : traceActive || underAttack
-                ? 'ACTIVE INTRUSION'
+                ? 'BEFORE THE LOCK'
                 : 'SILENT PERIMETER'}
             </span>
           </button>
