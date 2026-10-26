@@ -1,14 +1,45 @@
 // Tactical Neural Voice Synthesizer for NEXUS OS
-// Utilizing Web Speech API with zero external dependencies
+// Utilizing Web Speech API with natural, unwarped studio voices
+
+export interface VoiceOption {
+  name: string;
+  lang: string;
+  label: string;
+}
+
+const NOVELTY_VOICES = new Set([
+  "albert",
+  "bad news",
+  "bahh",
+  "bells",
+  "boing",
+  "bubbles",
+  "cellos",
+  "deranged",
+  "fred",
+  "good news",
+  "hysterical",
+  "junior",
+  "kathy",
+  "pipe organ",
+  "ralph",
+  "trinoids",
+  "whisper",
+  "zarvox",
+]);
 
 class VoiceSynthesizer {
   private synth: SpeechSynthesis | null = null;
-  public enabled: boolean = false; // Default disabled to maintain crisp soundtrack & avoid robotic TTS interruption
-  public volume: number = 0.7;
+  public enabled: boolean = true; // Enabled by default with high-quality voices
+  public volume: number = 0.75;
+  public selectedVoiceName: string = "";
   private selectedVoice: SpeechSynthesisVoice | null = null;
   private lastSpokenText: string = "";
   private lastSpokenTime: number = 0;
-  private listeners: Set<(state: { enabled: boolean; volume: number }) => void> = new Set();
+  private lastTransmissionTime: number = 0;
+  private listeners: Set<
+    (state: { enabled: boolean; volume: number; voiceName: string }) => void
+  > = new Set();
 
   constructor() {
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
@@ -16,6 +47,7 @@ class VoiceSynthesizer {
       try {
         this.synth.cancel();
       } catch {}
+
       this.initVoice();
       if (this.synth.onvoiceschanged !== undefined) {
         this.synth.onvoiceschanged = () => this.initVoice();
@@ -23,18 +55,49 @@ class VoiceSynthesizer {
     }
   }
 
-  public subscribe(cb: (state: { enabled: boolean; volume: number }) => void): () => void {
+  public subscribe(
+    cb: (state: { enabled: boolean; volume: number; voiceName: string }) => void,
+  ): () => void {
     this.listeners.add(cb);
-    cb({ enabled: this.enabled, volume: this.volume });
+    cb({
+      enabled: this.enabled,
+      volume: this.volume,
+      voiceName: this.selectedVoiceName,
+    });
     return () => this.listeners.delete(cb);
   }
 
   private notify() {
     this.listeners.forEach((cb) => {
       try {
-        cb({ enabled: this.enabled, volume: this.volume });
+        cb({
+          enabled: this.enabled,
+          volume: this.volume,
+          voiceName: this.selectedVoiceName,
+        });
       } catch {}
     });
+  }
+
+  public getAvailableVoices(): VoiceOption[] {
+    if (!this.synth) return [];
+    const voices = this.synth.getVoices();
+    if (!voices || voices.length === 0) return [];
+
+    return voices
+      .filter((v) => {
+        const lower = v.name.toLowerCase();
+        return (
+          v.lang.startsWith("en") &&
+          !NOVELTY_VOICES.has(lower) &&
+          !lower.includes("whisper")
+        );
+      })
+      .map((v) => ({
+        name: v.name,
+        lang: v.lang,
+        label: `${v.name} (${v.lang})`,
+      }));
   }
 
   private initVoice() {
@@ -42,20 +105,58 @@ class VoiceSynthesizer {
     const voices = this.synth.getVoices();
     if (!voices || voices.length === 0) return;
 
-    // Prioritize clean, crisp English robotic / assistant voices
-    const preferred = voices.find(
-      (v) =>
+    // Filter out joke / novelty voices
+    const naturalEnglish = voices.filter((v) => {
+      const lower = v.name.toLowerCase();
+      return (
         v.lang.startsWith("en") &&
-        (v.name.includes("Natural") ||
-          v.name.includes("UK English") ||
-          v.name.includes("Samantha") ||
-          v.name.includes("Daniel") ||
-          v.name.includes("Google UK") ||
-          v.name.includes("Google US")),
-    );
+        !NOVELTY_VOICES.has(lower) &&
+        !lower.includes("whisper")
+      );
+    });
 
-    this.selectedVoice =
-      preferred || voices.find((v) => v.lang.startsWith("en")) || voices[0];
+    if (naturalEnglish.length === 0) {
+      this.selectedVoice = voices[0];
+      this.selectedVoiceName = voices[0]?.name || "";
+      this.notify();
+      return;
+    }
+
+    // If user previously selected a voice that exists, retain it
+    if (this.selectedVoiceName) {
+      const existing = naturalEnglish.find((v) => v.name === this.selectedVoiceName);
+      if (existing) {
+        this.selectedVoice = existing;
+        return;
+      }
+    }
+
+    // Top choices on macOS / Chrome for tactical AI:
+    // 1. Daniel (British JARVIS-style, smooth and composed)
+    // 2. Samantha (US Siri / Tactical AI)
+    // 3. Serena / Karen / Google UK
+    const preferred =
+      naturalEnglish.find((v) => v.name.includes("Daniel")) ||
+      naturalEnglish.find((v) => v.name.includes("Samantha")) ||
+      naturalEnglish.find((v) => v.name.includes("Google UK English")) ||
+      naturalEnglish.find((v) => v.name.includes("Serena")) ||
+      naturalEnglish.find((v) => v.name.includes("Karen")) ||
+      naturalEnglish[0];
+
+    this.selectedVoice = preferred;
+    this.selectedVoiceName = preferred.name;
+    this.notify();
+  }
+
+  public setVoice(voiceName: string) {
+    if (!this.synth) return;
+    const voices = this.synth.getVoices();
+    const found = voices.find((v) => v.name === voiceName);
+    if (found) {
+      this.selectedVoice = found;
+      this.selectedVoiceName = found.name;
+      this.notify();
+    }
   }
 
   public setEnabled(enable: boolean) {
@@ -82,9 +183,9 @@ class VoiceSynthesizer {
   ) {
     if (!this.synth || !this.enabled || this.volume <= 0.05) return;
 
-    // Avoid repeating identical cues within 3 seconds
+    // Avoid repeating identical cues within 2 seconds
     const now = Date.now();
-    if (this.lastSpokenText === text && now - this.lastSpokenTime < 3000) {
+    if (this.lastSpokenText === text && now - this.lastSpokenTime < 2000) {
       return;
     }
     this.lastSpokenText = text;
@@ -100,62 +201,57 @@ class VoiceSynthesizer {
     }
     if (this.selectedVoice) {
       utterance.voice = this.selectedVoice;
+      utterance.lang = this.selectedVoice.lang || "en-US";
     }
 
     utterance.volume = this.volume;
-    utterance.rate = options?.rate ?? 1.05; // Snappy tactical delivery
-    utterance.pitch = options?.pitch ?? 0.88; // Deep, calm AI demeanor
+    // CRUCIAL: Pitch must be 1.0 (unwarped) to prevent metallic, distorted artifacts in browser TTS engines!
+    utterance.rate = options?.rate ?? 1.0;
+    utterance.pitch = options?.pitch ?? 1.0;
 
     this.synth.speak(utterance);
   }
 
-  // Tactical situational alerts
+  // Snappy, punchy military tactical callouts (2-3 words)
   public notifyTraceStart() {
-    this.speak("Warning: Neural trace initiated. Disconnect before triangulation.", {
-      priority: true,
-      rate: 1.1,
-      pitch: 0.85,
-    });
+    this.speak("Warning: Active trace.", { priority: true, rate: 1.05 });
   }
 
   public notifyTraceDanger() {
-    this.speak("Critical alert: Trace lock at eighty percent. Wipe logs immediately.", {
-      priority: true,
-      rate: 1.15,
-      pitch: 0.9,
-    });
+    this.speak("Critical: Trace lock imminent.", { priority: true, rate: 1.1 });
   }
 
-  public notifyHostCompromised(hostname?: string) {
-    const target = hostname ? hostname.replace(/[-_.]/g, " ") : "target";
-    this.speak(`Access granted. ${target} breached.`);
+  public notifyHostCompromised(_hostname?: string) {
+    this.speak("Target compromised.");
   }
 
-  public notifyFileExfiltrated(filename?: string) {
-    this.speak("Data packet exfiltrated to vault.");
+  public notifyFileExfiltrated(_filename?: string) {
+    this.speak("Data exfiltrated.");
   }
 
   public notifyUnderAttack() {
-    this.speak("Perimeter alarm. Hostile hunter drone detected. Deploy honeypot countermeasures.", {
-      priority: true,
-      rate: 1.1,
-    });
+    this.speak("Perimeter alert: Drone detected.", { priority: true, rate: 1.05 });
   }
 
   public notifyDroneCaptured() {
-    this.speak("Hostile drone trapped in honeypot containment.");
+    this.speak("Target trapped in honeypot.");
   }
 
-  public notifyTransmission(_sender: string) {
-    // Disabled: chat transmissions rely on synthesizer pager SFX rather than jarring TTS
+  public notifyTransmission(_sender?: string) {
+    const now = Date.now();
+    // Only speak once every 10 seconds so rapid messages don't spam
+    if (now - this.lastTransmissionTime > 10000) {
+      this.lastTransmissionTime = now;
+      this.speak("Incoming transmission.", { rate: 1.0 });
+    }
   }
 
   public notifyBountyCleared() {
-    this.speak("Freelance bounty cleared. Crypto reward transferred.");
+    this.speak("Bounty secured.");
   }
 
-  public notifyChapterComplete(chapterName: string) {
-    this.speak(`Operation complete. ${chapterName} secured.`);
+  public notifyChapterComplete(_chapterName?: string) {
+    this.speak("Operation secured.");
   }
 }
 

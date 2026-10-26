@@ -35,10 +35,16 @@ export const AudioMixerPopover: React.FC<AudioMixerPopoverProps> = ({ onClose })
   } = useGame();
 
   const [isPlaying, setIsPlaying] = useState<boolean>(() => sound.isMusicPlaying());
-  const [voiceState, setVoiceState] = useState<{ enabled: boolean; volume: number }>({
+  const [voiceState, setVoiceState] = useState<{
+    enabled: boolean;
+    volume: number;
+    voiceName: string;
+  }>({
     enabled: voice.enabled,
     volume: voice.volume,
+    voiceName: voice.selectedVoiceName,
   });
+  const [availableVoices, setAvailableVoices] = useState(() => voice.getAvailableVoices());
 
   useEffect(() => {
     const unsubSound = sound.subscribe((playing) => {
@@ -46,6 +52,7 @@ export const AudioMixerPopover: React.FC<AudioMixerPopoverProps> = ({ onClose })
     });
     const unsubVoice = voice.subscribe((vs) => {
       setVoiceState(vs);
+      setAvailableVoices(voice.getAvailableVoices());
     });
     return () => {
       unsubSound();
@@ -58,7 +65,7 @@ export const AudioMixerPopover: React.FC<AudioMixerPopoverProps> = ({ onClose })
   };
 
   const handleTestVoice = () => {
-    voice.speak('Neural voice synthesizer operational. All channels secure.', { priority: true });
+    voice.speak('Voice active. Transmission ready.', { priority: true });
   };
 
   const handleToggleMusicMute = () => {
@@ -232,6 +239,26 @@ export const AudioMixerPopover: React.FC<AudioMixerPopoverProps> = ({ onClose })
             {!voiceState.enabled ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
           </button>
         </div>
+
+        {voiceState.enabled && availableVoices.length > 0 && (
+          <div className="pt-0.5">
+            <select
+              value={voiceState.voiceName}
+              onChange={(e) => {
+                voice.setVoice(e.target.value);
+                sound.playClick();
+                voice.speak('Voice profile updated.', { priority: true });
+              }}
+              className="w-full py-1 px-1.5 bg-[#07090e] border border-[#261f14] text-[#e3b341] text-[10px] focus:outline-none focus:border-[#d29922] font-mono cursor-pointer"
+            >
+              {availableVoices.map((v) => (
+                <option key={v.name} value={v.name} className="bg-[#0c0f16] text-[#d4d7dc]">
+                  {v.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {/* Footer controls: Test beep, Test Voice & Master mute */}
