@@ -38,7 +38,7 @@ class SoundEngine {
   public initMusic() {
     if (typeof window === "undefined") return;
     if (!this.ambientAudio || this.ambientAudio.error) {
-      this.ambientAudio = new Audio("/audio/ambient_theme.mp3");
+      this.ambientAudio = new Audio("/audio/ambient_theme.mp3?v=swap");
       this.ambientAudio.loop = true;
       this.ambientAudio.preload = "auto";
       this.ambientAudio.addEventListener("play", () => this.notifyState());
@@ -51,7 +51,7 @@ class SoundEngine {
       this.applyMusicVolume();
     }
     if (!this.traceAudio || this.traceAudio.error) {
-      this.traceAudio = new Audio("/audio/active_trace_theme.mp3");
+      this.traceAudio = new Audio("/audio/active_trace_theme.mp3?v=swap");
       this.traceAudio.loop = true;
       this.traceAudio.preload = "auto";
       this.traceAudio.addEventListener("play", () => this.notifyState());
