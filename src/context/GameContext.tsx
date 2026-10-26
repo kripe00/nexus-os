@@ -321,6 +321,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setChatHistory(saved.chatHistory);
     }
     if (typeof saved.campaignFinished === 'boolean') setCampaignFinished(saved.campaignFinished);
+    if (typeof saved.firewallHealth === 'number') setFirewallHealth(saved.firewallHealth);
+    if (typeof saved.honeypotActive === 'boolean') setHoneypotActive(saved.honeypotActive);
+    if (typeof saved.capturedAttackerIp === 'string' || saved.capturedAttackerIp === null) {
+      setCapturedAttackerIp(saved.capturedAttackerIp);
+    }
+    if (Array.isArray(saved.successfulPhishes)) setSuccessfulPhishes(saved.successfulPhishes);
+    if (Array.isArray(saved.activeProxyChain)) setActiveProxyChain(saved.activeProxyChain);
   };
 
   const applyAudioSettings = (audio: { musicVolume?: number; sfxVolume?: number; muted?: boolean }) => {
@@ -463,6 +470,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         chatHistory,
         campaignFinished,
         activeProxyChain,
+        firewallHealth,
+        honeypotActive,
+        capturedAttackerIp,
+        successfulPhishes,
       };
       fetch('/api/save', {
         method: 'POST',
@@ -488,6 +499,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     chatHistory,
     campaignFinished,
     activeProxyChain,
+    firewallHealth,
+    honeypotActive,
+    capturedAttackerIp,
+    successfulPhishes,
   ]);
 
   // Step-by-step Briefing Message Streamer (when missionStage === 'briefing')
@@ -570,6 +585,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const activateHoneypot = () => {
     setHoneypotActive(true);
     setCapturedAttackerIp('141.98.11.200');
+    sound.playHoneypotTrap();
+    setDiscoveredClues((prev) => {
+      if (prev.some((c) => c.id === 'clue_hunter_drone_ip')) return prev;
+      const droneClue = ALL_CLUES.clue_hunter_drone_ip;
+      return droneClue ? [...prev, droneClue] : prev;
+    });
     addNotification('Honeypot Active', 'Attacker isolated: 141.98.11.200 trapped!', 'mission');
   };
 
@@ -1189,6 +1210,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLogsDirtyOnServer({});
     setTraceActive(false);
     setTracePercent(0);
+    setUnderAttack(false);
+    setFirewallHealth(100);
+    setHoneypotActive(false);
+    setCapturedAttackerIp(null);
+    setSuccessfulPhishes([]);
+    setActiveProxyChain(['node_zurich', 'node_montreal']);
     setCurrentMissionIndex(0);
     setMissionStage('briefing');
     setCompletedMissionIds([]);

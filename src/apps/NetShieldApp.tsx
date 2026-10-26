@@ -45,7 +45,7 @@ export const NetShieldApp: React.FC = () => {
   };
 
   const handleHoneypot = () => {
-    if (deployingHoneypot || honeypotActive) return;
+    if (deployingHoneypot) return;
     setDeployingHoneypot(true);
     sound.playKey();
     setTimeout(() => {
@@ -55,7 +55,7 @@ export const NetShieldApp: React.FC = () => {
       if (!discoveredClues.some((c) => c.id === 'clue_hunter_drone_ip')) {
         discoverClue('clue_hunter_drone_ip');
       }
-    }, 1200);
+    }, 600);
   };
 
   const routeDroneToTerminal = () => {
@@ -102,14 +102,32 @@ export const NetShieldApp: React.FC = () => {
             </div>
           </div>
 
-          <div
-            className={`px-3 py-1 font-bold text-xs uppercase border ${
-              underAttack
-                ? 'bg-[#ff3b3b] text-white border-[#ff5555]'
-                : 'bg-[#122117] text-[#3fb950] border-[#238636]'
-            }`}
-          >
-            {underAttack ? 'UNDER ATTACK' : 'ARMED & MONITORING'}
+          <div className="flex items-center gap-2 shrink-0">
+            {underAttack && (
+              <button
+                onClick={handleHoneypot}
+                disabled={deployingHoneypot}
+                className="px-3 py-1.5 bg-[#ff3b3b] hover:bg-[#ff5555] text-white font-bold text-xs uppercase cursor-pointer border border-white flex items-center gap-1.5 transition-all shadow-[0_0_12px_rgba(255,59,59,0.7)] animate-bounce"
+              >
+                <Zap className="w-3.5 h-3.5" />
+                <span>
+                  {deployingHoneypot
+                    ? 'DEPLOYING...'
+                    : capturedAttackerIp
+                    ? 'RE-ARM HONEYPOT'
+                    : '⚡ TRAP DRONE NOW'}
+                </span>
+              </button>
+            )}
+            <div
+              className={`px-3 py-1 font-bold text-xs uppercase border ${
+                underAttack
+                  ? 'bg-[#ff3b3b] text-white border-[#ff5555]'
+                  : 'bg-[#122117] text-[#3fb950] border-[#238636]'
+              }`}
+            >
+              {underAttack ? 'UNDER ATTACK' : 'ARMED & MONITORING'}
+            </div>
           </div>
         </div>
 
@@ -261,18 +279,27 @@ export const NetShieldApp: React.FC = () => {
 
             <button
               onClick={handleHoneypot}
-              disabled={honeypotActive || deployingHoneypot}
-              className={`px-3 py-1.5 font-bold text-xs uppercase border cursor-pointer transition-colors ${
-                honeypotActive
-                  ? 'bg-[#122117] text-[#3fb950] border-[#238636]'
+              disabled={deployingHoneypot}
+              className={`px-3.5 py-1.5 font-bold text-xs uppercase border cursor-pointer transition-colors flex items-center gap-1.5 ${
+                deployingHoneypot
+                  ? 'bg-[#1f293b] text-[#79c0ff] border-[#58a6ff] animate-pulse'
+                  : underAttack && !capturedAttackerIp
+                  ? 'bg-[#ff3b3b] hover:bg-[#ff5555] text-white border-white animate-bounce shadow-[0_0_12px_rgba(255,59,59,0.5)]'
+                  : honeypotActive && capturedAttackerIp
+                  ? 'bg-[#122117] text-[#3fb950] border-[#238636] hover:bg-[#193322]'
                   : 'bg-[#238636] hover:bg-[#2ea043] text-white border-[#3fb950]'
               }`}
             >
-              {deployingHoneypot
-                ? 'DEPLOYING SENSORS...'
-                : honeypotActive
-                ? 'HONEYPOT TRAP ACTIVE'
-                : 'DEPLOY HONEYPOT TRAP'}
+              <Zap className="w-3.5 h-3.5" />
+              <span>
+                {deployingHoneypot
+                  ? 'DEPLOYING SENSORS...'
+                  : underAttack && !capturedAttackerIp
+                  ? '⚡ TRAP INCOMING ATTACK'
+                  : honeypotActive && capturedAttackerIp
+                  ? 'HONEYPOT TRAP ACTIVE (RE-DEPLOY)'
+                  : 'DEPLOY HONEYPOT TRAP'}
+              </span>
             </button>
           </div>
 

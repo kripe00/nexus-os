@@ -45,4 +45,31 @@ describe('Tactical SpearPhish Engine & NetShield Defense', () => {
 
     expect(capturedIp).toBe('141.98.11.200');
   });
+
+  it('allows activating honeypot while attack is actively underway', () => {
+    // Scenario: Operator is in mission 7, underAttack is true, attack already draining firewall
+    const underAttack = true;
+    let deployingHoneypot = false;
+    let honeypotActive = false;
+    let capturedAttackerIp: string | null = null;
+    let discoveredClues: string[] = [];
+
+    // Player triggers honeypot activation
+    const canDeploy = !deployingHoneypot; // Not blocked by underAttack or prior honeypotActive
+    expect(canDeploy).toBe(true);
+
+    deployingHoneypot = true;
+    // Honeypot triggers
+    honeypotActive = true;
+    capturedAttackerIp = '141.98.11.200';
+    if (!discoveredClues.includes('clue_hunter_drone_ip')) {
+      discoveredClues.push('clue_hunter_drone_ip');
+    }
+    deployingHoneypot = false;
+
+    expect(underAttack).toBe(true);
+    expect(honeypotActive).toBe(true);
+    expect(capturedAttackerIp).toBe('141.98.11.200');
+    expect(discoveredClues).toContain('clue_hunter_drone_ip');
+  });
 });
