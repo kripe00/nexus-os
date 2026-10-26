@@ -1,5 +1,5 @@
 // Tactical Neural Voice Synthesizer for NEXUS OS
-// Utilizing Web Speech API with natural, unwarped studio voices
+// Utilizing Web Speech API with strict English studio voices (guaranteeing no Norwegian/local system voice fallback)
 
 export interface VoiceOption {
   name: string;
@@ -26,13 +26,16 @@ const NOVELTY_VOICES = new Set([
   "trinoids",
   "whisper",
   "zarvox",
+  "nora",
+  "henrik",
+  "stine",
 ]);
 
 class VoiceSynthesizer {
   private synth: SpeechSynthesis | null = null;
-  public enabled: boolean = true; // Enabled by default with high-quality voices
-  public volume: number = 0.75;
-  public selectedVoiceName: string = "";
+  public enabled: boolean = true;
+  public volume: number = 0.85;
+  public selectedVoiceName: string = "Daniel";
   private selectedVoice: SpeechSynthesisVoice | null = null;
   private lastSpokenText: string = "";
   private lastSpokenTime: number = 0;
@@ -48,9 +51,14 @@ class VoiceSynthesizer {
         this.synth.cancel();
       } catch {}
 
-      this.initVoice();
+      const savedVoice = localStorage.getItem("nexus_voice_name");
+      if (savedVoice) {
+        this.selectedVoiceName = savedVoice;
+      }
+
+      this.resolveEnglishVoice();
       if (this.synth.onvoiceschanged !== undefined) {
-        this.synth.onvoiceschanged = () => this.initVoice();
+        this.synth.onvoiceschanged = () => this.resolveEnglishVoice();
       }
     }
   }
@@ -79,82 +87,75 @@ class VoiceSynthesizer {
     });
   }
 
-  public getAvailableVoices(): VoiceOption[] {
+  // Strictly filter for English voices (ignoring Nora, Henrik, or other non-English system voices)
+  private getEnglishVoices(): SpeechSynthesisVoice[] {
     if (!this.synth) return [];
-    const voices = this.synth.getVoices();
-    if (!voices || voices.length === 0) return [];
+    const all = this.synth.getVoices();
+    if (!all || all.length === 0) return [];
 
-    return voices
-      .filter((v) => {
-        const lower = v.name.toLowerCase();
-        return (
-          v.lang.startsWith("en") &&
-          !NOVELTY_VOICES.has(lower) &&
-          !lower.includes("whisper")
-        );
-      })
-      .map((v) => ({
-        name: v.name,
-        lang: v.lang,
-        label: `${v.name} (${v.lang})`,
-      }));
+    return all.filter((v) => {
+      const lowerName = v.name.toLowerCase();
+      const lowerLang = (v.lang || "").toLowerCase().replace("_", "-");
+      const isEnglish = lowerLang.startsWith("en");
+      return isEnglish && !NOVELTY_VOICES.has(lowerName);
+    });
   }
 
-  private initVoice() {
-    if (!this.synth) return;
-    const voices = this.synth.getVoices();
-    if (!voices || voices.length === 0) return;
+  public getAvailableVoices(): VoiceOption[] {
+    const english = this.getEnglishVoices();
+    return english.map((v) => ({
+      name: v.name,
+      lang: v.lang,
+      label: `${v.name} (${v.lang.replace("_", "-")})`,
+    }));
+  }
 
-    // Filter out joke / novelty voices
-    const naturalEnglish = voices.filter((v) => {
-      const lower = v.name.toLowerCase();
-      return (
-        v.lang.startsWith("en") &&
-        !NOVELTY_VOICES.has(lower) &&
-        !lower.includes("whisper")
-      );
-    });
+  private resolveEnglishVoice() {
+    const english = this.getEnglishVoices();
+    if (english.length === 0) return;
 
-    if (naturalEnglish.length === 0) {
-      this.selectedVoice = voices[0];
-      this.selectedVoiceName = voices[0]?.name || "";
-      this.notify();
-      return;
-    }
-
-    // If user previously selected a voice that exists, retain it
+    // Check if user's saved preference exists in English voices
     if (this.selectedVoiceName) {
-      const existing = naturalEnglish.find((v) => v.name === this.selectedVoiceName);
-      if (existing) {
-        this.selectedVoice = existing;
+      const match = english.find((v) => v.name === this.selectedVoiceName);
+      if (match) {
+        this.selectedVoice = match;
+        this.notify();
         return;
       }
     }
 
-    // Top choices on macOS / Chrome for tactical AI:
-    // 1. Daniel (British JARVIS-style, smooth and composed)
-    // 2. Samantha (US Siri / Tactical AI)
+    // Top tactical AI voices on macOS / Chrome:
+    // 1. Daniel (British JARVIS - calm, masculine, authentic UK accent)
+    // 2. Samantha (US Command Siri - clean, crisp American accent)
     // 3. Serena / Karen / Google UK
     const preferred =
-      naturalEnglish.find((v) => v.name.includes("Daniel")) ||
-      naturalEnglish.find((v) => v.name.includes("Samantha")) ||
-      naturalEnglish.find((v) => v.name.includes("Google UK English")) ||
-      naturalEnglish.find((v) => v.name.includes("Serena")) ||
-      naturalEnglish.find((v) => v.name.includes("Karen")) ||
-      naturalEnglish[0];
+      english.find((v) => v.name.includes("Daniel")) ||
+      english.find((v) => v.name.includes("Samantha")) ||
+      english.find((v) => v.name.includes("Google UK English")) ||
+      english.find((v) => v.name.includes("Serena")) ||
+      english.find((v) => v.name.includes("Karen")) ||
+      english.find((v) => v.name.includes("Moira")) ||
+      english[0];
 
-    this.selectedVoice = preferred;
-    this.selectedVoiceName = preferred.name;
-    this.notify();
+    if (preferred) {
+      this.selectedVoice = preferred;
+      this.selectedVoiceName = preferred.name;
+      try {
+        localStorage.setItem("nexus_voice_name", preferred.name);
+      } catch {}
+      this.notify();
+    }
   }
 
   public setVoice(voiceName: string) {
-    if (!this.synth) return;
-    const voices = this.synth.getVoices();
-    const found = voices.find((v) => v.name === voiceName);
+    const english = this.getEnglishVoices();
+    const found = english.find((v) => v.name === voiceName);
     if (found) {
       this.selectedVoice = found;
       this.selectedVoiceName = found.name;
+      try {
+        localStorage.setItem("nexus_voice_name", found.name);
+      } catch {}
       this.notify();
     }
   }
@@ -183,9 +184,9 @@ class VoiceSynthesizer {
   ) {
     if (!this.synth || !this.enabled || this.volume <= 0.05) return;
 
-    // Avoid repeating identical cues within 2 seconds
+    // Avoid duplicate cues within 2.5 seconds
     const now = Date.now();
-    if (this.lastSpokenText === text && now - this.lastSpokenTime < 2000) {
+    if (this.lastSpokenText === text && now - this.lastSpokenTime < 2500) {
       return;
     }
     this.lastSpokenText = text;
@@ -195,24 +196,33 @@ class VoiceSynthesizer {
       this.synth.cancel();
     }
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    if (!this.selectedVoice) {
-      this.initVoice();
-    }
-    if (this.selectedVoice) {
-      utterance.voice = this.selectedVoice;
-      utterance.lang = this.selectedVoice.lang || "en-US";
+    // Always guarantee an authentic English voice is bound
+    if (
+      !this.selectedVoice ||
+      !this.selectedVoice.lang.toLowerCase().startsWith("en")
+    ) {
+      this.resolveEnglishVoice();
     }
 
+    // If voices are still loading from the browser, skip to prevent Nora/Norwegian fallback
+    if (!this.selectedVoice) {
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.voice = this.selectedVoice;
+    // Explicit English language tag:
+    utterance.lang = this.selectedVoice.lang || "en-GB";
+
     utterance.volume = this.volume;
-    // CRUCIAL: Pitch must be 1.0 (unwarped) to prevent metallic, distorted artifacts in browser TTS engines!
+    // Studio-clean pitch and rate (1.0 = clean, un-distorted human delivery)
     utterance.rate = options?.rate ?? 1.0;
     utterance.pitch = options?.pitch ?? 1.0;
 
     this.synth.speak(utterance);
   }
 
-  // Snappy, punchy military tactical callouts (2-3 words)
+  // Snappy, military tactical callouts
   public notifyTraceStart() {
     this.speak("Warning: Active trace.", { priority: true, rate: 1.05 });
   }
@@ -239,10 +249,9 @@ class VoiceSynthesizer {
 
   public notifyTransmission(_sender?: string) {
     const now = Date.now();
-    // Only speak once every 10 seconds so rapid messages don't spam
-    if (now - this.lastTransmissionTime > 10000) {
+    if (now - this.lastTransmissionTime > 8000) {
       this.lastTransmissionTime = now;
-      this.speak("Incoming transmission.", { rate: 1.0 });
+      this.speak("Incoming transmission.");
     }
   }
 
