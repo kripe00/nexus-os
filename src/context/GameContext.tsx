@@ -25,6 +25,7 @@ import {
 } from "../types/game";
 import { ContextMenuGroup, ContextMenuState } from "../components/ContextMenu";
 import { sound } from "../utils/sound";
+import { voice } from "../utils/voice";
 
 export type IntraWebPage =
   | "search"
@@ -447,6 +448,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
     const bounty = BOUNTY_CONTRACTS.find((b) => b.id === bountyId);
     if (!bounty) return;
     sound.playCryptoCoin();
+    voice.notifyBountyCleared();
     setCompletedBounties((prev) => [...prev, bountyId]);
     setCrypto((c) => c + bounty.rewardCrypto);
     addNotification(
@@ -458,6 +460,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const chooseEnding = (ending: "purge" | "subjugate" | "leak") => {
     sound.playSuccess();
+    voice.speak("Campaign resolution locked. World status updated.", { priority: true });
     setChosenEnding(ending);
     setCampaignFinished(true);
     if (ending === "subjugate") {
@@ -799,6 +802,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
     const nextMsg = remaining[0];
     const timer = setTimeout(() => {
       sound.playMessage();
+      if (nextMsg.sender !== "player" && nextMsg.sender !== "system") {
+        voice.notifyTransmission(nextMsg.senderName);
+      }
       setChatHistory((prev) => {
         if (prev.some((p) => p.id === nextMsg.id)) return prev;
         return [...prev, nextMsg];
@@ -841,6 +847,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
       setUnderAttack(true);
       setCamStatus("active");
       sound.playDroneRotors();
+      voice.notifyUnderAttack();
     } else {
       setUnderAttack(false);
       setCamStatus("off");
@@ -941,6 +948,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
     setHoneypotActive(true);
     setCapturedAttackerIp("141.98.11.200");
     sound.playHoneypotTrap();
+    voice.notifyDroneCaptured();
     setDiscoveredClues((prev) => {
       if (prev.some((c) => c.id === "clue_hunter_drone_ip")) return prev;
       const droneClue = ALL_CLUES.clue_hunter_drone_ip;
@@ -975,6 +983,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     if (!traceActive) return;
 
+    voice.notifyTraceStart();
+    let dangerWarningSpoken = false;
+
     const hasVpn = ownedTools.includes("proxy_shield_v1");
     const proxyDampener = Math.max(0.25, 1 - activeProxyChain.length * 0.2);
     const speedMultiplier = (hasVpn ? 0.5 : 1.0) * proxyDampener;
@@ -988,6 +999,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
           if (next >= 65) {
             sound.playTraceHeartbeat();
           }
+        }
+        if (next >= 80 && !dangerWarningSpoken) {
+          dangerWarningSpoken = true;
+          voice.notifyTraceDanger();
         }
         if (next >= 100) {
           clearInterval(interval);
@@ -1606,13 +1621,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const markPortCracked = (ip: string, port: number) => {
     sound.playSuccess();
+    const node = SERVER_NODES[ip];
+    voice.notifyHostCompromised(node?.hostname);
     setCrackedPorts((prev) => {
       const existing = prev[ip] || [];
       if (existing.includes(port)) return prev;
       return { ...prev, [ip]: [...existing, port] };
     });
 
-    const node = SERVER_NODES[ip];
     if (node?.triggersTrace) {
       setLogsDirtyOnServer((prev) => ({ ...prev, [ip]: true }));
       if (!traceActive) {
@@ -1650,6 +1666,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
   const downloadServerFile = (file: ServerFile) => {
     if (!downloadedFiles.some((f) => f.name === file.name)) {
       sound.playSuccess();
+      voice.notifyFileExfiltrated(file.name);
       setDownloadedFiles((prev) => [...prev, file]);
       addNotification(
         "File Exfiltrated",

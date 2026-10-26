@@ -39,9 +39,15 @@ export const SmartTerminalApp: React.FC = () => {
     openApp,
     terminalCommandToRun,
     setTerminalCommandToRun,
+    activeProxyChain,
+    underAttack,
+    crypto,
+    currentUser,
   } = useGame();
 
   const [input, setInput] = useState("");
+  const [history, setHistory] = useState<string[]>([]);
+  const [historyIndex, setHistoryIndex] = useState<number>(-1);
   const [busyTask, setBusyTask] = useState<{
     label: string;
     progress: number;
@@ -111,6 +117,9 @@ export const SmartTerminalApp: React.FC = () => {
     if (!cmdLine) return;
 
     sound.playTerminalExec();
+    setHistory((prev) => (prev[prev.length - 1] === cmdLine ? prev : [...prev, cmdLine]));
+    setHistoryIndex(-1);
+
     const promptPrefix = connectedIp
       ? `root@${connectedIp}:~#`
       : `operator@nexus:~#`;
@@ -125,16 +134,30 @@ export const SmartTerminalApp: React.FC = () => {
         appendLog(
           "info",
           [
+            "======================= NEXUS TACTICAL SHELL =======================",
             "CORE INTRUSION COMMANDS:",
             "  scan <ip>          - SYN port scan & security fingerprint",
-            "  crack <port>       - Execute binary exploit against port (22 / 443)",
+            "  crack <port>       - Execute binary exploit against port (22 / 443 / 80 / 502)",
             "  connect <ip>       - Mount remote root shell on compromised host",
             "  ls                 - List directory contents on remote filesystem",
             "  cat <filename>     - Dump plaintext file to stdout",
             "  download <file>    - Exfiltrate remote file to local DataVault",
             "  wipe_logs          - Zero out /var/connection.log & halt Active Trace",
             "  disconnect         - Terminate remote SSH tunnel",
-            "  clear              - Flush stdout buffer",
+            "",
+            "TACTICAL RECON & NETWORKING:",
+            "  ping <ip>          - Send ICMP echo requests to verify node responsiveness",
+            "  traceroute <ip>    - Trace packet hops through active proxy relays",
+            "  netstat            - Display active network sockets, ports & hostile probes",
+            "",
+            "SYSTEM & TELEMETRY:",
+            "  top / htop         - Live CPU, memory, and rogue process monitor",
+            "  whoami             - Display current identity, UID, privileges & wallet",
+            "  uname -a           - Print kernel release, architecture & OS version",
+            "  matrix             - Spurt cascading digital phosphorescent rain",
+            "  clear              - Flush terminal output buffer",
+            "====================================================================",
+            "PRO TIP: Press [TAB] for smart autocompletion. Use [↑] and [↓] for command history.",
           ].join("\n"),
         );
         break;
@@ -444,12 +467,342 @@ export const SmartTerminalApp: React.FC = () => {
         break;
       }
 
+      case "ping": {
+        const targetIp = arg || terminalSelectedIp || "127.0.0.1";
+        const node = SERVER_NODES[targetIp];
+        const isLocal = targetIp === "127.0.0.1" || targetIp === "localhost";
+        runWithProgress(`PINGING ${targetIp} WITH 64 BYTES...`, 900, () => {
+          if (!node && !isLocal && !scannedIps.includes(targetIp)) {
+            sound.playError();
+            appendLog(
+              "error",
+              [
+                `PING ${targetIp} (${targetIp}): 56 data bytes`,
+                `Request timeout for icmp_seq 0`,
+                `Request timeout for icmp_seq 1`,
+                `--- ${targetIp} ping statistics ---`,
+                `4 packets transmitted, 0 packets received, 100.0% packet loss`,
+              ].join("\n"),
+            );
+          } else {
+            sound.playSuccess();
+            const latency = isLocal ? "0.08" : (14.2 + Math.random() * 8).toFixed(2);
+            appendLog(
+              "success",
+              [
+                `PING ${targetIp} (${node ? node.hostname : "localhost"}): 56 data bytes`,
+                `64 bytes from ${targetIp}: icmp_seq=0 ttl=64 time=${latency} ms`,
+                `64 bytes from ${targetIp}: icmp_seq=1 ttl=64 time=${(parseFloat(latency) + 0.3).toFixed(2)} ms`,
+                `64 bytes from ${targetIp}: icmp_seq=2 ttl=64 time=${(parseFloat(latency) - 0.2).toFixed(2)} ms`,
+                `64 bytes from ${targetIp}: icmp_seq=3 ttl=64 time=${(parseFloat(latency) + 0.1).toFixed(2)} ms`,
+                `--- ${targetIp} ping statistics ---`,
+                `4 packets transmitted, 4 packets received, 0.0% packet loss, round-trip avg ${latency} ms`,
+              ].join("\n"),
+            );
+          }
+        });
+        break;
+      }
+
+      case "traceroute": {
+        const targetIp = arg || terminalSelectedIp || "203.0.113.88";
+        const node = SERVER_NODES[targetIp];
+        runWithProgress(`TRACING ROUTE TO ${targetIp}...`, 1200, () => {
+          sound.playSuccess();
+          const proxyHops = activeProxyChain.map((p, idx) => {
+            const ms = (5.4 + idx * 8.2).toFixed(2);
+            return ` ${idx + 2}  ${p.replace("node_", "").toUpperCase()}-RELAY.darknet (${140 + idx}.70.118.${20 + idx})  ${ms} ms  ${ms} ms`;
+          });
+          const targetMs = (15 + activeProxyChain.length * 8.5).toFixed(2);
+          const finalHop = ` ${activeProxyChain.length + 2}  ${targetIp} (${node?.hostname || "destination-gateway"})  ${targetMs} ms  ${targetMs} ms [REACHED]`;
+          appendLog(
+            "info",
+            [
+              `traceroute to ${targetIp} (${node?.hostname || targetIp}), 30 hops max, 60 byte packets`,
+              ` 1  10.0.0.1 (nexus-internal-gw)  0.784 ms  0.612 ms  0.550 ms`,
+              ...proxyHops,
+              finalHop,
+            ].join("\n"),
+          );
+        });
+        break;
+      }
+
+      case "netstat": {
+        const rows = [
+          "Active Internet connections (servers and established)",
+          "Proto Recv-Q Send-Q Local Address          Foreign Address        State       PID/Program name",
+          "tcp        0      0 127.0.0.1:3001         0.0.0.0:*              LISTEN      49750/nexus-backend",
+          "tcp        0      0 127.0.0.1:5173         0.0.0.0:*              LISTEN      50249/vite-desktop",
+          "tcp        0      0 10.0.0.4:58210         127.0.0.1:3001         ESTABLISHED 1001/nexus-shell",
+        ];
+        if (connectedIp) {
+          const node = SERVER_NODES[connectedIp];
+          rows.push(
+            `tcp        0      0 10.0.0.4:49152         ${connectedIp}:${node?.requiredPort || 22}    ESTABLISHED 1001/ssh-tunnel-root`,
+          );
+        }
+        if (traceActive) {
+          rows.push(
+            `tcp        0    842 10.0.0.4:53991         203.0.113.88:443       SYN_SENT    [ROGUE IC_TRACE_PROBE]`,
+          );
+        }
+        if (underAttack) {
+          rows.push(
+            `udp        0      0 0.0.0.0:9001           141.98.11.200:9001     ESTABLISHED [HUNTER_DRONE_RECON]`,
+          );
+        }
+        appendLog(traceActive ? "warn" : "info", rows.join("\n"));
+        break;
+      }
+
+      case "top":
+      case "htop": {
+        const memUsed = 1240;
+        const memTotal = 8192;
+        const lines = [
+          `top - 23:42:01 up 14 days,  1 user,  load average: ${traceActive ? "4.82, 3.12, 1.45" : "0.42, 0.35, 0.20"}`,
+          `Tasks: 184 total,   ${traceActive ? "3" : "1"} running, 181 sleeping,   0 stopped,   0 zombie`,
+          `%Cpu(s): ${traceActive ? "82.4" : "4.2"} us,  ${traceActive ? "14.1" : "1.8"} sy,  0.0 ni, ${traceActive ? "3.5" : "94.0"} id,  0.0 wa`,
+          `MiB Mem :  ${memTotal}.0 total,  ${memTotal - memUsed}.0 free,   ${memUsed}.0 used,    512.0 buff/cache`,
+          "",
+          "  PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND",
+          ` 1001 operator  20   0  524108  48220  24110 S   ${traceActive ? "12.4" : "1.2"}   0.6   0:14.22 smart-terminal`,
+          " 4975 operator  20   0  384110  68940  18200 S   0.8   0.8   0:08.41 nexus-sqlite-srv",
+          " 1002 operator  20   0  210400  32100  14500 S   0.4   0.4   0:02.10 whisper-daemon",
+          " 1003 operator  20   0  180200  28400  12000 S   0.2   0.3   0:01.88 audio-synthesizer",
+        ];
+        if (traceActive) {
+          lines.push(
+            " 9999 daemon    20   0  892400 148200  12400 R  84.2   1.8   0:04.12 ouroboros_trace_daemon",
+          );
+        }
+        if (underAttack) {
+          lines.push(
+            " 8821 daemon    20   0  420100  94100   8200 S  18.5   1.1   0:01.95 drone_packet_injector",
+          );
+        }
+        appendLog(traceActive ? "warn" : "info", lines.join("\n"));
+        break;
+      }
+
+      case "matrix":
+      case "cmatrix": {
+        sound.playSuccess();
+        const chars = "ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ1234567890ABCDEF$#%&*+-/=";
+        const makeLine = () =>
+          Array.from(
+            { length: 42 },
+            () => chars[Math.floor(Math.random() * chars.length)],
+          ).join(" ");
+        appendLog(
+          "success",
+          [
+            makeLine(),
+            makeLine(),
+            makeLine(),
+            makeLine(),
+            makeLine(),
+            makeLine(),
+            makeLine(),
+            makeLine(),
+            "[*] MATRIX CYBERPUNK PHOSPHOR EMULATION // STREAM ACTIVE",
+          ].join("\n"),
+        );
+        break;
+      }
+
+      case "whoami": {
+        const username = currentUser?.username || "OPERATOR";
+        if (connectedIp) {
+          appendLog(
+            "success",
+            [
+              `root@${connectedIp} (REMOTE ROOT ACCESS)`,
+              `uid=0(root) gid=0(root) groups=0(root),1(bin),2(daemon)`,
+              `SECURITY_CLEARANCE: LEVEL_5_RESTRICTED`,
+              `SESSION_ID: tty_pts_${connectedIp.replace(/\./g, "_")}`,
+            ].join("\n"),
+          );
+        } else {
+          appendLog(
+            "info",
+            [
+              `operator@nexus-tactical (${username})`,
+              `uid=1001(${username}) gid=1001(operator) groups=1001(operator),27(sudo),44(crypto),100(darknet)`,
+              `CURRENT_ESCROW_WALLET: ${crypto} ◈`,
+              `SYSTEM_INTEGRITY: NORMAL // ENCRYPTED`,
+            ].join("\n"),
+          );
+        }
+        break;
+      }
+
+      case "uname": {
+        if (arg === "-a" || !arg) {
+          appendLog(
+            "info",
+            "Linux nexus-tactical 6.11.0-ouroboros-x86_64 #1 SMP PREEMPT_DYNAMIC Mon Oct 26 23:42:00 CET 2026 x86_64 GNU/Linux",
+          );
+        } else {
+          appendLog("info", "Linux");
+        }
+        break;
+      }
+
       default: {
         sound.playError();
         appendLog("error", `sh: command not found: "${cmd}". Type "help".`);
       }
     }
     setInput("");
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // 1. History Navigation Up
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (history.length === 0) return;
+      const nextIdx =
+        historyIndex === -1 ? history.length - 1 : Math.max(0, historyIndex - 1);
+      setHistoryIndex(nextIdx);
+      setInput(history[nextIdx]);
+      sound.playKey();
+      return;
+    }
+
+    // 2. History Navigation Down
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (historyIndex === -1) return;
+      const nextIdx = historyIndex + 1;
+      if (nextIdx < history.length) {
+        setHistoryIndex(nextIdx);
+        setInput(history[nextIdx]);
+        sound.playKey();
+      } else {
+        setHistoryIndex(-1);
+        setInput("");
+        sound.playKey();
+      }
+      return;
+    }
+
+    // 3. Tab Autocompletion
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const trimmed = input.trimStart();
+      const allKnownIps = Array.from(
+        new Set([...knownIps, ...Object.keys(SERVER_NODES)]),
+      );
+
+      const AVAILABLE_COMMANDS = [
+        "scan",
+        "crack",
+        "connect",
+        "ls",
+        "cat",
+        "download",
+        "wipe_logs",
+        "disconnect",
+        "ping",
+        "traceroute",
+        "netstat",
+        "top",
+        "htop",
+        "matrix",
+        "whoami",
+        "uname",
+        "help",
+        "clear",
+      ];
+
+      // If empty:
+      if (!trimmed) {
+        appendLog(
+          "info",
+          `AVAILABLE COMMANDS: ${AVAILABLE_COMMANDS.slice(0, 10).join("  ")}`,
+        );
+        sound.playKey();
+        return;
+      }
+
+      const parts = trimmed.split(/\s+/);
+
+      // Typing first word (command)
+      if (parts.length === 1 && !trimmed.endsWith(" ")) {
+        const prefix = parts[0].toLowerCase();
+        const matches = AVAILABLE_COMMANDS.filter((c) => c.startsWith(prefix));
+        if (matches.length === 1) {
+          setInput(matches[0] + " ");
+          sound.playKey();
+        } else if (matches.length > 1) {
+          appendLog("info", `MATCHES: ${matches.join("  ")}`);
+          sound.playKey();
+        }
+        return;
+      }
+
+      // Typing command argument
+      const cmd = parts[0].toLowerCase();
+      const argPrefix = parts.slice(1).join(" ");
+
+      if (["scan", "connect", "ping", "traceroute"].includes(cmd)) {
+        const ipMatches = allKnownIps.filter((ip) => ip.startsWith(argPrefix));
+        if (ipMatches.length === 1) {
+          setInput(`${cmd} ${ipMatches[0]}`);
+          sound.playKey();
+        } else if (ipMatches.length > 1) {
+          appendLog("info", `KNOWN IPS: ${ipMatches.join("  ")}`);
+          sound.playKey();
+        } else if (!argPrefix && terminalSelectedIp) {
+          setInput(`${cmd} ${terminalSelectedIp}`);
+          sound.playKey();
+        }
+        return;
+      }
+
+      if (cmd === "crack") {
+        const targetIp = connectedIp || terminalSelectedIp;
+        const node = SERVER_NODES[targetIp];
+        if (node) {
+          setInput(`crack ${node.requiredPort}`);
+          sound.playKey();
+        }
+        return;
+      }
+
+      if (["cat", "download"].includes(cmd)) {
+        const node = connectedIp ? SERVER_NODES[connectedIp] : null;
+        if (node && node.files) {
+          const fileMatches = node.files
+            .map((f) => f.name)
+            .filter((fn) =>
+              fn.toLowerCase().startsWith(argPrefix.toLowerCase()),
+            );
+          if (fileMatches.length === 1) {
+            setInput(`${cmd} ${fileMatches[0]}`);
+            sound.playKey();
+          } else if (fileMatches.length > 1) {
+            appendLog("info", `FILES: ${fileMatches.join("  ")}`);
+            sound.playKey();
+          }
+        }
+        return;
+      }
+    }
+
+    // 4. Ctrl+C Cancel
+    if (e.key === "c" && e.ctrlKey) {
+      if (busyTask) {
+        setBusyTask(null);
+        appendLog("cmd", "^C [PROCESS TERMINATED]");
+      } else {
+        appendLog("cmd", "^C");
+      }
+      setInput("");
+      sound.playKey();
+    }
   };
 
   useEffect(() => {
@@ -718,11 +1071,12 @@ export const SmartTerminalApp: React.FC = () => {
           type="text"
           value={input}
           disabled={!!busyTask}
+          onKeyDown={handleKeyDown}
           onChange={(e) => {
             sound.playKey();
             setInput(e.target.value);
           }}
-          placeholder="stdin..."
+          placeholder="stdin (press [TAB] to autocomplete, [↑]/[↓] for history)..."
           className="flex-1 bg-transparent text-white focus:outline-none"
         />
         <button
