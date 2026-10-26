@@ -7,7 +7,7 @@ import {
   Terminal as TerminalIcon,
   Zap,
 } from 'lucide-react';
-import { SERVER_NODES } from '../data/worldData';
+import { SERVER_NODES, SHOP_ITEMS } from '../data/worldData';
 import { useGame } from '../context/GameContext';
 import { WindowFrame } from '../components/WindowFrame';
 import { sound } from '../utils/sound';
@@ -21,6 +21,7 @@ interface LogLine {
 export const SmartTerminalApp: React.FC = () => {
   const {
     discoveredClues,
+    crackedEmails,
     ownedTools,
     scannedIps,
     crackedPorts,
@@ -157,10 +158,8 @@ export const SmartTerminalApp: React.FC = () => {
               `    ORG_ENTITY   : ${node.organization}`,
               `    THREAT_LEVEL : ${node.securityLevel}`,
               `    PORT_STATE   : ${node.requiredPort}/tcp [LOCKED // REQUIRES ${
-                node.requiredPort === 22
-                  ? 'SSH-Breaker (crack 22)'
-                  : 'HyperSSL Zero-Day (crack 443)'
-              }]`,
+                SHOP_ITEMS.find((t) => t.id === node.requiredToolId)?.name || 'EXPLOIT'
+              } (crack ${node.requiredPort})]`,
             ].join('\n')
           );
         });
@@ -187,11 +186,11 @@ export const SmartTerminalApp: React.FC = () => {
 
         if (!ownedTools.includes(node.requiredToolId)) {
           sound.playError();
+          const reqTool = SHOP_ITEMS.find((t) => t.id === node.requiredToolId);
+          const reqName = reqTool ? `${reqTool.name} ${reqTool.version}` : node.requiredToolId;
           appendLog(
             'error',
-            `ERR_MISSING_BINARY: Port ${portNum} requires "${
-              portNum === 22 ? 'SSH-Breaker v1.4' : 'HyperSSL Zero-Day v2.0'
-            }". Acquire it in BLACKMARKET.`
+            `ERR_MISSING_BINARY: Port ${portNum} requires "${reqName}". Acquire it in BLACKMARKET.`
           );
           break;
         }
@@ -216,6 +215,44 @@ export const SmartTerminalApp: React.FC = () => {
           appendLog(
             'error',
             `ERR_FACILITY_ROUTING_LOCKED: 194.165.16.100 supercluster requires routing clearance from Chief Viktor Reyes. Crack his WebMail (v.reyes@aethelgard.corp) first.`
+          );
+          break;
+        }
+
+        if (
+          targetIp === '217.182.80.50' &&
+          !discoveredClues.some((c) => c.id === 'clue_scada_ip') &&
+          !crackedEmails.includes('a.lindholm@nordgrid-power.com')
+        ) {
+          sound.playError();
+          appendLog(
+            'error',
+            `ERR_SCADA_GATEWAY_LOCKED: NordGrid 217.182.80.50 requires SCADA authorization from Dr. Astrid Lindholm. Investigate her mail or Chirper (@dr_astrid_power) first.`
+          );
+          break;
+        }
+
+        if (
+          targetIp === '102.16.88.12' &&
+          !discoveredClues.some((c) => c.id === 'clue_subsea_fiber_ip') &&
+          !crackedEmails.includes('k.thorne@oceaniclink-telecom.net')
+        ) {
+          sound.playError();
+          appendLog(
+            'error',
+            `ERR_QKD_OPTICAL_LOCKED: Transatlantic Repeater 102.16.88.12 requires QKD session keys from Kai Thorne. Compromise his OceanicLink mail (k.thorne@oceaniclink-telecom.net) first.`
+          );
+          break;
+        }
+
+        if (
+          targetIp === '185.190.20.1' &&
+          !discoveredClues.some((c) => c.id === 'clue_ouroboros_root_paradox')
+        ) {
+          sound.playError();
+          appendLog(
+            'error',
+            `ERR_SINGULARITY_SHIELD_ACTIVE: Svalbard Deep Core 185.190.20.1 requires the Gödel Paradox Override Token ("GODEL-ZERO-SELF-TERMINATE"). Check the research thread on 0xUnderground DarkNet Forum first.`
           );
           break;
         }

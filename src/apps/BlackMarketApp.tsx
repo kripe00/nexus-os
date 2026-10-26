@@ -8,6 +8,7 @@ import {
   ShoppingBag,
   Terminal,
   Wifi,
+  Zap,
 } from 'lucide-react';
 import { SHOP_ITEMS } from '../data/worldData';
 import { useGame } from '../context/GameContext';
@@ -19,8 +20,9 @@ export const BlackMarketApp: React.FC = () => {
   const getItemIcon = (id: string, category: string) => {
     if (category === 'STEALTH') return <Wifi className="w-4 h-4" />;
     if (id === 'ssl_zero_day_v2') return <ShieldAlert className="w-4 h-4" />;
-    if (id === 'sat_uplink_hijack_v1') return <Radio className="w-4 h-4" />;
-    if (id === 'quantum_bypass_v3') return <Cpu className="w-4 h-4" />;
+    if (id === 'sat_uplink_hijack_v1' || id === 'zero_paradox_injector') return <Radio className="w-4 h-4" />;
+    if (id === 'quantum_bypass_v3' || id === 'optical_qkd_decryptor') return <Cpu className="w-4 h-4" />;
+    if (id === 'scada_plc_exploit') return <Zap className="w-4 h-4 text-[#e3b341]" />;
     return <Terminal className="w-4 h-4" />;
   };
 

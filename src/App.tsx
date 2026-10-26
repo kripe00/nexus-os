@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   AlertOctagon,
+  Briefcase,
   Coins,
   Cpu,
   Fish,
@@ -24,6 +25,7 @@ import {
   VolumeX,
 } from 'lucide-react';
 import { BlackMarketApp } from './apps/BlackMarketApp';
+import { BountyBoardApp } from './apps/BountyBoardApp';
 import { DataVaultApp } from './apps/DataVaultApp';
 import { GeoRelayApp } from './apps/GeoRelayApp';
 import { IntraWebApp } from './apps/IntraWebApp';
@@ -227,6 +229,11 @@ const DesktopEnvironment: React.FC = () => {
       icon: <FolderLock className="w-6 h-6" />,
       badge: downloadedFiles.length > 0 ? downloadedFiles.length : undefined,
     },
+    {
+      id: 'bountyboard',
+      label: 'BountyBoard',
+      icon: <Briefcase className="w-6 h-6 text-[#e3b341]" />,
+    },
   ];
 
   // Only apps that are currently open show up in the bottom taskbar!
@@ -306,6 +313,7 @@ const DesktopEnvironment: React.FC = () => {
           <PacketSnifferApp />
           <GeoRelayApp />
           <DataVaultApp />
+          <BountyBoardApp />
 
           {/* Toast Notifications */}
           <div className="fixed bottom-14 left-5 z-50 space-y-2 pointer-events-none">

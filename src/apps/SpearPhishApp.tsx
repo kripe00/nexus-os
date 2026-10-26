@@ -118,6 +118,111 @@ const PHISH_TARGETS: PhishTemplate[] = [
     ],
     successfulBaitRewardClueId: 'clue_datacenter_core_ip',
   },
+  {
+    id: 'phish_astrid',
+    targetEmail: 'a.lindholm@nordgrid-power.com',
+    targetName: 'Dr. Astrid Lindholm (VP SCADA Systems & Grid Stability)',
+    senderSpoof: 'regatta-committee@nordicyachting.org',
+    subjectOptions: [
+      {
+        id: 'sub_a_1',
+        text: 'Urgent: Registration Confirmation for NordicBreeze in Baltic Cup Regatta',
+        isEffective: true,
+        reason: 'Target is passionate about her racing sailboat NordicBreeze and never ignores yachting notices.',
+      },
+      {
+        id: 'sub_a_2',
+        text: 'Quarterly NordGrid Employee Health Insurance Policy',
+        isEffective: false,
+        reason: 'Target delegates human resources notifications to her administrative team.',
+      },
+      {
+        id: 'sub_a_3',
+        text: 'Password Reset: scada-core-01.nordgrid-power.com',
+        isEffective: false,
+        reason: 'As SCADA Director, target is highly trained against generic internal IT phishing.',
+      },
+    ],
+    lureOptions: [
+      {
+        id: 'lure_a_1',
+        text: 'Secure Yachting Portal: Verify Skipper Crew List and Mooring Permit for NordicBreeze',
+        payloadType: 'FAKE_LOGIN',
+        isEffective: true,
+      },
+      {
+        id: 'lure_a_2',
+        text: 'Attachment: baltic_cup_regatta_rules.exe',
+        payloadType: 'INFECTED_ATTACHMENT',
+        isEffective: false,
+      },
+    ],
+    successfulBaitRewardClueId: 'clue_scada_ip',
+  },
+  {
+    id: 'phish_kai',
+    targetEmail: 'k.thorne@oceaniclink-telecom.net',
+    targetName: 'Kai Thorne (Lead Subsea Cable Engineer)',
+    senderSpoof: 'union-rep@deepseadivers-international.org',
+    subjectOptions: [
+      {
+        id: 'sub_k_1',
+        text: 'Hazard Pay Dispute & Emergency Hyperbaric Overtime Compensation (AbyssPoint9)',
+        isEffective: true,
+        reason: 'Target is deeply frustrated by lack of overtime compensation during dangerous deep-sea dive shifts.',
+      },
+      {
+        id: 'sub_k_2',
+        text: 'Corporate Optical Equipment Brochure 2026',
+        isEffective: false,
+        reason: 'Engineering field techs ignore marketing brochures.',
+      },
+    ],
+    lureOptions: [
+      {
+        id: 'lure_k_1',
+        text: 'Portal Verification: Sign Union Class-Action Claim for AbyssPoint9 Hazard Hours',
+        payloadType: 'FAKE_LOGIN',
+        isEffective: true,
+      },
+      {
+        id: 'lure_k_2',
+        text: 'PDF Document: quarterly_subsea_pension.pdf.bat',
+        payloadType: 'INFECTED_ATTACHMENT',
+        isEffective: false,
+      },
+    ],
+    successfulBaitRewardClueId: 'clue_subsea_fiber_ip',
+  },
+  {
+    id: 'phish_commissioner',
+    targetEmail: 'commissioner.vance@metro-police.gov',
+    targetName: 'Commissioner Gordon Vance (Metro Police Chief)',
+    senderSpoof: 'membership@royalphinegolf.com',
+    subjectOptions: [
+      {
+        id: 'sub_c_1',
+        text: 'Private Invitational: RoyalPine Annual Presidential Tournament & VIP Locker Access',
+        isEffective: true,
+        reason: 'Commissioner Vance values his elite country club status and VIP networking above all else.',
+      },
+      {
+        id: 'sub_c_2',
+        text: 'Traffic Violation Report: Precinct 4',
+        isEffective: false,
+        reason: 'The Police Commissioner does not review mundane traffic tickets.',
+      },
+    ],
+    lureOptions: [
+      {
+        id: 'lure_c_1',
+        text: 'Exclusive Member Portal: Confirm VIP Tee-Time & Private Lounge Reservations',
+        payloadType: 'FAKE_LOGIN',
+        isEffective: true,
+      },
+    ],
+    successfulBaitRewardClueId: 'clue_commissioner_badge',
+  },
 ];
 
 export const SpearPhishApp: React.FC = () => {

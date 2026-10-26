@@ -16,6 +16,7 @@ describe('Window Management Logic', () => {
       packetsniffer: { id: 'packetsniffer', title: 'PacketSniffer', isOpen: false, isMinimized: false, zIndex: 18, position: { x: 240, y: 45 } },
       georelay: { id: 'georelay', title: 'GeoRelay', isOpen: false, isMinimized: false, zIndex: 18, position: { x: 190, y: 48 } },
       files: { id: 'files', title: 'DataVault', isOpen: false, isMinimized: false, zIndex: 12, position: { x: 260, y: 85 } },
+      bountyboard: { id: 'bountyboard', title: 'BountyBoard', isOpen: false, isMinimized: false, zIndex: 16, position: { x: 210, y: 70 } },
     };
 
     // 1. Close whisper
@@ -63,6 +64,7 @@ describe('Window Management Logic', () => {
       packetsniffer: { id: 'packetsniffer', title: 'PacketSniffer', isOpen: false, isMinimized: false, zIndex: 18, position: { x: 240, y: 45 } },
       georelay: { id: 'georelay', title: 'GeoRelay', isOpen: false, isMinimized: false, zIndex: 18, position: { x: 190, y: 48 } },
       files: { id: 'files', title: 'DataVault', isOpen: false, isMinimized: false, zIndex: 12, position: { x: 260, y: 85 } },
+      bountyboard: { id: 'bountyboard', title: 'BountyBoard', isOpen: false, isMinimized: false, zIndex: 16, position: { x: 210, y: 70 } },
     };
 
     // Minimize all

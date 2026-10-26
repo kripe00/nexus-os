@@ -8,16 +8,18 @@ import {
 } from '../data/worldData';
 
 describe('Nexus OS World Data Integrity', () => {
-  it('should have all 7 operations configured across 3 chapters', () => {
-    expect(MISSIONS.length).toBe(7);
+  it('should have all 10 operations configured across 4 chapters', () => {
+    expect(MISSIONS.length).toBe(10);
 
     const chapter1 = MISSIONS.filter((m) => m.chapter === 1);
     const chapter2 = MISSIONS.filter((m) => m.chapter === 2);
     const chapter3 = MISSIONS.filter((m) => m.chapter === 3);
+    const chapter4 = MISSIONS.filter((m) => m.chapter === 4);
 
     expect(chapter1.length).toBe(3);
     expect(chapter2.length).toBe(3);
     expect(chapter3.length).toBe(1);
+    expect(chapter4.length).toBe(3);
 
     // Each mission must have distinct IDs, titles, and non-empty objectives
     const missionIds = new Set<string>();

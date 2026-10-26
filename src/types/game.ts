@@ -8,7 +8,8 @@ export type AppId =
   | 'spearphish'
   | 'packetsniffer'
   | 'georelay'
-  | 'files';
+  | 'files'
+  | 'bountyboard';
 
 export interface GeoRelayNode {
   id: string;
@@ -134,6 +135,26 @@ export interface Mission {
   summary: string;
   initialMessages: ChatMessage[];
   completionMessages: ChatMessage[];
+  objectives: {
+    id: string;
+    description: string;
+  }[];
+}
+
+export interface BountyContract {
+  id: string;
+  title: string;
+  clientHandle: string;
+  clientName: string;
+  rewardCrypto: number;
+  difficulty: 'STANDARD' | 'HARD' | 'ELITE';
+  category: 'FINANCIAL' | 'INTEL' | 'SABOTAGE' | 'BLACK_OPS';
+  briefing: string;
+  targetDetails: {
+    targetIp?: string;
+    targetEmail?: string;
+    organization: string;
+  };
   objectives: {
     id: string;
     description: string;

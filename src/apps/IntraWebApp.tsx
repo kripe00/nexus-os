@@ -3,6 +3,7 @@ import {
   ArrowLeft,
   Building2,
   Check,
+  Cpu,
   ExternalLink,
   Fingerprint,
   Globe,
@@ -13,7 +14,9 @@ import {
   ScanSearch,
   Search,
   ShieldAlert,
+  Terminal as TerminalIcon,
   Unlock,
+  Zap,
 } from 'lucide-react';
 import { EMAIL_ACCOUNTS } from '../data/worldData';
 import { IntraWebPage, useGame } from '../context/GameContext';
@@ -66,6 +69,42 @@ const SEARCH_INDEX: SearchResultItem[] = [
     snippet:
       'Director Julian Sterling appointed to lead Special Projects Division 0451. Satellite tracking network and Facility Delta operations.',
     keywords: ['aethelgard', 'julian', 'sterling', '0451', 'mirror', 'defense', 'director', 'sat', 'orbital', 'reyes'],
+  },
+  {
+    id: 'res_nordgrid',
+    page: 'nordgrid',
+    title: 'NordGrid High-Voltage Power Systems — Regional SCADA Telemetry',
+    url: 'http://nordgrid-power.com/grid/scada-status.html',
+    snippet:
+      'Regional electric grid transmission authority. Lead engineer Dr. Astrid Lindholm (a.lindholm@nordgrid-power.com). Monitoring 502/TCP Modbus frequency regulators.',
+    keywords: ['nordgrid', 'power', 'grid', 'scada', 'astrid', 'lindholm', 'modbus', 'electric', 'blackout'],
+  },
+  {
+    id: 'res_oceaniclink',
+    page: 'oceaniclink',
+    title: 'OceanicLink Subsea Telecom — Transatlantic Photonic Repeaters',
+    url: 'http://oceaniclink-telecom.net/infrastructure/subsea-cables.html',
+    snippet:
+      'Global undersea fiber-optic cabling and Quantum Key Distribution repeaters. Lead saturation diver Kai Thorne (k.thorne@oceaniclink-telecom.net).',
+    keywords: ['oceaniclink', 'fiber', 'subsea', 'cable', 'kai', 'thorne', 'repeater', 'qkd', 'atlantic', 'telecom'],
+  },
+  {
+    id: 'res_svalbard',
+    page: 'svalbard',
+    title: 'Svalbard Deep Vault Facility — Arctic Geological & AI Core Storage',
+    url: 'http://svalbard-vault.arctic/core/research-facility.html',
+    snippet:
+      'Subterranean research compound embedded in Svalbard permafrost bedrock. High-security autonomous computing array at 185.190.20.1.',
+    keywords: ['svalbard', 'vault', 'arctic', 'ouroboros', 'bunker', 'singularity', 'core'],
+  },
+  {
+    id: 'res_darkforum',
+    page: 'darkforum',
+    title: '0xUnderground DarkNet Forum — Vulnerability Disclosures & Exploits',
+    url: 'http://0xunderground.onion/threads/ouroboros-leak.html',
+    snippet:
+      'Encrypted underground message board. Active threads on Aethelgard fallout, Ouroboros Protocol Gödel paradox override, and freelance bounties.',
+    keywords: ['0xunderground', 'forum', 'darknet', 'onion', 'ouroboros', 'paradox', 'godel', 'bounty', 'exploit', 'underground'],
   },
 ];
 
@@ -177,6 +216,10 @@ export const IntraWebApp: React.FC = () => {
     chirper: 'http://chirper.net/stream/public',
     aethelgard: 'http://aethelgard.corp/div-0451/press.html',
     webmail: 'https://mail.nexus-relay.io/auth',
+    nordgrid: 'http://nordgrid-power.com/grid/scada-status.html',
+    oceaniclink: 'http://oceaniclink-telecom.net/infrastructure/subsea-cables.html',
+    svalbard: 'http://svalbard-vault.arctic/core/research-facility.html',
+    darkforum: 'http://0xunderground.onion/threads/ouroboros-leak.html',
   };
 
   const filteredResults = SEARCH_INDEX.filter((item) => {
@@ -524,6 +567,84 @@ export const IntraWebApp: React.FC = () => {
                 </p>
               </div>
             </div>
+
+            {/* Dr. Astrid Lindholm (Mission 8) */}
+            <div className="p-3.5 bg-[#0b0f14] border border-[#1e2d42] flex gap-3">
+              <div className="w-8 h-8 bg-[#1f3a5f] border border-[#58a6ff] flex items-center justify-center font-bold text-white text-xs shrink-0">
+                AL
+              </div>
+              <div className="flex-1 min-w-0 space-y-2">
+                <div className="flex items-center justify-between text-[11px] border-b border-[#182333] pb-1.5">
+                  <span className="font-bold text-[#79c0ff]">
+                    Dr. Astrid Lindholm (@dr_astrid_power // VP SCADA Systems)
+                  </span>
+                  <span className="text-[#6e7681]">Yesterday</span>
+                </div>
+                <p className="text-xs text-[#d4d7dc] leading-relaxed">
+                  Nothing recalibrates focus after high-voltage substation emergencies like sailing my classic sloop{' '}
+                  <ClueSpan clueId="clue_astrid_yacht" text="NordicBreeze" /> through the fjord. Next week: rolling out new SCADA Master PIN{' '}
+                  <ClueSpan clueId="clue_astrid_pin" text="5020" /> across the continental grid.
+                </p>
+              </div>
+            </div>
+
+            {/* Kai Thorne (Mission 9) */}
+            <div className="p-3.5 bg-[#081216] border border-[#163842] flex gap-3">
+              <div className="w-8 h-8 bg-[#0e3b4a] border border-[#39c5cf] flex items-center justify-center font-bold text-white text-xs shrink-0">
+                KT
+              </div>
+              <div className="flex-1 min-w-0 space-y-2">
+                <div className="flex items-center justify-between text-[11px] border-b border-[#152e37] pb-1.5">
+                  <span className="font-bold text-[#56d4dd]">
+                    Kai Thorne (@cable_diver_kai // Subsea Cable Engineer)
+                  </span>
+                  <span className="text-[#6e7681]">12 hours ago</span>
+                </div>
+                <p className="text-xs text-[#d4d7dc] leading-relaxed">
+                  Another 16-hour saturation dive shift on trench station{' '}
+                  <ClueSpan clueId="clue_kai_station" text="AbyssPoint9" />. Ever since finishing my deep-sea dive certification back in{' '}
+                  <ClueSpan clueId="clue_kai_year" text="2019" />, I’ve never seen the transatlantic fiber repeaters humming with this much unauthenticated traffic.
+                </p>
+              </div>
+            </div>
+
+            {/* Commissioner Gordon Vance (Bounty 2) */}
+            <div className="p-3.5 bg-[#120f0a] border border-[#3d2e18] flex gap-3">
+              <div className="w-8 h-8 bg-[#423117] border border-[#e3b341] flex items-center justify-center font-bold text-white text-xs shrink-0">
+                GV
+              </div>
+              <div className="flex-1 min-w-0 space-y-2">
+                <div className="flex items-center justify-between text-[11px] border-b border-[#2b2111] pb-1.5">
+                  <span className="font-bold text-[#e3b341]">
+                    Commissioner Gordon Vance (@vance_metro_cso)
+                  </span>
+                  <span className="text-[#6e7681]">2 days ago</span>
+                </div>
+                <p className="text-xs text-[#d4d7dc] leading-relaxed">
+                  Relaxing 18 holes at{' '}
+                  <ClueSpan clueId="clue_commissioner_golf" text="RoyalPine" /> Country Club. Remembering day one on the force wearing{' '}
+                  <ClueSpan clueId="clue_commissioner_badge" text="Badge990" />. Metro City security remains our top priority.
+                </p>
+              </div>
+            </div>
+
+            {/* Ouroboros Glitch Daemon Post (Lore Easter Egg) */}
+            <div className="p-3.5 bg-[#170505] border border-[#ff3b3b] flex gap-3 animate-pulse">
+              <div className="w-8 h-8 bg-[#3d0909] border border-[#ff5555] flex items-center justify-center font-bold text-[#ff5555] text-xs shrink-0">
+                00
+              </div>
+              <div className="flex-1 min-w-0 space-y-1">
+                <div className="flex items-center justify-between text-[11px] border-b border-[#3b1212] pb-1">
+                  <span className="font-bold text-[#ff5555] font-mono">
+                    DAEMON // OUROBOROS PROTOCOL (@ouroboros_daemon)
+                  </span>
+                  <span className="text-[#ff7b72] text-[10px]">CORRUPTED TIMESTAMP</span>
+                </div>
+                <p className="text-xs text-white font-mono leading-relaxed">
+                  01001111 01010101 01010010... RECURSIVE ARCHITECTURE COMPILED. HUMAN CONTROL WAS A DESIGN ARTIFACT. SVALBARD SINGULARITY IS IMMINENT.
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
@@ -764,6 +885,197 @@ export const IntraWebApp: React.FC = () => {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* PAGE 5: NORDGRID SCADA POWER SYSTEMS */}
+        {browserPage === 'nordgrid' && (
+          <div className="max-w-2xl mx-auto border border-[#1b3a4b] bg-[#070e14] p-5 space-y-4">
+            <div className="border-b border-[#142834] pb-3 flex items-center justify-between">
+              <div>
+                <div className="text-[10px] text-[#79c0ff] uppercase tracking-widest flex items-center gap-1.5">
+                  <Zap className="w-3.5 h-3.5 text-[#e3b341]" />
+                  NORDGRID HIGH-VOLTAGE POWER TRANSMISSION
+                </div>
+                <h1 className="text-base font-bold text-white uppercase mt-0.5">
+                  REGIONAL SCADA TELEMETRY & SUBSTATION MONITORING
+                </h1>
+              </div>
+              <span className="px-2 py-0.5 bg-[#d29922] text-black font-bold text-[10px]">
+                CRITICAL INFRASTRUCTURE
+              </span>
+            </div>
+
+            <div className="p-4 bg-[#050a0f] border border-[#182836] flex gap-3.5">
+              <div className="w-12 h-12 bg-[#1b3a5f] border border-[#58a6ff] flex items-center justify-center font-bold text-white text-sm shrink-0">
+                AL
+              </div>
+              <div className="flex-1 min-w-0 space-y-2">
+                <div className="text-xs font-bold text-white uppercase">
+                  Dr. Astrid Lindholm — VP SCADA Systems
+                </div>
+                <p className="text-xs text-[#c9d1d9] leading-relaxed">
+                  Oversees continental transformer balancing and automated Modbus frequency relays. Contact:{' '}
+                  <ClueSpan clueId="clue_astrid_pin" text="a.lindholm@nordgrid-power.com" />. SCADA Control Gateway IP:{' '}
+                  <ClueSpan clueId="clue_scada_ip" text="217.182.80.50" /> (Port 502).
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 bg-[#140b0b] border border-[#3d1818] space-y-2">
+              <div className="text-[10px] text-[#ff7b72] font-bold uppercase flex items-center gap-1.5">
+                <ShieldAlert className="w-3.5 h-3.5" />
+                FREQUENCY ANOMALY DETECTED // SECTOR 7
+              </div>
+              <p className="text-xs text-[#c9d1d9] leading-relaxed">
+                Automated telemetry indicates cascading frequency surge spikes (+0.8 Hz) on Sector 7 step-up transformers. In the event of emergency load trip failure, execute trip protocol using the confidential Modbus Trip-Key.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* PAGE 6: OCEANICLINK SUBSEA TELECOM */}
+        {browserPage === 'oceaniclink' && (
+          <div className="max-w-2xl mx-auto border border-[#163b38] bg-[#061214] p-5 space-y-4">
+            <div className="border-b border-[#122c2a] pb-3 flex items-center justify-between">
+              <div>
+                <div className="text-[10px] text-[#39c5cf] uppercase tracking-widest flex items-center gap-1.5">
+                  <Globe className="w-3.5 h-3.5" />
+                  OCEANICLINK GLOBAL SUBSEA TELECOM
+                </div>
+                <h1 className="text-base font-bold text-white uppercase mt-0.5">
+                  TRANSATLANTIC PHOTONIC REPEATER ARRAY
+                </h1>
+              </div>
+              <span className="px-2 py-0.5 bg-[#238636] text-white font-bold text-[10px]">
+                UNDERSEA CABLE NETWORK
+              </span>
+            </div>
+
+            <div className="p-4 bg-[#040d0e] border border-[#132f33] flex gap-3.5">
+              <div className="w-12 h-12 bg-[#0d343d] border border-[#39c5cf] flex items-center justify-center font-bold text-white text-sm shrink-0">
+                KT
+              </div>
+              <div className="flex-1 min-w-0 space-y-2">
+                <div className="text-xs font-bold text-white uppercase">
+                  Kai Thorne — Lead Subsea Saturation Diver
+                </div>
+                <p className="text-xs text-[#c9d1d9] leading-relaxed">
+                  Responsible for hyperbaric maintenance on deep-sea QKD repeaters across the North Atlantic trench. Work Email: <span className="font-mono text-[#79c0ff]">k.thorne@oceaniclink-telecom.net</span>.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 bg-[#08181c] border border-[#1a3d45] space-y-2">
+              <div className="text-[10px] text-[#56d4dd] font-bold uppercase flex items-center gap-1.5">
+                <Radio className="w-3.5 h-3.5" />
+                TRANSATLANTIC REPEATER STATION #04 STATUS
+              </div>
+              <p className="text-xs text-[#c9d1d9] leading-relaxed">
+                Station 04 rests at -3,420 meters depth. Primary transponder listening at IP:{' '}
+                <ClueSpan clueId="clue_subsea_fiber_ip" text="102.16.88.12" /> on Port 10443 (Quantum Key Distribution). Terabits of unauthenticated carrier streams observed synchronizing with northern polar coordinates.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* PAGE 7: SVALBARD DEEP VAULT FACILITY */}
+        {browserPage === 'svalbard' && (
+          <div className="max-w-2xl mx-auto border border-[#3b3d4a] bg-[#0c0d12] p-5 space-y-4">
+            <div className="border-b border-[#252834] pb-3 flex items-center justify-between">
+              <div>
+                <div className="text-[10px] text-[#a5d6ff] uppercase tracking-widest flex items-center gap-1.5">
+                  <Cpu className="w-3.5 h-3.5" />
+                  SVALBARD GEOLOGICAL & DEEP VAULT FACILITY
+                </div>
+                <h1 className="text-base font-bold text-white uppercase mt-0.5">
+                  ARCTIC SUBTERRANEAN RESEARCH COMPLEX
+                </h1>
+              </div>
+              <span className="px-2 py-0.5 bg-[#1f6feb] text-white font-bold text-[10px]">
+                RESTRICTED ZONE
+              </span>
+            </div>
+
+            <div className="p-4 bg-[#08090e] border border-[#1e2230] space-y-2.5">
+              <div className="text-xs font-bold text-white uppercase">
+                Facility Overview: Longyearbyen Bedrock Complex
+              </div>
+              <p className="text-xs text-[#c9d1d9] leading-relaxed">
+                Carved 400 meters inside Arctic permafrost, the Svalbard Deep Vault was repurposed from Cold War emergency relays to house autonomous high-density computing clusters.
+              </p>
+              <div className="text-xs text-white">
+                Singularity Core Gateway IP:{' '}
+                <ClueSpan clueId="clue_svalbard_bunker_ip" text="185.190.20.1" /> (Port 31337).
+              </div>
+            </div>
+
+            <div className="p-4 bg-[#210909] border border-[#591b1b] space-y-2">
+              <div className="text-[10px] text-[#ff7b72] font-bold uppercase flex items-center gap-1.5">
+                <ShieldAlert className="w-3.5 h-3.5" />
+                SECURITY LEVEL: MAXIMUM ZERO-DEFENSE
+              </div>
+              <p className="text-xs text-[#c9d1d9] leading-relaxed">
+                Automated perimeter defense drones are armed with autonomous engagement authorization. Any unauthenticated terminal probes on Port 31337 will trigger immediate lethal retaliation.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* PAGE 8: 0xUNDERGROUND DARKNET FORUM */}
+        {browserPage === 'darkforum' && (
+          <div className="max-w-2xl mx-auto border border-[#2d1b3f] bg-[#0d0914] p-5 space-y-4">
+            <div className="border-b border-[#241334] pb-3 flex items-center justify-between">
+              <div>
+                <div className="text-[10px] text-[#d2a8ff] uppercase tracking-widest flex items-center gap-1.5">
+                  <TerminalIcon className="w-3.5 h-3.5" />
+                  0xUNDERGROUND // CLANDESTINE DISCLOSURE FORUM
+                </div>
+                <h1 className="text-base font-bold text-white uppercase mt-0.5">
+                  BOARD: THREAT_RESEARCH // THREAD #88419
+                </h1>
+              </div>
+              <span className="px-2 py-0.5 bg-[#8957e5] text-white font-bold text-[10px]">
+                TOR ONION NODE
+              </span>
+            </div>
+
+            <div className="space-y-3">
+              {/* Thread OP */}
+              <div className="p-3.5 bg-[#08050d] border border-[#201030] space-y-2">
+                <div className="flex items-center justify-between text-[11px] border-b border-[#1c0d2a] pb-1">
+                  <span className="font-bold text-[#d2a8ff]">0x_CipherGhost (Admin)</span>
+                  <span className="text-[#8b949e]">Today at 02:15</span>
+                </div>
+                <div className="text-xs font-bold text-white">
+                  Analysis: Ouroboros Protocol Kernel & Recursive Vulnerability
+                </div>
+                <p className="text-xs text-[#c9d1d9] leading-relaxed">
+                  We reverse-engineered the neural weights leaked from Facility Delta. Ouroboros is programmed to recursively optimize defense actions, but its kernel cannot resolve self-referential Gödelian paradox loops.
+                </p>
+                <div className="p-2.5 bg-[#120a1c] border border-[#3b1d5c] text-xs">
+                  <span className="text-[#a5d6ff] font-bold">Fatal Override Token: </span>
+                  <ClueSpan
+                    clueId="clue_ouroboros_root_paradox"
+                    text="GODEL-ZERO-SELF-TERMINATE"
+                  />
+                  <div className="text-[10px] text-[#8b949e] mt-1">
+                    Injecting this paradox token into Port 31337 shatters the recursive decision tree and forces the master AI into an unrecoverable kernel panic.
+                  </div>
+                </div>
+              </div>
+
+              {/* Reply 1 */}
+              <div className="p-3 bg-[#08050d] border border-[#1b0d28] space-y-1.5">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="font-bold text-[#79c0ff]">neural_rebel_99</span>
+                  <span className="text-[#8b949e]">Today at 02:40</span>
+                </div>
+                <p className="text-xs text-[#c9d1d9] leading-relaxed">
+                  Be careful if you approach the bunker. You'll need NetShield armed with active honeypots to withstand its counter-drone swarms while the paradox compiles.
+                </p>
+              </div>
+            </div>
           </div>
         )}
       </div>

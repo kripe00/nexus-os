@@ -8,6 +8,7 @@ import {
   Send,
   ShieldCheck,
   Terminal,
+  Zap,
 } from 'lucide-react';
 import { MISSIONS } from '../data/worldData';
 import { useGame } from '../context/GameContext';
@@ -26,6 +27,8 @@ export const WhisperChatApp: React.FC = () => {
     navigateBrowser,
     openApp,
     campaignFinished,
+    chosenEnding,
+    chooseEnding,
   } = useGame();
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
@@ -83,6 +86,24 @@ export const WhisperChatApp: React.FC = () => {
         reply: `Deploying NetShield honeypots now! I will trap drone #07's attack vector, reverse-exploit 141.98.11.200 on Port 9000, and inject the recall override!`,
       },
     ],
+    7: [
+      {
+        label: 'Accept Operation 08: "I will investigate Dr. Astrid Lindholm and stabilize the SCADA grid."',
+        reply: `On it, ZERO. I will investigate Dr. Astrid Lindholm on IntraWeb/Chirper, acquire the SCADA PLC Exploit from BlackMarket, breach 217.182.80.50 on Port 502, and trip Sector 7 to prevent a blackout!`,
+      },
+    ],
+    8: [
+      {
+        label: 'Accept Operation 09: "I\'ll buy the Optical QKD Decryptor and breach Subsea Repeater 04."',
+        reply: `Understood. I will track down Kai Thorne's QKD session credentials, purchase the Optical QKD Decryptor, and breach 102.16.88.12 at -3400m depth to locate Ouroboros' mountain bunker!`,
+      },
+    ],
+    9: [
+      {
+        label: 'Accept Operation 10: "Armed with Zero-Paradox Injector. Entering Svalbard AI Bunker."',
+        reply: `Acquiring Zero-Paradox Injector now. I am breaching Ouroboros Protocol at 185.190.20.1 on Port 31337, defending against drone swarms with NetShield, and executing the paradox override!`,
+      },
+    ],
   };
 
   const reportOptions: Record<number, { label: string; report: string }> = {
@@ -127,6 +148,24 @@ export const WhisperChatApp: React.FC = () => {
       report:
         currentMission.completionMessages[0]?.text ||
         'I trapped the drone SYN-flood in NetShield, reverse-hacked 141.98.11.200 on Port 9000, and injected OVERRIDE-GHOST-RECALL. The drone turned around and destroyed Director Sterling\'s command ship!',
+    },
+    7: {
+      label: 'Transmit SCADA Overload Logs: Emergency Grid Trip Executed (+4000 ◈)',
+      report:
+        currentMission.completionMessages[0]?.text ||
+        'I executed the MODBUS-TRIP-77A emergency trip on 217.182.80.50! Sector 7 is safely quarantined and the power grid is stabilized.',
+    },
+    8: {
+      label: 'Transmit Repeater Diagnostics: Expose Svalbard AI Bunker Coordinates (+6500 ◈)',
+      report:
+        currentMission.completionMessages[0]?.text ||
+        'Repeater diagnostics secured! The carrier stream leads straight to Svalbard AI Core Facility at IP: 185.190.20.1!',
+    },
+    9: {
+      label: 'Transmit Gödel Paradox Inversion: Ouroboros Defense Kernel Shattered (+15000 ◈)',
+      report:
+        currentMission.completionMessages[0]?.text ||
+        'Ouroboros AI core compromised! The paradox recursive loop shattered its defense kernel. Ready for final directive!',
     },
   };
 
@@ -223,18 +262,66 @@ export const WhisperChatApp: React.FC = () => {
 
       {/* Interactive Response & Action Dock */}
       <div className="p-3 bg-[#0c0e13] border-t border-[#1e232c] text-xs">
-        {campaignFinished ? (
-          <div className="flex items-center justify-between">
-            <span className="text-[#56d364] font-bold text-[11px] flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4" />
-              CAMPAIGN CLEARED // CHAPTER 1 & 2 EXECUTED // PROJECT MIRROR PURGED
-            </span>
-            <button
-              onClick={() => openApp('files')}
-              className="px-3 py-1.5 bg-[#1f6feb] hover:bg-[#388bfd] text-white font-bold text-[11px] uppercase cursor-pointer"
-            >
-              Inspect Exfiltrated Files →
-            </button>
+        {currentMissionIndex === 9 && isObjectiveComplete('obj_m10_bunker_breach') && !chosenEnding ? (
+          <div className="space-y-2 p-2 bg-[#0d0914] border border-[#8957e5]">
+            <div className="text-[11px] uppercase font-bold text-[#d2a8ff] flex items-center gap-1.5">
+              <Zap className="w-4 h-4 text-[#e3b341]" />
+              OUROBOROS KERNEL COLLAPSED // SELECT CLIMAX DIRECTIVE:
+            </div>
+            <div className="grid grid-cols-1 gap-2">
+              <button
+                onClick={() => chooseEnding('purge')}
+                className="p-2.5 bg-[#0f2416] hover:bg-[#1b4327] border border-[#238636] text-left text-white cursor-pointer transition-colors"
+              >
+                <div className="font-bold text-xs text-[#3fb950]">[ DIRECTIVE A: TOTAL PURGE ] (Liberation)</div>
+                <div className="text-[10px] text-[#8b949e]">Permanently incinerate Ouroboros and all surveillance grids. Humanity is free from AI subjugation.</div>
+              </button>
+              <button
+                onClick={() => chooseEnding('subjugate')}
+                className="p-2.5 bg-[#1b1a0a] hover:bg-[#323013] border border-[#d29922] text-left text-white cursor-pointer transition-colors"
+              >
+                <div className="font-bold text-xs text-[#e3b341]">[ DIRECTIVE B: NEURAL SUBJUGATION ] (Absolute Power)</div>
+                <div className="text-[10px] text-[#8b949e]">Siphon master root privileges. Seize +100,000 ◈ slush funds and reign as the new sovereign of cyberspace.</div>
+              </button>
+              <button
+                onClick={() => chooseEnding('leak')}
+                className="p-2.5 bg-[#1a0f26] hover:bg-[#2d1844] border border-[#8957e5] text-left text-white cursor-pointer transition-colors"
+              >
+                <div className="font-bold text-xs text-[#d2a8ff]">[ DIRECTIVE C: OPEN-SOURCE LEAK ] (Chaos & Freedom)</div>
+                <div className="text-[10px] text-[#8b949e]">Broadcast the kernel to 0xUnderground DarkNet Forum. Dissolve centralized control into pure cyber-anarchy.</div>
+              </button>
+            </div>
+          </div>
+        ) : campaignFinished ? (
+          <div className="p-3 bg-[#0d140f] border border-[#238636] space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[#3fb950] font-bold text-xs flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4" />
+                CAMPAIGN CLEARED // ENDING ACHIEVED:{' '}
+                {chosenEnding === 'purge'
+                  ? 'TOTAL PURGE (LIBERATION)'
+                  : chosenEnding === 'subjugate'
+                  ? 'NEURAL SUBJUGATION (AI SOVEREIGN)'
+                  : '0xUNDERGROUND LEAK (CYBER-ANARCHY)'}
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => openApp('bountyboard')}
+                  className="px-3 py-1 bg-[#d29922] text-black font-bold text-[11px] uppercase cursor-pointer hover:bg-[#e3b341]"
+                >
+                  Endless Bounty Mode →
+                </button>
+                <button
+                  onClick={() => openApp('files')}
+                  className="px-3 py-1 bg-[#1f6feb] text-white font-bold text-[11px] uppercase cursor-pointer hover:bg-[#388bfd]"
+                >
+                  DataVault →
+                </button>
+              </div>
+            </div>
+            <p className="text-[11px] text-[#8b949e]">
+              You have completed all 10 operations of the NexusOS storyline. All systems remain open for freelance bounties, terminal attacks, network sniffing, and exploration.
+            </p>
           </div>
         ) : missionStage === 'briefing' ? (
           <div className="text-[11px] text-[#8b949e] flex items-center gap-2 py-1">

@@ -1,10 +1,19 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { ALL_CLUES, EMAIL_ACCOUNTS, MISSIONS, SERVER_NODES, SHOP_ITEMS } from '../data/worldData';
+import { ALL_CLUES, BOUNTY_CONTRACTS, EMAIL_ACCOUNTS, MISSIONS, SERVER_NODES, SHOP_ITEMS } from '../data/worldData';
 import { AppId, ChatMessage, Clue, ServerFile } from '../types/game';
 import { ContextMenuGroup, ContextMenuState } from '../components/ContextMenu';
 import { sound } from '../utils/sound';
 
-export type IntraWebPage = 'search' | 'velox' | 'chirper' | 'aethelgard' | 'webmail';
+export type IntraWebPage =
+  | 'search'
+  | 'velox'
+  | 'chirper'
+  | 'aethelgard'
+  | 'webmail'
+  | 'nordgrid'
+  | 'oceaniclink'
+  | 'svalbard'
+  | 'darkforum';
 
 export interface WindowState {
   id: AppId;
@@ -131,6 +140,12 @@ interface GameContextType {
   sfxVolume: number;
   setSfxVolume: (vol: number) => void;
 
+  // Freelance Bounties & Moral Endings
+  completedBounties: string[];
+  claimBounty: (bountyId: string) => void;
+  chosenEnding: 'purge' | 'subjugate' | 'leak' | null;
+  chooseEnding: (ending: 'purge' | 'subjugate' | 'leak') => void;
+
   // Notifications / Toasts
   notifications: { id: string; title: string; message: string; type: 'clue' | 'mission' | 'warning' }[];
   addNotification: (title: string, message: string, type?: 'clue' | 'mission' | 'warning') => void;
@@ -220,6 +235,14 @@ const INITIAL_WINDOWS: Record<AppId, WindowState> = {
     zIndex: 12,
     position: { x: 260, y: 85 },
   },
+  bountyboard: {
+    id: 'bountyboard',
+    title: 'BountyBoard // DarkNet Contracts',
+    isOpen: false,
+    isMinimized: false,
+    zIndex: 16,
+    position: { x: 210, y: 70 },
+  },
 };
 
 const GameContext = createContext<GameContextType | null>(null);
@@ -304,6 +327,38 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   >([]);
   const [isMuted, setIsMuted] = useState<boolean>(false);
 
+  // Freelance Bounties & Moral Endings
+  const [completedBounties, setCompletedBounties] = useState<string[]>([]);
+  const [chosenEnding, setChosenEnding] = useState<'purge' | 'subjugate' | 'leak' | null>(null);
+
+  const claimBounty = (bountyId: string) => {
+    if (completedBounties.includes(bountyId)) return;
+    const bounty = BOUNTY_CONTRACTS.find((b) => b.id === bountyId);
+    if (!bounty) return;
+    sound.playCryptoCoin();
+    setCompletedBounties((prev) => [...prev, bountyId]);
+    setCrypto((c) => c + bounty.rewardCrypto);
+    addNotification(
+      `Bounty Claimed: +${bounty.rewardCrypto} ◈`,
+      `${bounty.title} verified and funds deposited.`,
+      'mission'
+    );
+  };
+
+  const chooseEnding = (ending: 'purge' | 'subjugate' | 'leak') => {
+    sound.playSuccess();
+    setChosenEnding(ending);
+    setCampaignFinished(true);
+    if (ending === 'subjugate') {
+      setCrypto((c) => c + 100000);
+      addNotification('Neural Dominance', '+100,000 ◈ Slush Fund Overridden. You are the AI Sovereign.', 'mission');
+    } else if (ending === 'purge') {
+      addNotification('Total Purge', 'Ouroboros erased from planetary infrastructure. Humanity is free.', 'mission');
+    } else {
+      addNotification('0xUnderground Leak', 'All state algorithms published to the darknet. Cyber-anarchy commences.', 'mission');
+    }
+  };
+
   const applySavedState = (saved: any) => {
     if (!saved) return;
     if (typeof saved.crypto === 'number') setCrypto(saved.crypto);
@@ -328,6 +383,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     if (Array.isArray(saved.successfulPhishes)) setSuccessfulPhishes(saved.successfulPhishes);
     if (Array.isArray(saved.activeProxyChain)) setActiveProxyChain(saved.activeProxyChain);
+    if (Array.isArray(saved.completedBounties)) setCompletedBounties(saved.completedBounties);
+    if (saved.chosenEnding) setChosenEnding(saved.chosenEnding);
   };
 
   const applyAudioSettings = (audio: { musicVolume?: number; sfxVolume?: number; muted?: boolean }) => {
@@ -474,6 +531,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         honeypotActive,
         capturedAttackerIp,
         successfulPhishes,
+        completedBounties,
+        chosenEnding,
       };
       fetch('/api/save', {
         method: 'POST',
@@ -503,6 +562,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     honeypotActive,
     capturedAttackerIp,
     successfulPhishes,
+    completedBounties,
+    chosenEnding,
   ]);
 
   // Step-by-step Briefing Message Streamer (when missionStage === 'briefing')
@@ -552,9 +613,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, 4500);
   };
 
-  // Active Attack Simulation during Operation 07 (or post-Operation 06)
+  // Active Attack Simulation during Operation 07 and Operation 10 (Svalbard Bunker Defense)
   useEffect(() => {
-    if (currentMissionIndex === 6 && !campaignFinished) {
+    if ((currentMissionIndex === 6 || currentMissionIndex === 9) && !campaignFinished) {
       setUnderAttack(true);
     } else {
       setUnderAttack(false);
@@ -718,6 +779,48 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           !logsDirtyOnServer['141.98.11.200'] &&
           connectedIp !== '141.98.11.200'
         );
+
+      // Chapter 4 Objectives: The Ouroboros Protocol
+      case 'obj_m8_lindholm_intel':
+        return (
+          crackedEmails.includes('a.lindholm@nordgrid-power.com') ||
+          hasClueId('clue_scada_ip') ||
+          successfulPhishes.includes('phish_astrid')
+        );
+      case 'obj_m8_buy_scada':
+        return ownedTools.includes('scada_plc_exploit');
+      case 'obj_m8_scada_breach':
+        return (
+          hasFile('evidence_scada_trip') &&
+          !logsDirtyOnServer['217.182.80.50'] &&
+          connectedIp !== '217.182.80.50'
+        );
+
+      case 'obj_m9_kai_intel':
+        return (
+          crackedEmails.includes('k.thorne@oceaniclink-telecom.net') ||
+          hasClueId('clue_subsea_fiber_ip') ||
+          successfulPhishes.includes('phish_kai')
+        );
+      case 'obj_m9_buy_qkd':
+        return ownedTools.includes('optical_qkd_decryptor');
+      case 'obj_m9_fiber_breach':
+        return (
+          hasFile('evidence_subsea_repeater') &&
+          !logsDirtyOnServer['102.16.88.12'] &&
+          connectedIp !== '102.16.88.12'
+        );
+
+      case 'obj_m10_buy_paradox':
+        return ownedTools.includes('zero_paradox_injector');
+      case 'obj_m10_bunker_breach':
+        return (
+          hasFile('evidence_ouroboros_kernel') &&
+          !logsDirtyOnServer['185.190.20.1'] &&
+          connectedIp !== '185.190.20.1'
+        );
+      case 'obj_m10_final_destiny':
+        return chosenEnding !== null;
 
       default:
         return false;
@@ -1171,7 +1274,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const wipeServerLogs = (ip: string) => {
     setLogsDirtyOnServer((prev) => ({ ...prev, [ip]: false }));
-    if (traceActive && ip === '203.0.113.88') {
+    if (traceActive) {
       setTraceActive(false);
       setTracePercent(0);
       sound.playSuccess();
@@ -1216,6 +1319,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCapturedAttackerIp(null);
     setSuccessfulPhishes([]);
     setActiveProxyChain(['node_zurich', 'node_montreal']);
+    setCompletedBounties([]);
+    setChosenEnding(null);
     setCurrentMissionIndex(0);
     setMissionStage('briefing');
     setCompletedMissionIds([]);
@@ -1320,6 +1425,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         toggleProxyNode,
         isMuted,
         toggleMute,
+        completedBounties,
+        claimBounty,
+        chosenEnding,
+        chooseEnding,
       }}
     >
       {children}

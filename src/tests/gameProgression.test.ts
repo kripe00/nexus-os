@@ -161,4 +161,75 @@ describe('Gameplay Engine & Progression Logic', () => {
       expect(ALL_CLUES.clue_counter_exploit_token.value).toBe('OVERRIDE-GHOST-RECALL');
     });
   });
+
+  describe('Mission 8: NordGrid SCADA Power Grid Stabilization', () => {
+    it('validates Dr. Astrid Lindholm synthesis and SCADA server 217.182.80.50 exploitation', () => {
+      const email = 'a.lindholm@nordgrid-power.com';
+      const account = EMAIL_ACCOUNTS[email];
+      expect(account).toBeDefined();
+
+      const yachtClue = ALL_CLUES.clue_astrid_yacht;
+      const pinClue = ALL_CLUES.clue_astrid_pin;
+      expect(yachtClue.value).toBe('NordicBreeze');
+      expect(pinClue.value).toBe('5020');
+      expect(account.password).toBe('NordicBreeze5020');
+
+      const server = SERVER_NODES['217.182.80.50'];
+      expect(server).toBeDefined();
+      expect(server.requiredPort).toBe(502);
+      expect(server.requiredToolId).toBe('scada_plc_exploit');
+
+      const tool = SHOP_ITEMS.find((t) => t.id === 'scada_plc_exploit');
+      expect(tool).toBeDefined();
+
+      const dump = server.files.find((f) => f.name === 'scada_telemetry_dump.bin');
+      expect(dump).toBeDefined();
+      expect(dump?.clues?.some((c) => c.id === 'clue_scada_sync_key')).toBe(true);
+      expect(ALL_CLUES.clue_scada_sync_key.value).toBe('MODBUS-TRIP-77A');
+    });
+  });
+
+  describe('Mission 9: OceanicLink Subsea QKD Repeater Tap', () => {
+    it('validates Kai Thorne credentials and optical repeater 102.16.88.12 breach', () => {
+      const email = 'k.thorne@oceaniclink-telecom.net';
+      const account = EMAIL_ACCOUNTS[email];
+      expect(account).toBeDefined();
+
+      const stationClue = ALL_CLUES.clue_kai_station;
+      const yearClue = ALL_CLUES.clue_kai_year;
+      expect(stationClue.value).toBe('AbyssPoint9');
+      expect(yearClue.value).toBe('2019');
+      expect(account.password).toBe('AbyssPoint92019');
+
+      const server = SERVER_NODES['102.16.88.12'];
+      expect(server).toBeDefined();
+      expect(server.requiredPort).toBe(10443);
+      expect(server.requiredToolId).toBe('optical_qkd_decryptor');
+
+      const tool = SHOP_ITEMS.find((t) => t.id === 'optical_qkd_decryptor');
+      expect(tool).toBeDefined();
+
+      const diagnostics = server.files.find((f) => f.name === 'undersea_repeater_diagnostics.dat');
+      expect(diagnostics).toBeDefined();
+      expect(diagnostics?.clues?.some((c) => c.id === 'clue_svalbard_bunker_ip')).toBe(true);
+      expect(ALL_CLUES.clue_svalbard_bunker_ip.value).toBe('185.190.20.1');
+    });
+  });
+
+  describe('Mission 10: Svalbard AI Core Bunker Singularity Breach', () => {
+    it('validates Ouroboros Protocol bunker 185.190.20.1 and Gödel paradox override', () => {
+      const server = SERVER_NODES['185.190.20.1'];
+      expect(server).toBeDefined();
+      expect(server.requiredPort).toBe(31337);
+      expect(server.requiredToolId).toBe('zero_paradox_injector');
+      expect(server.triggersTrace).toBe(true);
+
+      const tool = SHOP_ITEMS.find((t) => t.id === 'zero_paradox_injector');
+      expect(tool).toBeDefined();
+
+      const kernel = server.files.find((f) => f.name === 'ouroboros_master_kernel.sys');
+      expect(kernel).toBeDefined();
+      expect(ALL_CLUES.clue_ouroboros_root_paradox.value).toBe('GODEL-ZERO-SELF-TERMINATE');
+    });
+  });
 });
