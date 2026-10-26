@@ -473,26 +473,31 @@ class SoundEngine {
     } catch {}
   }
 
-  // Incoming WhisperChat message ping
+  // Incoming WhisperChat encrypted transmission chime (tactical cyberpunk pager)
   playMessage() {
     const ctx = this.getContext();
     if (!ctx) return;
     try {
-      const notes = [740, 1108.73]; // F#5, C#6
-      notes.forEach((freq, idx) => {
+      const now = ctx.currentTime;
+      // Soft high-tech digital chirps
+      const notes = [
+        { freq: 880, start: 0, dur: 0.06 },
+        { freq: 1320, start: 0.05, dur: 0.09 },
+        { freq: 1760, start: 0.11, dur: 0.12 },
+      ];
+      notes.forEach(({ freq, start, dur }) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = "sine";
-        const start = ctx.currentTime + idx * 0.08;
-        osc.frequency.setValueAtTime(freq, start);
+        osc.frequency.setValueAtTime(freq, now + start);
 
-        gain.gain.setValueAtTime(0.07 * this.sfxVolume, start);
-        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.18);
+        gain.gain.setValueAtTime(0.045 * this.sfxVolume, now + start);
+        gain.gain.exponentialRampToValueAtTime(0.0005, now + start + dur);
 
         osc.connect(gain);
         gain.connect(ctx.destination);
-        osc.start(start);
-        osc.stop(start + 0.2);
+        osc.start(now + start);
+        osc.stop(now + start + dur + 0.01);
       });
     } catch {}
   }

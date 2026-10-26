@@ -3,8 +3,8 @@
 
 class VoiceSynthesizer {
   private synth: SpeechSynthesis | null = null;
-  public enabled: boolean = true;
-  public volume: number = 0.85;
+  public enabled: boolean = false; // Default disabled to maintain crisp soundtrack & avoid robotic TTS interruption
+  public volume: number = 0.7;
   private selectedVoice: SpeechSynthesisVoice | null = null;
   private lastSpokenText: string = "";
   private lastSpokenTime: number = 0;
@@ -13,6 +13,9 @@ class VoiceSynthesizer {
   constructor() {
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
       this.synth = window.speechSynthesis;
+      try {
+        this.synth.cancel();
+      } catch {}
       this.initVoice();
       if (this.synth.onvoiceschanged !== undefined) {
         this.synth.onvoiceschanged = () => this.initVoice();
@@ -143,9 +146,8 @@ class VoiceSynthesizer {
     this.speak("Hostile drone trapped in honeypot containment.");
   }
 
-  public notifyTransmission(sender: string) {
-    const cleanSender = sender.replace(/\[ENCRYPTED\]/g, "").trim();
-    this.speak(`Incoming encrypted transmission from ${cleanSender || "Zero"}.`);
+  public notifyTransmission(_sender: string) {
+    // Disabled: chat transmissions rely on synthesizer pager SFX rather than jarring TTS
   }
 
   public notifyBountyCleared() {

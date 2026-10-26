@@ -804,9 +804,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
     const nextMsg = remaining[0];
     const timer = setTimeout(() => {
       sound.playMessage();
-      if (nextMsg.sender !== "player" && nextMsg.sender !== "system") {
-        voice.notifyTransmission(nextMsg.senderName);
-      }
       setChatHistory((prev) => {
         if (prev.some((p) => p.id === nextMsg.id)) return prev;
         return [...prev, nextMsg];
