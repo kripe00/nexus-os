@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
+  ArrowLeftRight,
   Award,
   CheckCircle2,
   ChevronDown,
@@ -33,6 +34,7 @@ export const OnboardingHUD: React.FC<OnboardingHUDProps> = ({ onClose }) => {
   } = useGame();
 
   const [minimized, setMinimized] = useState<boolean>(false);
+  const [dockSide, setDockSide] = useState<"right" | "left">("right");
   const [rewardClaimed, setRewardClaimed] = useState<boolean>(false);
 
   // Evaluate step conditions
@@ -111,11 +113,41 @@ export const OnboardingHUD: React.FC<OnboardingHUDProps> = ({ onClose }) => {
     return null;
   }
 
+  // Minimized compact pill mode
+  if (minimized) {
+    return (
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className={`fixed z-40 font-mono select-none transition-all duration-200 animate-window-in ${
+          dockSide === "right" ? "top-3 right-[335px]" : "top-3 left-28"
+        }`}
+      >
+        <div className="flex items-center gap-1 bg-[#0b0e14]/95 border border-[#1f6feb] shadow-[0_8px_30px_rgba(0,0,0,0.85)] p-1 text-xs">
+          <button
+            onClick={() => setMinimized(false)}
+            className="flex items-center gap-2 px-2.5 py-1 text-[#79c0ff] hover:text-white cursor-pointer font-bold tracking-wider text-[11px]"
+          >
+            <Compass className="w-3.5 h-3.5 text-[#58a6ff] animate-spin-slow" />
+            <span>TUTORIAL HUD: {completedCount}/{steps.length}</span>
+            <ChevronDown className="w-3.5 h-3.5 text-[#8b949e]" />
+          </button>
+          <button
+            onClick={onClose}
+            title="Dismiss Orientation HUD"
+            className="p-1 hover:text-[#ff5555] text-[#8b949e] cursor-pointer border-l border-[#1c232f]"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       onClick={(e) => e.stopPropagation()}
-      className={`fixed top-12 right-4 z-40 font-mono select-none transition-all duration-200 animate-window-in ${
-        minimized ? "w-64" : "w-80"
+      className={`fixed top-3 z-40 font-mono select-none transition-all duration-200 animate-window-in w-80 ${
+        dockSide === "right" ? "right-[335px]" : "left-28"
       }`}
     >
       <div className="bg-[#0b0e14]/95 backdrop-blur-md border border-[#2b3545] shadow-[0_12px_40px_rgba(0,0,0,0.85)] text-xs text-[#d4d7dc]">
@@ -125,7 +157,18 @@ export const OnboardingHUD: React.FC<OnboardingHUDProps> = ({ onClose }) => {
             <Compass className="w-3.5 h-3.5 text-[#58a6ff] animate-spin-slow" />
             <span className="truncate">ORIENTATION PROTOCOL</span>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setDockSide(dockSide === "right" ? "left" : "right")}
+              title={
+                dockSide === "right"
+                  ? "Move HUD to Left Desktop Area"
+                  : "Move HUD to Right Dock Area"
+              }
+              className="p-1 hover:text-[#58a6ff] text-[#8b949e] cursor-pointer"
+            >
+              <ArrowLeftRight className="w-3 h-3" />
+            </button>
             <span
               className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${
                 allCompleted
@@ -136,15 +179,11 @@ export const OnboardingHUD: React.FC<OnboardingHUDProps> = ({ onClose }) => {
               {allCompleted ? "CERTIFIED" : `${completedCount}/${steps.length}`}
             </span>
             <button
-              onClick={() => setMinimized(!minimized)}
-              title={minimized ? "Expand Directives" : "Minimize HUD"}
+              onClick={() => setMinimized(true)}
+              title="Minimize HUD to Pill"
               className="p-1 hover:text-white text-[#8b949e] cursor-pointer"
             >
-              {minimized ? (
-                <ChevronDown className="w-3.5 h-3.5" />
-              ) : (
-                <ChevronUp className="w-3.5 h-3.5" />
-              )}
+              <ChevronUp className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={onClose}
