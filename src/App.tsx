@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   AlertOctagon,
+  AlertTriangle,
   Briefcase,
   Coins,
   Cpu,
@@ -19,31 +20,32 @@ import {
   ShoppingBag,
   Sliders,
   Terminal,
+  Trash2,
   Tv,
   User,
   Volume2,
   VolumeX,
-} from 'lucide-react';
-import { BlackMarketApp } from './apps/BlackMarketApp';
-import { BountyBoardApp } from './apps/BountyBoardApp';
-import { DataVaultApp } from './apps/DataVaultApp';
-import { GeoRelayApp } from './apps/GeoRelayApp';
-import { IntraWebApp } from './apps/IntraWebApp';
-import { NetShieldApp } from './apps/NetShieldApp';
-import { PacketSnifferApp } from './apps/PacketSnifferApp';
-import { PassWeaverApp } from './apps/PassWeaverApp';
-import { SmartTerminalApp } from './apps/SmartTerminalApp';
-import { SpearPhishApp } from './apps/SpearPhishApp';
-import { WhisperChatApp } from './apps/WhisperChatApp';
-import { AudioMixerPopover } from './components/AudioMixerPopover';
-import { ClueBoardSidebar } from './components/ClueBoardSidebar';
-import { ContextMenu } from './components/ContextMenu';
-import { DesktopWallpaper } from './components/DesktopWallpaper';
-import { HexInspectorModal } from './components/HexInspectorModal';
-import { OperatorLoginScreen } from './components/OperatorLoginScreen';
-import { GameProvider, useGame } from './context/GameContext';
-import { AppId } from './types/game';
-import { sound } from './utils/sound';
+} from "lucide-react";
+import { BlackMarketApp } from "./apps/BlackMarketApp";
+import { BountyBoardApp } from "./apps/BountyBoardApp";
+import { DataVaultApp } from "./apps/DataVaultApp";
+import { GeoRelayApp } from "./apps/GeoRelayApp";
+import { IntraWebApp } from "./apps/IntraWebApp";
+import { NetShieldApp } from "./apps/NetShieldApp";
+import { PacketSnifferApp } from "./apps/PacketSnifferApp";
+import { PassWeaverApp } from "./apps/PassWeaverApp";
+import { SmartTerminalApp } from "./apps/SmartTerminalApp";
+import { SpearPhishApp } from "./apps/SpearPhishApp";
+import { WhisperChatApp } from "./apps/WhisperChatApp";
+import { AudioMixerPopover } from "./components/AudioMixerPopover";
+import { ClueBoardSidebar } from "./components/ClueBoardSidebar";
+import { ContextMenu } from "./components/ContextMenu";
+import { DesktopWallpaper } from "./components/DesktopWallpaper";
+import { HexInspectorModal } from "./components/HexInspectorModal";
+import { OperatorLoginScreen } from "./components/OperatorLoginScreen";
+import { GameProvider, useGame } from "./context/GameContext";
+import { AppId } from "./types/game";
+import { sound } from "./utils/sound";
 
 const DesktopEnvironment: React.FC = () => {
   const {
@@ -78,60 +80,86 @@ const DesktopEnvironment: React.FC = () => {
     setInspectedFile,
     connectToServer,
     activeProxyChain,
+    camStatus,
   } = useGame();
 
-  const [clock, setClock] = useState<string>('23:42');
+  const [clock, setClock] = useState<string>("23:42");
   const [crtMode, setCrtMode] = useState<boolean>(true);
   const [startMenuOpen, setStartMenuOpen] = useState<boolean>(false);
   const [audioMixerOpen, setAudioMixerOpen] = useState<boolean>(false);
+  const [wipeModalOpen, setWipeModalOpen] = useState<boolean>(false);
 
   const handleDesktopContextMenu = (e: React.MouseEvent) => {
     showContextMenu(e, [
       {
-        header: '// SYSTEM OPERATIONS',
+        header: "// SYSTEM OPERATIONS",
         items: [
           {
-            label: 'Launch Terminal',
+            label: "Launch Terminal",
             icon: <Terminal className="w-3.5 h-3.5" />,
-            shortcut: 'CTRL+T',
-            onClick: () => openApp('terminal'),
+            shortcut: "CTRL+T",
+            onClick: () => openApp("terminal"),
           },
           {
-            label: 'Minimize All Windows',
+            label: "Minimize All Windows",
             icon: <Minimize2 className="w-3.5 h-3.5" />,
-            shortcut: 'WIN+D',
+            shortcut: "WIN+D",
             onClick: minimizeAll,
           },
           {
-            label: 'Reset Window Grid',
+            label: "Reset Window Grid",
             icon: <RotateCcw className="w-3.5 h-3.5" />,
-            shortcut: 'RESET',
+            shortcut: "RESET",
             onClick: resetWindowPositions,
           },
         ],
       },
       {
-        header: '// DISPLAY & AUDIO',
+        header: "// DISPLAY & AUDIO",
         items: [
           {
-            label: crtMode ? 'Disable CRT Scanlines' : 'Enable CRT Scanlines',
+            label: crtMode ? "Disable CRT Scanlines" : "Enable CRT Scanlines",
             icon: <Tv className="w-3.5 h-3.5" />,
-            shortcut: 'CRT',
+            shortcut: "CRT",
             onClick: () => setCrtMode(!crtMode),
           },
           {
-            label: 'Tactical Audio Mixer',
+            label: "Tactical Audio Mixer",
             icon: <Sliders className="w-3.5 h-3.5" />,
-            shortcut: 'MIXER',
+            shortcut: "MIXER",
             onClick: () => setAudioMixerOpen(true),
           },
         ],
       },
       {
-        header: '// EMERGENCY OVERRIDE',
+        header: "// OPERATOR SESSION",
         items: [
           {
-            label: 'Emergency Disconnect / Killswitch',
+            label: `Log Out (${currentUser?.username || "Operator"})`,
+            icon: <LogOut className="w-3.5 h-3.5" />,
+            onClick: () => {
+              if (
+                window.confirm(
+                  `Log out operator session (${currentUser?.username || "Operator"})?`,
+                )
+              ) {
+                logout();
+              }
+            },
+          },
+          {
+            label: "Wipe Progress / Restart Campaign",
+            icon: <Trash2 className="w-3.5 h-3.5" />,
+            danger: true,
+            onClick: () => setWipeModalOpen(true),
+          },
+        ],
+      },
+      {
+        header: "// EMERGENCY OVERRIDE",
+        items: [
+          {
+            label: "Emergency Disconnect / Killswitch",
             icon: <ShieldAlert className="w-3.5 h-3.5" />,
             danger: true,
             onClick: () => connectToServer(null),
@@ -145,7 +173,11 @@ const DesktopEnvironment: React.FC = () => {
     const updateClock = () => {
       const now = new Date();
       setClock(
-        now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
+        now.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        }),
       );
     };
     updateClock();
@@ -157,14 +189,14 @@ const DesktopEnvironment: React.FC = () => {
   useEffect(() => {
     const handleFirstInteraction = () => {
       sound.startMusic();
-      window.removeEventListener('pointerdown', handleFirstInteraction);
-      window.removeEventListener('keydown', handleFirstInteraction);
+      window.removeEventListener("pointerdown", handleFirstInteraction);
+      window.removeEventListener("keydown", handleFirstInteraction);
     };
-    window.addEventListener('pointerdown', handleFirstInteraction);
-    window.addEventListener('keydown', handleFirstInteraction);
+    window.addEventListener("pointerdown", handleFirstInteraction);
+    window.addEventListener("keydown", handleFirstInteraction);
     return () => {
-      window.removeEventListener('pointerdown', handleFirstInteraction);
-      window.removeEventListener('keydown', handleFirstInteraction);
+      window.removeEventListener("pointerdown", handleFirstInteraction);
+      window.removeEventListener("keydown", handleFirstInteraction);
     };
   }, []);
 
@@ -175,63 +207,67 @@ const DesktopEnvironment: React.FC = () => {
     badge?: number;
   }[] = [
     {
-      id: 'whisper',
-      label: 'WhisperChat',
+      id: "whisper",
+      label: "WhisperChat",
       icon: <MessageSquare className="w-6 h-6" />,
       badge: unreadMessages > 0 ? unreadMessages : undefined,
     },
     {
-      id: 'intraweb',
-      label: 'IntraWeb',
+      id: "intraweb",
+      label: "IntraWeb",
       icon: <Globe className="w-6 h-6" />,
     },
     {
-      id: 'passweaver',
-      label: 'PassWeaver',
+      id: "passweaver",
+      label: "PassWeaver",
       icon: <KeyRound className="w-6 h-6" />,
       badge: discoveredClues.length >= 2 ? discoveredClues.length : undefined,
     },
     {
-      id: 'spearphish',
-      label: 'SpearPhish',
+      id: "spearphish",
+      label: "SpearPhish",
       icon: <Fish className="w-6 h-6" />,
     },
     {
-      id: 'terminal',
-      label: 'Terminal',
+      id: "terminal",
+      label: "Terminal",
       icon: <Terminal className="w-6 h-6" />,
     },
     {
-      id: 'blackmarket',
-      label: 'BlackMarket',
+      id: "blackmarket",
+      label: "BlackMarket",
       icon: <ShoppingBag className="w-6 h-6" />,
     },
     {
-      id: 'netshield',
-      label: 'NetShield IDS',
-      icon: <ShieldAlert className={`w-6 h-6 ${underAttack ? 'text-[#ff3b3b] animate-bounce' : ''}`} />,
+      id: "netshield",
+      label: "NetShield IDS",
+      icon: (
+        <ShieldAlert
+          className={`w-6 h-6 ${underAttack ? "text-[#ff3b3b] animate-bounce" : ""}`}
+        />
+      ),
       badge: underAttack ? Math.round(firewallHealth) : undefined,
     },
     {
-      id: 'packetsniffer',
-      label: 'PacketSniffer',
+      id: "packetsniffer",
+      label: "PacketSniffer",
       icon: <Radio className="w-6 h-6 text-[#58a6ff]" />,
     },
     {
-      id: 'georelay',
-      label: 'GeoRelay',
+      id: "georelay",
+      label: "GeoRelay",
       icon: <Network className="w-6 h-6 text-[#58a6ff]" />,
       badge: activeProxyChain.length > 0 ? activeProxyChain.length : undefined,
     },
     {
-      id: 'files',
-      label: 'DataVault',
+      id: "files",
+      label: "DataVault",
       icon: <FolderLock className="w-6 h-6" />,
       badge: downloadedFiles.length > 0 ? downloadedFiles.length : undefined,
     },
     {
-      id: 'bountyboard',
-      label: 'BountyBoard',
+      id: "bountyboard",
+      label: "BountyBoard",
       icon: <Briefcase className="w-6 h-6 text-[#e3b341]" />,
     },
   ];
@@ -242,8 +278,14 @@ const DesktopEnvironment: React.FC = () => {
   if (!currentUser) {
     return (
       <div className="relative w-screen h-screen overflow-hidden bg-[#060708]">
-        {crtMode && <div className="crt-overlay absolute inset-0 z-40 pointer-events-none" />}
-        <OperatorLoginScreen onLogin={login} onRegister={register} onGuest={guestLogin} />
+        {crtMode && (
+          <div className="crt-overlay absolute inset-0 z-40 pointer-events-none" />
+        )}
+        <OperatorLoginScreen
+          onLogin={login}
+          onRegister={register}
+          onGuest={guestLogin}
+        />
       </div>
     );
   }
@@ -251,19 +293,21 @@ const DesktopEnvironment: React.FC = () => {
   return (
     <div
       className={`relative w-screen h-screen overflow-hidden flex flex-col bg-[#060708] ${
-        traceActive ? 'trace-danger-frame border-2 border-[#ff3b3b]' : ''
-      }`}
+        traceActive ? "trace-danger-frame border-2 border-[#ff3b3b]" : ""
+      } ${underAttack && firewallHealth < 50 ? "screen-glitch-shake" : ""}`}
     >
       {/* Optional CRT Monitor Phosphor & Scanlines Overlay */}
-      {crtMode && <div className="crt-overlay absolute inset-0 z-40 pointer-events-none" />}
+      {crtMode && (
+        <div className="crt-overlay absolute inset-0 z-40 pointer-events-none" />
+      )}
 
       {/* Top Threat Banner when Active Trace is live */}
       {traceActive && (
         <div className="h-6 bg-[#ff3b3b] text-white font-mono font-bold text-[10px] tracking-widest uppercase flex items-center justify-center gap-3 animate-pulse z-50 shrink-0">
           <ShieldAlert className="w-3.5 h-3.5" />
           <span>
-            CRITICAL ALERT // COUNTER-INTRUSION TRACE AT {tracePercent.toFixed(0)}% // DISCONNECT OR
-            RUN 'wipe_logs'
+            CRITICAL ALERT // COUNTER-INTRUSION TRACE AT{" "}
+            {tracePercent.toFixed(0)}% // DISCONNECT OR RUN 'wipe_logs'
           </span>
           <ShieldAlert className="w-3.5 h-3.5" />
         </div>
@@ -321,11 +365,11 @@ const DesktopEnvironment: React.FC = () => {
               <div
                 key={n.id}
                 className={`px-3.5 py-2.5 border-l-4 bg-[#0d1017] border border-[#282f3d] text-xs shadow-2xl ${
-                  n.type === 'warning'
-                    ? 'border-l-[#ff3b3b] text-[#ff5555]'
-                    : n.type === 'mission'
-                    ? 'border-l-[#3fb950] text-[#56d364]'
-                    : 'border-l-[#58a6ff] text-[#79c0ff]'
+                  n.type === "warning"
+                    ? "border-l-[#ff3b3b] text-[#ff5555]"
+                    : n.type === "mission"
+                      ? "border-l-[#3fb950] text-[#56d364]"
+                      : "border-l-[#58a6ff] text-[#79c0ff]"
                 }`}
               >
                 <div className="font-bold text-[11px]">{n.title}</div>
@@ -348,8 +392,8 @@ const DesktopEnvironment: React.FC = () => {
             title="Nexus OS Menu"
             className={`h-8 px-3 border font-bold flex items-center gap-2 mr-1 cursor-pointer transition-colors ${
               startMenuOpen
-                ? 'bg-[#1f6feb] border-[#58a6ff] text-white'
-                : 'bg-[#151921] border-[#303947] text-[#e6edf3] hover:border-[#58a6ff]'
+                ? "bg-[#1f6feb] border-[#58a6ff] text-white"
+                : "bg-[#151921] border-[#303947] text-[#e6edf3] hover:border-[#58a6ff]"
             }`}
           >
             <Cpu className="w-4 h-4 text-[#58a6ff]" />
@@ -375,20 +419,62 @@ const DesktopEnvironment: React.FC = () => {
                       }}
                       className={`p-2 flex items-center justify-between border cursor-pointer transition-colors ${
                         isOpen
-                          ? 'bg-[#161c26] border-[#3b4659] text-white'
-                          : 'bg-[#08090d] border-[#1e232c] hover:border-[#58a6ff] text-[#c9d1d9]'
+                          ? "bg-[#161c26] border-[#3b4659] text-white"
+                          : "bg-[#08090d] border-[#1e232c] hover:border-[#58a6ff] text-[#c9d1d9]"
                       }`}
                     >
                       <div className="flex items-center gap-2">
-                        <span className="text-[#58a6ff] [&>svg]:w-4 [&>svg]:h-4">{app.icon}</span>
-                        <span className="font-semibold text-[11px]">{app.label}</span>
+                        <span className="text-[#58a6ff] [&>svg]:w-4 [&>svg]:h-4">
+                          {app.icon}
+                        </span>
+                        <span className="font-semibold text-[11px]">
+                          {app.label}
+                        </span>
                       </div>
-                      <span className={`text-[10px] font-mono ${isOpen ? 'text-[#3fb950]' : 'text-[#6e7681]'}`}>
-                        {isOpen ? 'ACTIVE' : 'LAUNCH'}
+                      <span
+                        className={`text-[10px] font-mono ${isOpen ? "text-[#3fb950]" : "text-[#6e7681]"}`}
+                      >
+                        {isOpen ? "ACTIVE" : "LAUNCH"}
                       </span>
                     </button>
                   );
                 })}
+              </div>
+
+              <div className="pt-2 border-t border-[#21262d] mt-2 space-y-1.5">
+                <button
+                  onClick={() => {
+                    setStartMenuOpen(false);
+                    setWipeModalOpen(true);
+                  }}
+                  className="w-full p-2 bg-[#1b1012] hover:bg-[#2e1215] border border-[#ff3b3b]/40 text-[#ff7b72] flex items-center justify-between text-xs font-bold cursor-pointer transition-colors"
+                >
+                  <span className="flex items-center gap-1.5">
+                    <Trash2 className="w-3.5 h-3.5 text-[#ff5555]" />
+                    WIPE DOSSIER // RESTART
+                  </span>
+                  <span className="text-[10px] text-[#ff7b72]/60">PURGE</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setStartMenuOpen(false);
+                    if (
+                      window.confirm(
+                        `Log out operator session (${currentUser.username})?`,
+                      )
+                    ) {
+                      logout();
+                    }
+                  }}
+                  className="w-full p-2 bg-[#151921] hover:bg-[#1f2633] border border-[#303947] text-[#c9d1d9] hover:text-white flex items-center justify-between text-xs font-bold cursor-pointer transition-colors"
+                >
+                  <span className="flex items-center gap-1.5">
+                    <LogOut className="w-3.5 h-3.5 text-[#8b949e]" />
+                    LOG OUT / SWITCH OPERATOR
+                  </span>
+                  <span className="text-[10px] text-[#8b949e]">DISCONNECT</span>
+                </button>
               </div>
             </div>
           )}
@@ -402,11 +488,13 @@ const DesktopEnvironment: React.FC = () => {
                 onClick={() => openApp(app.id)}
                 className={`h-8 px-3 border text-xs flex items-center gap-2 cursor-pointer transition-colors ${
                   isFocused
-                    ? 'bg-[#171c26] text-white border-[#58a6ff] font-semibold'
-                    : 'bg-[#0e1117] text-[#8b949e] border-[#21262d] hover:text-white'
+                    ? "bg-[#171c26] text-white border-[#58a6ff] font-semibold"
+                    : "bg-[#0e1117] text-[#8b949e] border-[#21262d] hover:text-white"
                 }`}
               >
-                <span className="text-[#58a6ff] [&>svg]:w-4 [&>svg]:h-4">{app.icon}</span>
+                <span className="text-[#58a6ff] [&>svg]:w-4 [&>svg]:h-4">
+                  {app.icon}
+                </span>
                 <span>{app.label}</span>
               </button>
             );
@@ -424,7 +512,7 @@ const DesktopEnvironment: React.FC = () => {
         {/* Right: System Tray (Wallet, Audio, Reset, Clock) */}
         <div className="flex items-center gap-2 shrink-0">
           <button
-            onClick={() => openApp('blackmarket')}
+            onClick={() => openApp("blackmarket")}
             title="Open BlackMarket"
             className="h-8 px-3 bg-[#111620] border border-[#282f3d] text-[#79c0ff] font-bold cursor-pointer hover:border-[#58a6ff] flex items-center gap-1.5"
           >
@@ -434,11 +522,11 @@ const DesktopEnvironment: React.FC = () => {
 
           <button
             onClick={() => setCrtMode(!crtMode)}
-            title={crtMode ? 'Disable CRT Scanlines' : 'Enable CRT Scanlines'}
+            title={crtMode ? "Disable CRT Scanlines" : "Enable CRT Scanlines"}
             className={`h-8 px-2.5 bg-[#111620] border text-xs cursor-pointer flex items-center gap-1.5 transition-colors ${
               crtMode
-                ? 'border-[#58a6ff] text-[#58a6ff] font-bold'
-                : 'border-[#21262d] text-[#8b949e] hover:text-white'
+                ? "border-[#58a6ff] text-[#58a6ff] font-bold"
+                : "border-[#21262d] text-[#8b949e] hover:text-white"
             }`}
           >
             <Tv className="w-3.5 h-3.5" />
@@ -451,55 +539,80 @@ const DesktopEnvironment: React.FC = () => {
             title="Tactical Audio Mixer (Music & SFX Volume)"
             className={`h-8 px-2.5 bg-[#111620] border text-[10px] font-mono flex items-center gap-1.5 cursor-pointer transition-colors ${
               audioMixerOpen
-                ? 'border-[#58a6ff] text-white bg-[#171c26]'
-                : 'border-[#21262d] text-[#79c0ff] hover:border-[#58a6ff]'
+                ? "border-[#58a6ff] text-white bg-[#171c26]"
+                : "border-[#21262d] text-[#79c0ff] hover:border-[#58a6ff]"
             }`}
           >
             <Sliders className="w-3.5 h-3.5 text-[#58a6ff]" />
             <span className="hidden md:inline truncate max-w-[145px]">
               {isMuted
-                ? 'OST: MUTED'
+                ? "OST: MUTED"
                 : traceActive || underAttack
-                ? 'BEFORE THE LOCK'
-                : 'SILENT PERIMETER'}
+                  ? "BEFORE THE LOCK"
+                  : "SILENT PERIMETER"}
             </span>
           </button>
 
           <button
             onClick={toggleMute}
-            title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
+            title={isMuted ? "Unmute Audio" : "Mute Audio"}
             className="h-8 w-8 bg-[#111620] border border-[#21262d] text-[#8b949e] hover:text-white cursor-pointer flex items-center justify-center"
           >
-            {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+            {isMuted ? (
+              <VolumeX className="w-4 h-4" />
+            ) : (
+              <Volume2 className="w-4 h-4" />
+            )}
           </button>
+
+          {/* Hardware Surveillance Indicator */}
+          {camStatus === "active" ? (
+            <div className="h-8 px-2.5 bg-[#290808] border border-[#ff3b3b] text-[10px] font-mono text-[#ff5555] font-bold flex items-center gap-1.5 animate-pulse">
+              <span className="w-2 h-2 rounded-full bg-[#ff3b3b] animate-ping" />
+              <span>[CAM_01: ACTIVE // REC]</span>
+            </div>
+          ) : (
+            <div className="h-8 px-2 bg-[#111620] border border-[#21262d] text-[10px] font-mono text-[#6e7681] flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#30363d]" />
+              <span>[CAM_01: OFF]</span>
+            </div>
+          )}
 
           {/* Operator Badge & Logout */}
           <div className="h-8 px-2.5 bg-[#111620] border border-[#21262d] text-[11px] font-mono text-[#c9d1d9] flex items-center gap-2">
             <User className="w-3.5 h-3.5 text-[#3fb950]" />
-            <span className="text-[#3fb950] font-bold truncate max-w-[90px]">{currentUser.username}</span>
+            <span className="text-[#3fb950] font-bold truncate max-w-[90px]">
+              {currentUser.username}
+            </span>
             <button
               onClick={() => {
-                if (window.confirm(`Log out operator session (${currentUser.username})?`)) {
+                if (
+                  window.confirm(
+                    `Log out operator session (${currentUser.username})?`,
+                  )
+                ) {
                   logout();
                 }
               }}
               title="Log Out Operator Session"
-              className="text-[#8b949e] hover:text-[#ff5555] ml-0.5 cursor-pointer"
+              className="text-[#8b949e] hover:text-[#ff5555] ml-1 cursor-pointer flex items-center gap-1 bg-[#1a1416] px-1.5 py-0.5 border border-[#3b2329] hover:border-[#ff5555] transition-colors"
             >
-              <LogOut className="w-3.5 h-3.5" />
+              <LogOut className="w-3 h-3 text-[#ff7b72]" />
+              <span className="text-[9px] uppercase font-bold text-[#ff7b72]">
+                Exit
+              </span>
             </button>
           </div>
 
           <button
-            onClick={() => {
-              if (window.confirm('Reset campaign progress and start over from Operation 01?')) {
-                resetGame();
-              }
-            }}
-            title="Reset Campaign Progress"
-            className="h-8 w-8 bg-[#111620] border border-[#21262d] text-[#8b949e] hover:text-[#ff5555] cursor-pointer flex items-center justify-center"
+            onClick={() => setWipeModalOpen(true)}
+            title="Wipe Progress / Restart Campaign"
+            className="h-8 px-2 bg-[#111620] border border-[#21262d] text-[#8b949e] hover:text-[#ff5555] hover:border-[#ff5555] cursor-pointer flex items-center gap-1 transition-colors"
           >
-            <RotateCcw className="w-4 h-4" />
+            <RotateCcw className="w-3.5 h-3.5 text-[#ff7b72]" />
+            <span className="hidden sm:inline text-[10px] font-mono text-[#ff7b72] font-bold">
+              WIPE
+            </span>
           </button>
 
           <div className="h-8 px-3 bg-[#111620] border border-[#21262d] text-[#c9d1d9] font-semibold flex items-center">
@@ -518,7 +631,10 @@ const DesktopEnvironment: React.FC = () => {
 
       {/* Raw Hex & Metadata Inspector */}
       {inspectedFile && (
-        <HexInspectorModal file={inspectedFile} onClose={() => setInspectedFile(null)} />
+        <HexInspectorModal
+          file={inspectedFile}
+          onClose={() => setInspectedFile(null)}
+        />
       )}
 
       {/* Trace Reached 100% Modal */}
@@ -530,10 +646,14 @@ const DesktopEnvironment: React.FC = () => {
               <span>CRITICAL ALERT // TRACE REACHED 100%</span>
             </div>
             <p className="text-[#d4d7dc] leading-relaxed">
-              Aethelgard's neural trace triangulated your proxy chain before <span className="text-white font-bold">/var/connection.log</span> was wiped. Emergency circuit breaker severed your session.
+              Aethelgard's neural trace triangulated your proxy chain before{" "}
+              <span className="text-white font-bold">/var/connection.log</span>{" "}
+              was wiped. Emergency circuit breaker severed your session.
             </p>
             <p className="text-[#79c0ff]">
-              Re-run `crack 443`, `connect 203.0.113.88`, `download PROJECT_MIRROR_TARGETS.dec`, and immediately execute `wipe_logs` + `disconnect`.
+              Re-run `crack 443`, `connect 203.0.113.88`, `download
+              PROJECT_MIRROR_TARGETS.dec`, and immediately execute `wipe_logs` +
+              `disconnect`.
             </p>
             <button
               onClick={dismissTraceAlert}
@@ -541,6 +661,65 @@ const DesktopEnvironment: React.FC = () => {
             >
               [ RETRY BREACH ]
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Wipe Progress Confirmation Modal */}
+      {wipeModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4 select-none">
+          <div className="max-w-md w-full p-5 bg-[#0e090a] border-2 border-[#ff3b3b] space-y-4 text-xs font-mono shadow-[0_0_50px_rgba(255,59,59,0.3)] animate-window-in">
+            <div className="px-2.5 py-1.5 bg-[#ff3b3b] text-white font-bold uppercase flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4" />
+                CONFIRM DOSSIER PURGE // ZERO-FILL
+              </span>
+              <span className="text-[10px] bg-black/40 px-1.5 py-0.5">
+                IRREVERSIBLE
+              </span>
+            </div>
+            <p className="text-[#d4d7dc] leading-relaxed">
+              Er du sikker på at du vil slette all fremgang for operatør{" "}
+              <span className="text-white font-bold">
+                {currentUser?.username || "GUEST"}
+              </span>
+              ?
+            </p>
+            <div className="p-3 bg-[#180a0c] border border-[#ff3b3b]/40 text-[#ff7b72] text-[11px] space-y-1">
+              <div>
+                • Tilbakestiller kampanjen til{" "}
+                <span className="font-bold text-white">
+                  Operasjon 01: Velox AI Infiltration
+                </span>
+              </div>
+              <div>
+                • Nullstiller saldo til{" "}
+                <span className="font-bold text-white">50 ◈</span>
+              </div>
+              <div>• Sletter alle kjøpte exploits og stjålne arkiver</div>
+              <div>
+                • Fjerner alle innsamlede OSINT-ledetråder og knekte passord
+              </div>
+              <div>• Sletter lagret spilltilstand fra databasen</div>
+            </div>
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <button
+                onClick={() => setWipeModalOpen(false)}
+                className="py-2.5 bg-[#151921] hover:bg-[#202735] border border-[#303947] text-white font-bold text-xs uppercase cursor-pointer transition-colors"
+              >
+                AVBRYT / BEHOLD
+              </button>
+              <button
+                onClick={() => {
+                  setWipeModalOpen(false);
+                  resetGame();
+                }}
+                className="py-2.5 bg-[#ff3b3b] hover:bg-[#ff5555] text-white font-bold text-xs uppercase tracking-wider cursor-pointer transition-colors flex items-center justify-center gap-1.5"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                SLETT ALL FREMGANG
+              </button>
+            </div>
           </div>
         </div>
       )}

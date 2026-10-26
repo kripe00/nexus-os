@@ -1,19 +1,41 @@
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { ALL_CLUES, BOUNTY_CONTRACTS, EMAIL_ACCOUNTS, MISSIONS, SERVER_NODES, SHOP_ITEMS } from '../data/worldData';
-import { AppId, ChatMessage, Clue, ServerFile } from '../types/game';
-import { ContextMenuGroup, ContextMenuState } from '../components/ContextMenu';
-import { sound } from '../utils/sound';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import {
+  ALL_CLUES,
+  BOUNTY_CONTRACTS,
+  EMAIL_ACCOUNTS,
+  MISSIONS,
+  SERVER_NODES,
+  SHOP_ITEMS,
+} from "../data/worldData";
+import {
+  AppId,
+  CamStatus,
+  ChatMessage,
+  Clue,
+  ExfiltratedArchiveChoice,
+  MoralAlignment,
+  MoralDecision,
+  ServerFile,
+} from "../types/game";
+import { ContextMenuGroup, ContextMenuState } from "../components/ContextMenu";
+import { sound } from "../utils/sound";
 
 export type IntraWebPage =
-  | 'search'
-  | 'velox'
-  | 'chirper'
-  | 'aethelgard'
-  | 'webmail'
-  | 'nordgrid'
-  | 'oceaniclink'
-  | 'svalbard'
-  | 'darkforum';
+  | "search"
+  | "velox"
+  | "chirper"
+  | "aethelgard"
+  | "webmail"
+  | "nordgrid"
+  | "oceaniclink"
+  | "svalbard"
+  | "darkforum";
 
 export interface WindowState {
   id: AppId;
@@ -64,7 +86,11 @@ interface GameContextType {
   passWeaverTargetEmail: string;
   passWeaverSelectedClues: string[];
   terminalSelectedIp: string;
-  navigateBrowser: (page: IntraWebPage, query?: string, prefillEmail?: string) => void;
+  navigateBrowser: (
+    page: IntraWebPage,
+    query?: string,
+    prefillEmail?: string,
+  ) => void;
   sendClueToApp: (clue: Clue) => void;
   togglePassWeaverClue: (clueId: string) => void;
   setPassWeaverTargetEmail: (email: string) => void;
@@ -116,7 +142,13 @@ interface GameContextType {
 
   // Interactive Mission & Chat State Machine
   currentMissionIndex: number;
-  missionStage: 'briefing' | 'accept_prompt' | 'investigating' | 'report_ready' | 'reporting' | 'completed';
+  missionStage:
+    | "briefing"
+    | "accept_prompt"
+    | "investigating"
+    | "report_ready"
+    | "reporting"
+    | "completed";
   clientIsTyping: boolean;
   acceptCurrentMission: (replyText: string) => void;
   submitMissionReport: (reportText: string) => void;
@@ -130,8 +162,14 @@ interface GameContextType {
 
   // Operator Authentication (SQLite Backend Session)
   currentUser: { id: string; username: string } | null;
-  login: (username: string, pass: string) => Promise<{ success: boolean; error?: string }>;
-  register: (username: string, pass: string) => Promise<{ success: boolean; error?: string }>;
+  login: (
+    username: string,
+    pass: string,
+  ) => Promise<{ success: boolean; error?: string }>;
+  register: (
+    username: string,
+    pass: string,
+  ) => Promise<{ success: boolean; error?: string }>;
   guestLogin: () => void;
   logout: () => void;
 
@@ -144,12 +182,28 @@ interface GameContextType {
   // Freelance Bounties & Moral Endings
   completedBounties: string[];
   claimBounty: (bountyId: string) => void;
-  chosenEnding: 'purge' | 'subjugate' | 'leak' | null;
-  chooseEnding: (ending: 'purge' | 'subjugate' | 'leak') => void;
+  chosenEnding: "purge" | "subjugate" | "leak" | null;
+  chooseEnding: (ending: "purge" | "subjugate" | "leak") => void;
+
+  // Moral Vectors & Exfiltrated Archive Monetization
+  moralChoices: Record<string, ExfiltratedArchiveChoice>;
+  handleMonetizeArchive: (fileId: string, decision: MoralDecision) => void;
+  activeAlignment: MoralAlignment;
+  traceSensitivityMultiplier: number;
+  camStatus: CamStatus;
 
   // Notifications / Toasts
-  notifications: { id: string; title: string; message: string; type: 'clue' | 'mission' | 'warning' }[];
-  addNotification: (title: string, message: string, type?: 'clue' | 'mission' | 'warning') => void;
+  notifications: {
+    id: string;
+    title: string;
+    message: string;
+    type: "clue" | "mission" | "warning";
+  }[];
+  addNotification: (
+    title: string,
+    message: string,
+    type?: "clue" | "mission" | "warning",
+  ) => void;
   resetGame: () => void;
   isMuted: boolean;
   toggleMute: () => void;
@@ -157,88 +211,88 @@ interface GameContextType {
 
 const INITIAL_WINDOWS: Record<AppId, WindowState> = {
   whisper: {
-    id: 'whisper',
-    title: 'WhisperChat',
+    id: "whisper",
+    title: "WhisperChat",
     isOpen: true,
     isMinimized: false,
     zIndex: 20,
     position: { x: 145, y: 36 },
   },
   intraweb: {
-    id: 'intraweb',
-    title: 'IntraWeb Browser',
+    id: "intraweb",
+    title: "IntraWeb Browser",
     isOpen: false,
     isMinimized: false,
     zIndex: 15,
     position: { x: 165, y: 42 },
   },
   passweaver: {
-    id: 'passweaver',
-    title: 'PassWeaver',
+    id: "passweaver",
+    title: "PassWeaver",
     isOpen: false,
     isMinimized: false,
     zIndex: 14,
     position: { x: 220, y: 70 },
   },
   terminal: {
-    id: 'terminal',
-    title: 'Terminal',
+    id: "terminal",
+    title: "Terminal",
     isOpen: false,
     isMinimized: false,
     zIndex: 16,
     position: { x: 185, y: 55 },
   },
   blackmarket: {
-    id: 'blackmarket',
-    title: 'BlackMarket',
+    id: "blackmarket",
+    title: "BlackMarket",
     isOpen: false,
     isMinimized: false,
     zIndex: 13,
     position: { x: 230, y: 65 },
   },
   netshield: {
-    id: 'netshield',
-    title: 'NetShield IDS',
+    id: "netshield",
+    title: "NetShield IDS",
     isOpen: false,
     isMinimized: false,
     zIndex: 17,
     position: { x: 200, y: 50 },
   },
   spearphish: {
-    id: 'spearphish',
-    title: 'SpearPhish',
+    id: "spearphish",
+    title: "SpearPhish",
     isOpen: false,
     isMinimized: false,
     zIndex: 15,
     position: { x: 215, y: 60 },
   },
   packetsniffer: {
-    id: 'packetsniffer',
-    title: 'PacketSniffer // WireTap',
+    id: "packetsniffer",
+    title: "PacketSniffer // WireTap",
     isOpen: false,
     isMinimized: false,
     zIndex: 18,
     position: { x: 240, y: 45 },
   },
   georelay: {
-    id: 'georelay',
-    title: 'GeoRelay // Network Topology',
+    id: "georelay",
+    title: "GeoRelay // Network Topology",
     isOpen: false,
     isMinimized: false,
     zIndex: 18,
     position: { x: 190, y: 48 },
   },
   files: {
-    id: 'files',
-    title: 'DataVault',
+    id: "files",
+    title: "DataVault",
     isOpen: false,
     isMinimized: false,
     zIndex: 12,
     position: { x: 260, y: 85 },
   },
   bountyboard: {
-    id: 'bountyboard',
-    title: 'BountyBoard // DarkNet Contracts',
+    id: "bountyboard",
+    title: "BountyBoard // DarkNet Contracts",
     isOpen: false,
     isMinimized: false,
     zIndex: 16,
@@ -248,23 +302,34 @@ const INITIAL_WINDOWS: Record<AppId, WindowState> = {
 
 const GameContext = createContext<GameContextType | null>(null);
 
-export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [windows, setWindows] = useState<Record<AppId, WindowState>>(INITIAL_WINDOWS);
-  const [activeApp, setActiveApp] = useState<AppId>('whisper');
+export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const [windows, setWindows] =
+    useState<Record<AppId, WindowState>>(INITIAL_WINDOWS);
+  const [activeApp, setActiveApp] = useState<AppId>("whisper");
   const topZRef = useRef<number>(30);
 
   // Operator Account & Backend Session
-  const [currentUser, setCurrentUser] = useState<{ id: string; username: string } | null>(null);
-  const [musicVolume, setMusicVolumeState] = useState<number>(0.70);
-  const [sfxVolume, setSfxVolumeState] = useState<number>(0.80);
+  const [currentUser, setCurrentUser] = useState<{
+    id: string;
+    username: string;
+  } | null>(null);
+  const [musicVolume, setMusicVolumeState] = useState<number>(0.7);
+  const [sfxVolume, setSfxVolumeState] = useState<number>(0.8);
 
   // Cross-App Deep-Link states
-  const [browserPage, setBrowserPage] = useState<IntraWebPage>('search');
-  const [browserSearchQuery, setBrowserSearchQuery] = useState<string>('');
-  const [webmailPrefillEmail, setWebmailPrefillEmail] = useState<string>('m.cole@velox-ai.io');
-  const [passWeaverTargetEmail, setPassWeaverTargetEmail] = useState<string>('m.cole@velox-ai.io');
-  const [passWeaverSelectedClues, setPassWeaverSelectedClues] = useState<string[]>([]);
-  const [terminalSelectedIp, setTerminalSelectedIp] = useState<string>('198.51.100.42');
+  const [browserPage, setBrowserPage] = useState<IntraWebPage>("search");
+  const [browserSearchQuery, setBrowserSearchQuery] = useState<string>("");
+  const [webmailPrefillEmail, setWebmailPrefillEmail] =
+    useState<string>("m.cole@velox-ai.io");
+  const [passWeaverTargetEmail, setPassWeaverTargetEmail] =
+    useState<string>("m.cole@velox-ai.io");
+  const [passWeaverSelectedClues, setPassWeaverSelectedClues] = useState<
+    string[]
+  >([]);
+  const [terminalSelectedIp, setTerminalSelectedIp] =
+    useState<string>("198.51.100.42");
 
   const [crypto, setCrypto] = useState<number>(50);
   const [ownedTools, setOwnedTools] = useState<string[]>([]);
@@ -273,10 +338,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loggedIntoEmails, setLoggedIntoEmails] = useState<string[]>([]);
 
   const [scannedIps, setScannedIps] = useState<string[]>([]);
-  const [crackedPorts, setCrackedPorts] = useState<Record<string, number[]>>({});
+  const [crackedPorts, setCrackedPorts] = useState<Record<string, number[]>>(
+    {},
+  );
   const [connectedIp, setConnectedIp] = useState<string | null>(null);
   const [downloadedFiles, setDownloadedFiles] = useState<ServerFile[]>([]);
-  const [logsDirtyOnServer, setLogsDirtyOnServer] = useState<Record<string, boolean>>({});
+  const [logsDirtyOnServer, setLogsDirtyOnServer] = useState<
+    Record<string, boolean>
+  >({});
 
   const [traceActive, setTraceActive] = useState<boolean>(false);
   const [tracePercent, setTracePercent] = useState<number>(0);
@@ -286,15 +355,40 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [underAttack, setUnderAttack] = useState<boolean>(false);
   const [firewallHealth, setFirewallHealth] = useState<number>(100);
   const [honeypotActive, setHoneypotActive] = useState<boolean>(false);
-  const [capturedAttackerIp, setCapturedAttackerIp] = useState<string | null>(null);
+  const [capturedAttackerIp, setCapturedAttackerIp] = useState<string | null>(
+    null,
+  );
 
   // SpearPhishing Engine State
   const [successfulPhishes, setSuccessfulPhishes] = useState<string[]>([]);
 
+  // Moral Choices & Exfiltration Monetization State
+  const [moralChoices, setMoralChoices] = useState<
+    Record<string, ExfiltratedArchiveChoice>
+  >({});
+  const [traceSensitivityMultiplier, setTraceSensitivityMultiplier] =
+    useState<number>(1.0);
+  const [camStatus, setCamStatus] = useState<CamStatus>("off");
+
+  // Dynamic Alignment Computation
+  const activeAlignment: MoralAlignment = (() => {
+    let purge = 0;
+    let hegemony = 0;
+    let disclosure = 0;
+    Object.values(moralChoices).forEach((mc) => {
+      if (mc.decision === "honor") purge++;
+      else if (mc.decision === "sell") hegemony++;
+      else if (mc.decision === "leak") disclosure++;
+    });
+    if (hegemony > purge && hegemony >= disclosure) return "hegemony";
+    if (disclosure > purge && disclosure > hegemony) return "disclosure";
+    return "purge";
+  })();
+
   // GeoRelay Multi-Hop Proxy Chain
   const [activeProxyChain, setActiveProxyChain] = useState<string[]>([
-    'node_zurich',
-    'node_montreal',
+    "node_zurich",
+    "node_montreal",
   ]);
 
   const toggleProxyNode = (nodeId: string) => {
@@ -304,7 +398,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return prev.filter((id) => id !== nodeId);
       } else {
         if (prev.length >= 4) {
-          addNotification('Proxy Circuit Full', 'Maximum 4 relay hops active simultaneously.', 'warning');
+          addNotification(
+            "Proxy Circuit Full",
+            "Maximum 4 relay hops active simultaneously.",
+            "warning",
+          );
           return prev;
         }
         return [...prev, nodeId];
@@ -314,8 +412,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [currentMissionIndex, setCurrentMissionIndex] = useState<number>(0);
   const [missionStage, setMissionStage] = useState<
-    'briefing' | 'accept_prompt' | 'investigating' | 'report_ready' | 'reporting' | 'completed'
-  >('briefing');
+    | "briefing"
+    | "accept_prompt"
+    | "investigating"
+    | "report_ready"
+    | "reporting"
+    | "completed"
+  >("briefing");
   const [clientIsTyping, setClientIsTyping] = useState<boolean>(false);
   const [completedMissionIds, setCompletedMissionIds] = useState<string[]>([]);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
@@ -324,13 +427,20 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loadedFromSave, setLoadedFromSave] = useState<boolean>(false);
 
   const [notifications, setNotifications] = useState<
-    { id: string; title: string; message: string; type: 'clue' | 'mission' | 'warning' }[]
+    {
+      id: string;
+      title: string;
+      message: string;
+      type: "clue" | "mission" | "warning";
+    }[]
   >([]);
   const [isMuted, setIsMuted] = useState<boolean>(false);
 
   // Freelance Bounties & Moral Endings
   const [completedBounties, setCompletedBounties] = useState<string[]>([]);
-  const [chosenEnding, setChosenEnding] = useState<'purge' | 'subjugate' | 'leak' | null>(null);
+  const [chosenEnding, setChosenEnding] = useState<
+    "purge" | "subjugate" | "leak" | null
+  >(null);
 
   const claimBounty = (bountyId: string) => {
     if (completedBounties.includes(bountyId)) return;
@@ -342,39 +452,60 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     addNotification(
       `Bounty Claimed: +${bounty.rewardCrypto} ◈`,
       `${bounty.title} verified and funds deposited.`,
-      'mission'
+      "mission",
     );
   };
 
-  const chooseEnding = (ending: 'purge' | 'subjugate' | 'leak') => {
+  const chooseEnding = (ending: "purge" | "subjugate" | "leak") => {
     sound.playSuccess();
     setChosenEnding(ending);
     setCampaignFinished(true);
-    if (ending === 'subjugate') {
+    if (ending === "subjugate") {
       setCrypto((c) => c + 100000);
-      addNotification('Neural Dominance', '+100,000 ◈ Slush Fund Overridden. You are the AI Sovereign.', 'mission');
-    } else if (ending === 'purge') {
-      addNotification('Total Purge', 'Ouroboros erased from planetary infrastructure. Humanity is free.', 'mission');
+      addNotification(
+        "Clandestine Continuity",
+        "+100,000 ◈ Slush Fund Siphoned. Shadow hegemony established.",
+        "mission",
+      );
+    } else if (ending === "purge") {
+      addNotification(
+        "Total Certificate Revocation",
+        "Sovereign PKI revoked. Ouroboros purged from continental backbones.",
+        "mission",
+      );
     } else {
-      addNotification('0xUnderground Leak', 'All state algorithms published to the darknet. Cyber-anarchy commences.', 'mission');
+      addNotification(
+        "Unredacted Global Disclosure",
+        "All sovereign surveillance models and records leaked to the public domain.",
+        "mission",
+      );
     }
   };
 
   const applySavedState = (saved: any) => {
     if (!saved) return;
-    if (typeof saved.crypto === 'number') setCrypto(saved.crypto);
+    if (typeof saved.crypto === "number") setCrypto(saved.crypto);
     if (Array.isArray(saved.ownedTools)) setOwnedTools(saved.ownedTools);
-    if (Array.isArray(saved.discoveredClues)) setDiscoveredClues(saved.discoveredClues);
-    if (Array.isArray(saved.crackedEmails)) setCrackedEmails(saved.crackedEmails);
-    if (Array.isArray(saved.loggedIntoEmails)) setLoggedIntoEmails(saved.loggedIntoEmails);
+    if (Array.isArray(saved.discoveredClues))
+      setDiscoveredClues(saved.discoveredClues);
+    if (Array.isArray(saved.crackedEmails))
+      setCrackedEmails(saved.crackedEmails);
+    if (Array.isArray(saved.loggedIntoEmails))
+      setLoggedIntoEmails(saved.loggedIntoEmails);
     if (Array.isArray(saved.scannedIps)) setScannedIps(saved.scannedIps);
     if (saved.crackedPorts) setCrackedPorts(saved.crackedPorts);
-    if (Array.isArray(saved.downloadedFiles)) setDownloadedFiles(saved.downloadedFiles);
-    let effectiveIndex = typeof saved.currentMissionIndex === 'number' ? saved.currentMissionIndex : 0;
-    const completedIds = Array.isArray(saved.completedMissionIds) ? saved.completedMissionIds : [];
+    if (Array.isArray(saved.downloadedFiles))
+      setDownloadedFiles(saved.downloadedFiles);
+    let effectiveIndex =
+      typeof saved.currentMissionIndex === "number"
+        ? saved.currentMissionIndex
+        : 0;
+    const completedIds = Array.isArray(saved.completedMissionIds)
+      ? saved.completedMissionIds
+      : [];
 
     // If mission_3 was completed, advance to 3 (Chapter 2: Orbital Eye)
-    if (completedIds.includes('mission_3') && effectiveIndex <= 2) {
+    if (completedIds.includes("mission_3") && effectiveIndex <= 2) {
       effectiveIndex = 3;
     }
 
@@ -382,12 +513,16 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCompletedMissionIds(completedIds);
 
     // Only allow campaignFinished if at the final operation (Operation 10)
-    const isReallyCampaignFinished = Boolean(saved.campaignFinished) && effectiveIndex >= MISSIONS.length - 1;
+    const isReallyCampaignFinished =
+      Boolean(saved.campaignFinished) && effectiveIndex >= MISSIONS.length - 1;
     setCampaignFinished(isReallyCampaignFinished);
 
     if (saved.missionStage) {
-      if (saved.missionStage === 'completed' && effectiveIndex < MISSIONS.length - 1) {
-        setMissionStage('briefing');
+      if (
+        saved.missionStage === "completed" &&
+        effectiveIndex < MISSIONS.length - 1
+      ) {
+        setMissionStage("briefing");
       } else {
         setMissionStage(saved.missionStage);
       }
@@ -396,28 +531,40 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (Array.isArray(saved.chatHistory) && saved.chatHistory.length > 0) {
       setChatHistory(saved.chatHistory);
     }
-    if (typeof saved.firewallHealth === 'number') setFirewallHealth(saved.firewallHealth);
-    if (typeof saved.honeypotActive === 'boolean') setHoneypotActive(saved.honeypotActive);
-    if (typeof saved.capturedAttackerIp === 'string' || saved.capturedAttackerIp === null) {
+    if (typeof saved.firewallHealth === "number")
+      setFirewallHealth(saved.firewallHealth);
+    if (typeof saved.honeypotActive === "boolean")
+      setHoneypotActive(saved.honeypotActive);
+    if (
+      typeof saved.capturedAttackerIp === "string" ||
+      saved.capturedAttackerIp === null
+    ) {
       setCapturedAttackerIp(saved.capturedAttackerIp);
     }
-    if (Array.isArray(saved.successfulPhishes)) setSuccessfulPhishes(saved.successfulPhishes);
-    if (Array.isArray(saved.activeProxyChain)) setActiveProxyChain(saved.activeProxyChain);
-    if (Array.isArray(saved.completedBounties)) setCompletedBounties(saved.completedBounties);
+    if (Array.isArray(saved.successfulPhishes))
+      setSuccessfulPhishes(saved.successfulPhishes);
+    if (Array.isArray(saved.activeProxyChain))
+      setActiveProxyChain(saved.activeProxyChain);
+    if (Array.isArray(saved.completedBounties))
+      setCompletedBounties(saved.completedBounties);
     if (saved.chosenEnding) setChosenEnding(saved.chosenEnding);
   };
 
-  const applyAudioSettings = (audio: { musicVolume?: number; sfxVolume?: number; muted?: boolean }) => {
+  const applyAudioSettings = (audio: {
+    musicVolume?: number;
+    sfxVolume?: number;
+    muted?: boolean;
+  }) => {
     if (!audio) return;
-    if (typeof audio.musicVolume === 'number') {
+    if (typeof audio.musicVolume === "number") {
       setMusicVolumeState(audio.musicVolume);
       sound.setMusicVolume(audio.musicVolume);
     }
-    if (typeof audio.sfxVolume === 'number') {
+    if (typeof audio.sfxVolume === "number") {
       setSfxVolumeState(audio.sfxVolume);
       sound.setSfxVolume(audio.sfxVolume);
     }
-    if (typeof audio.muted === 'boolean') {
+    if (typeof audio.muted === "boolean") {
       sound.muted = audio.muted;
       setIsMuted(audio.muted);
     }
@@ -426,10 +573,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const setMusicVolume = (vol: number) => {
     setMusicVolumeState(vol);
     sound.setMusicVolume(vol);
-    if (currentUser && !currentUser.id.startsWith('guest_')) {
-      fetch('/api/audio', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+    if (currentUser && !currentUser.id.startsWith("guest_")) {
+      fetch("/api/audio", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: currentUser.id,
           musicVolume: vol,
@@ -443,10 +590,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const setSfxVolume = (vol: number) => {
     setSfxVolumeState(vol);
     sound.setSfxVolume(vol);
-    if (currentUser && !currentUser.id.startsWith('guest_')) {
-      fetch('/api/audio', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+    if (currentUser && !currentUser.id.startsWith("guest_")) {
+      fetch("/api/audio", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: currentUser.id,
           musicVolume,
@@ -459,7 +606,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Auto-resume active session on initial mount
   useEffect(() => {
-    fetch('/api/auth/session')
+    fetch("/api/auth/session")
       .then((res) => res.json())
       .then((data) => {
         if (data.user) {
@@ -472,10 +619,46 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .catch(() => {});
   }, []);
 
+  const resetLocalGameState = () => {
+    setCrypto(50);
+    setOwnedTools([]);
+    setDiscoveredClues([]);
+    setCrackedEmails([]);
+    setLoggedIntoEmails([]);
+    setScannedIps([]);
+    setCrackedPorts({});
+    setConnectedIp(null);
+    setDownloadedFiles([]);
+    setLogsDirtyOnServer({});
+    setTraceActive(false);
+    setTracePercent(0);
+    setUnderAttack(false);
+    setFirewallHealth(100);
+    setHoneypotActive(false);
+    setCapturedAttackerIp(null);
+    setSuccessfulPhishes([]);
+    setMoralChoices({});
+    setTraceSensitivityMultiplier(1.0);
+    setCamStatus("off");
+    setActiveProxyChain(["node_zurich", "node_montreal"]);
+    setCompletedBounties([]);
+    setChosenEnding(null);
+    setCurrentMissionIndex(0);
+    setMissionStage("briefing");
+    setCompletedMissionIds([]);
+    setChatHistory([]);
+    setCampaignFinished(false);
+    setWindows(INITIAL_WINDOWS);
+    setActiveApp("whisper");
+    setBrowserPage("search");
+    setBrowserSearchQuery("");
+  };
+
   const login = async (username: string, pass: string) => {
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    resetLocalGameState();
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password: pass }),
     });
     const data = await res.json();
@@ -494,9 +677,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const register = async (username: string, pass: string) => {
-    const res = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    resetLocalGameState();
+    const res = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password: pass }),
     });
     const data = await res.json();
@@ -512,20 +696,26 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const guestLogin = async () => {
+    resetLocalGameState();
     try {
-      const res = await fetch('/api/auth/guest', { method: 'POST' });
+      const res = await fetch("/api/auth/guest", { method: "POST" });
       const data = await res.json();
       setCurrentUser(data.user);
     } catch {
-      setCurrentUser({ id: 'guest_local', username: 'GUEST_OPERATOR' });
+      const guestId = `guest_${Math.floor(1000 + Math.random() * 9000)}`;
+      setCurrentUser({
+        id: guestId,
+        username: `OPERATOR_${guestId.slice(-4)}`,
+      });
     }
     setLoadedFromSave(true);
   };
 
   const logout = () => {
-    fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+    fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
     setCurrentUser(null);
     setLoadedFromSave(false);
+    resetLocalGameState();
   };
 
   // Sync state changes with SQLite backend (debounced)
@@ -554,9 +744,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         completedBounties,
         chosenEnding,
       };
-      fetch('/api/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      fetch("/api/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: currentUser.id, state: data }),
       }).catch(() => {});
     }, 400);
@@ -589,19 +779,19 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Step-by-step Briefing Message Streamer (when missionStage === 'briefing')
   useEffect(() => {
     if (!loadedFromSave) return;
-    if (missionStage !== 'briefing') return;
+    if (missionStage !== "briefing") return;
 
     const mission = MISSIONS[currentMissionIndex];
     if (!mission) return;
 
     // Check which initialMessages are not yet in chatHistory
     const remaining = mission.initialMessages.filter(
-      (m) => !chatHistory.some((existing) => existing.id === m.id)
+      (m) => !chatHistory.some((existing) => existing.id === m.id),
     );
 
     if (remaining.length === 0) {
       setClientIsTyping(false);
-      setMissionStage('accept_prompt');
+      setMissionStage("accept_prompt");
       return;
     }
 
@@ -613,21 +803,30 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (prev.some((p) => p.id === nextMsg.id)) return prev;
         return [...prev, nextMsg];
       });
-      if (activeApp !== 'whisper') {
+      if (activeApp !== "whisper") {
         setUnreadMessages((u) => u + 1);
       }
     }, 1100);
 
     return () => clearTimeout(timer);
-  }, [loadedFromSave, missionStage, currentMissionIndex, chatHistory, activeApp]);
+  }, [
+    loadedFromSave,
+    missionStage,
+    currentMissionIndex,
+    chatHistory,
+    activeApp,
+  ]);
 
   const addNotification = (
     title: string,
     message: string,
-    type: 'clue' | 'mission' | 'warning' = 'clue'
+    type: "clue" | "mission" | "warning" = "clue",
   ) => {
     const id = `${Date.now()}-${Math.random()}`;
-    setNotifications((prev) => [...prev.slice(-3), { id, title, message, type }]);
+    setNotifications((prev) => [
+      ...prev.slice(-3),
+      { id, title, message, type },
+    ]);
     setTimeout(() => {
       setNotifications((prev) => prev.filter((n) => n.id !== id));
     }, 4500);
@@ -635,12 +834,83 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Active Attack Simulation during Operation 07 and Operation 10 (Svalbard Bunker Defense)
   useEffect(() => {
-    if ((currentMissionIndex === 6 || currentMissionIndex === 9) && !campaignFinished) {
+    if (
+      (currentMissionIndex === 6 || currentMissionIndex === 9) &&
+      !campaignFinished
+    ) {
       setUnderAttack(true);
+      setCamStatus("active");
+      sound.playDroneRotors();
     } else {
       setUnderAttack(false);
+      setCamStatus("off");
+      sound.stopDroneRotors();
     }
+    return () => {
+      sound.stopDroneRotors();
+    };
   }, [currentMissionIndex, campaignFinished]);
+
+  // SCADA 60Hz Grid Hum during Operation 08 (NordGrid SCADA Overload)
+  useEffect(() => {
+    if (currentMissionIndex === 7 && !campaignFinished) {
+      sound.play60HzGridHum(false);
+    } else {
+      sound.stop60HzGridHum();
+    }
+    return () => {
+      sound.stop60HzGridHum();
+    };
+  }, [currentMissionIndex, campaignFinished]);
+
+  // Archive Monetization / Moral Vector Decision Handler
+  const handleMonetizeArchive = (fileId: string, decision: MoralDecision) => {
+    if (moralChoices[fileId]) return;
+
+    const PAYOUT_TIERS: Record<string, number> = {
+      "velox_core_v4.tar.gz": 350,
+      "PROJECT_MIRROR_TARGETS.dec": 750,
+      "GLOBAL_CITIZEN_DOSSIERS.db": 2000,
+    };
+
+    let bonus = 0;
+    if (decision === "sell") {
+      bonus = PAYOUT_TIERS[fileId] || 500;
+      setCrypto((prev) => prev + bonus);
+      setTraceSensitivityMultiplier((prev) => +(prev + 0.15).toFixed(2));
+      sound.playCryptoCoin();
+      addNotification(
+        "[!] DARKNET SIGNATURE FLAGGED",
+        `Exfiltrated archive sold to Darknet broker (+${bonus} ◈). Enemy trace sensitivity increased (+15%).`,
+        "warning",
+      );
+    } else if (decision === "leak") {
+      setTraceSensitivityMultiplier((prev) => +(prev + 0.15).toFixed(2));
+      sound.playSuccess();
+      addNotification(
+        "[!] PUBLIC DISCLOSURE ALERT",
+        `Archive leaked to 0xUnderground mirrors! Enemy trace sensitivity increased (+15%).`,
+        "warning",
+      );
+    } else {
+      sound.playSuccess();
+      addNotification(
+        "[*] CONTRACT HONORED",
+        `Archive encrypted in secure offline vault. Network footprint clean.`,
+        "mission",
+      );
+    }
+
+    setMoralChoices((prev) => ({
+      ...prev,
+      [fileId]: {
+        fileId,
+        decision,
+        payoutBonus: bonus,
+        timestamp: new Date().toISOString(),
+      },
+    }));
+  };
 
   // Firewall health degradation when under attack
   useEffect(() => {
@@ -654,7 +924,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         if (next <= 0) {
           sound.playError();
-          addNotification('FIREWALL BREACHED', 'Hostile drone penetrated local ports! Reinforcing emergency circuit.', 'warning');
+          addNotification(
+            "FIREWALL BREACHED",
+            "Hostile drone penetrated local ports! Reinforcing emergency circuit.",
+            "warning",
+          );
           return 50; // Emergency recovery
         }
         return next;
@@ -665,40 +939,55 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const activateHoneypot = () => {
     setHoneypotActive(true);
-    setCapturedAttackerIp('141.98.11.200');
+    setCapturedAttackerIp("141.98.11.200");
     sound.playHoneypotTrap();
     setDiscoveredClues((prev) => {
-      if (prev.some((c) => c.id === 'clue_hunter_drone_ip')) return prev;
+      if (prev.some((c) => c.id === "clue_hunter_drone_ip")) return prev;
       const droneClue = ALL_CLUES.clue_hunter_drone_ip;
       return droneClue ? [...prev, droneClue] : prev;
     });
-    addNotification('Honeypot Active', 'Attacker isolated: 141.98.11.200 trapped!', 'mission');
+    addNotification(
+      "Honeypot Active",
+      "Attacker isolated: 141.98.11.200 trapped!",
+      "mission",
+    );
   };
 
   const repairFirewall = () => {
     setFirewallHealth((prev) => Math.min(100, prev + 35));
-    addNotification('Firewall Reinforced', 'Integrity restored +35%', 'mission');
+    addNotification(
+      "Firewall Reinforced",
+      "Integrity restored +35%",
+      "mission",
+    );
   };
 
   const markPhishSuccess = (targetId: string) => {
     if (!successfulPhishes.includes(targetId)) {
       setSuccessfulPhishes((prev) => [...prev, targetId]);
-      addNotification('Target Compromised', 'Victim fell for your spear-phishing bait!', 'mission');
+      addNotification(
+        "Target Compromised",
+        "Victim fell for your spear-phishing bait!",
+        "mission",
+      );
     }
   };
   useEffect(() => {
     if (!traceActive) return;
 
-    const hasVpn = ownedTools.includes('proxy_shield_v1');
+    const hasVpn = ownedTools.includes("proxy_shield_v1");
     const proxyDampener = Math.max(0.25, 1 - activeProxyChain.length * 0.2);
     const speedMultiplier = (hasVpn ? 0.5 : 1.0) * proxyDampener;
-    const baseSpeed = 2.0 * speedMultiplier;
+    const baseSpeed = 2.0 * speedMultiplier * traceSensitivityMultiplier;
 
     const interval = setInterval(() => {
       setTracePercent((prev) => {
         const next = Math.min(100, +(prev + baseSpeed * 0.5).toFixed(1));
         if (Math.floor(next) % 4 === 0) {
           sound.playTraceTick(next >= 70);
+          if (next >= 65) {
+            sound.playTraceHeartbeat();
+          }
         }
         if (next >= 100) {
           clearInterval(interval);
@@ -708,11 +997,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setTraceFailedAlert(true);
           setCrackedPorts((cp) => ({
             ...cp,
-            '203.0.113.88': [],
+            "203.0.113.88": [],
           }));
           setLogsDirtyOnServer((ld) => ({
             ...ld,
-            '203.0.113.88': false,
+            "203.0.113.88": false,
           }));
           return 0;
         }
@@ -725,121 +1014,123 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Objective Evaluation Helper
   const isObjectiveComplete = (objId: string): boolean => {
-    const hasClueId = (cid: string) => discoveredClues.some((c) => c.id === cid);
-    const hasFile = (evId: string) => downloadedFiles.some((f) => f.evidenceId === evId);
+    const hasClueId = (cid: string) =>
+      discoveredClues.some((c) => c.id === cid);
+    const hasFile = (evId: string) =>
+      downloadedFiles.some((f) => f.evidenceId === evId);
 
     switch (objId) {
-      case 'obj_m1_clues':
+      case "obj_m1_clues":
         return (
-          hasClueId('clue_marcus_email') ||
-          hasClueId('clue_dropoff_ip') ||
-          (hasClueId('clue_marcus_dog') && hasClueId('clue_marcus_year'))
+          hasClueId("clue_marcus_email") ||
+          hasClueId("clue_dropoff_ip") ||
+          (hasClueId("clue_marcus_dog") && hasClueId("clue_marcus_year"))
         );
-      case 'obj_m1_passweaver':
+      case "obj_m1_passweaver":
         return (
-          crackedEmails.includes('m.cole@velox-ai.io') ||
-          hasClueId('clue_dropoff_ip') ||
-          successfulPhishes.includes('phish_marcus')
+          crackedEmails.includes("m.cole@velox-ai.io") ||
+          hasClueId("clue_dropoff_ip") ||
+          successfulPhishes.includes("phish_marcus")
         );
-      case 'obj_m1_webmail':
-        return hasClueId('clue_dropoff_ip');
+      case "obj_m1_webmail":
+        return hasClueId("clue_dropoff_ip");
 
-      case 'obj_m2_buy_ssh':
-        return ownedTools.includes('ssh_breaker_v1');
-      case 'obj_m2_connect':
-        return (crackedPorts['198.51.100.42'] || []).includes(22);
-      case 'obj_m2_download':
-        return hasFile('evidence_buyer_manifest');
+      case "obj_m2_buy_ssh":
+        return ownedTools.includes("ssh_breaker_v1");
+      case "obj_m2_connect":
+        return (crackedPorts["198.51.100.42"] || []).includes(22);
+      case "obj_m2_download":
+        return hasFile("evidence_buyer_manifest");
 
-      case 'obj_m3_sterling_mail':
-        return hasClueId('clue_vault_override');
-      case 'obj_m3_buy_ssl':
-        return ownedTools.includes('ssl_zero_day_v2');
-      case 'obj_m3_vault_breach':
+      case "obj_m3_sterling_mail":
+        return hasClueId("clue_vault_override");
+      case "obj_m3_buy_ssl":
+        return ownedTools.includes("ssl_zero_day_v2");
+      case "obj_m3_vault_breach":
         return (
-          hasFile('evidence_project_mirror') &&
-          !logsDirtyOnServer['203.0.113.88'] &&
-          connectedIp !== '203.0.113.88'
+          hasFile("evidence_project_mirror") &&
+          !logsDirtyOnServer["203.0.113.88"] &&
+          connectedIp !== "203.0.113.88"
         );
 
       // Chapter 2 Objectives
-      case 'obj_m4_buy_sat':
-        return ownedTools.includes('sat_uplink_hijack_v1');
-      case 'obj_m4_crack_sat':
-        return (crackedPorts['185.220.101.5'] || []).includes(80);
-      case 'obj_m4_download_sat':
-        return hasFile('evidence_sat_intercept');
+      case "obj_m4_buy_sat":
+        return ownedTools.includes("sat_uplink_hijack_v1");
+      case "obj_m4_crack_sat":
+        return (crackedPorts["185.220.101.5"] || []).includes(80);
+      case "obj_m4_download_sat":
+        return hasFile("evidence_sat_intercept");
 
-      case 'obj_m5_reyes_clues':
-        return hasClueId('clue_reyes_unit') && hasClueId('clue_reyes_pin');
-      case 'obj_m5_passweaver':
-        return crackedEmails.includes('v.reyes@aethelgard.corp');
-      case 'obj_m5_webmail':
-        return hasClueId('clue_datacenter_core_ip');
+      case "obj_m5_reyes_clues":
+        return hasClueId("clue_reyes_unit") && hasClueId("clue_reyes_pin");
+      case "obj_m5_passweaver":
+        return crackedEmails.includes("v.reyes@aethelgard.corp");
+      case "obj_m5_webmail":
+        return hasClueId("clue_datacenter_core_ip");
 
-      case 'obj_m6_buy_quantum':
-        return ownedTools.includes('quantum_bypass_v3');
-      case 'obj_m6_breach_cluster':
-        return (crackedPorts['194.165.16.100'] || []).includes(8080);
-      case 'obj_m6_purge_escape':
+      case "obj_m6_buy_quantum":
+        return ownedTools.includes("quantum_bypass_v3");
+      case "obj_m6_breach_cluster":
+        return (crackedPorts["194.165.16.100"] || []).includes(8080);
+      case "obj_m6_purge_escape":
         return (
-          hasFile('evidence_global_dossiers') &&
-          !logsDirtyOnServer['194.165.16.100'] &&
-          connectedIp !== '194.165.16.100'
+          hasFile("evidence_global_dossiers") &&
+          !logsDirtyOnServer["194.165.16.100"] &&
+          connectedIp !== "194.165.16.100"
         );
 
       // Chapter 3 Objectives
-      case 'obj_m7_netshield_defense':
+      case "obj_m7_netshield_defense":
         return honeypotActive && !!capturedAttackerIp;
-      case 'obj_m7_buy_override':
-        return ownedTools.includes('counter_sig_exploit_v1');
-      case 'obj_m7_counter_breach':
+      case "obj_m7_buy_override":
+        return ownedTools.includes("counter_sig_exploit_v1");
+      case "obj_m7_counter_breach":
         return (
-          hasFile('evidence_drone_override') &&
-          !logsDirtyOnServer['141.98.11.200'] &&
-          connectedIp !== '141.98.11.200'
+          hasFile("evidence_drone_override") &&
+          !logsDirtyOnServer["141.98.11.200"] &&
+          connectedIp !== "141.98.11.200"
         );
 
       // Chapter 4 Objectives: The Ouroboros Protocol
-      case 'obj_m8_lindholm_intel':
+      case "obj_m8_lindholm_intel":
         return (
-          crackedEmails.includes('a.lindholm@nordgrid-power.com') ||
-          hasClueId('clue_scada_ip') ||
-          successfulPhishes.includes('phish_astrid')
+          crackedEmails.includes("a.lindholm@nordgrid-power.com") ||
+          hasClueId("clue_scada_ip") ||
+          successfulPhishes.includes("phish_astrid")
         );
-      case 'obj_m8_buy_scada':
-        return ownedTools.includes('scada_plc_exploit');
-      case 'obj_m8_scada_breach':
+      case "obj_m8_buy_scada":
+        return ownedTools.includes("scada_plc_exploit");
+      case "obj_m8_scada_breach":
         return (
-          hasFile('evidence_scada_trip') &&
-          !logsDirtyOnServer['217.182.80.50'] &&
-          connectedIp !== '217.182.80.50'
-        );
-
-      case 'obj_m9_kai_intel':
-        return (
-          crackedEmails.includes('k.thorne@oceaniclink-telecom.net') ||
-          hasClueId('clue_subsea_fiber_ip') ||
-          successfulPhishes.includes('phish_kai')
-        );
-      case 'obj_m9_buy_qkd':
-        return ownedTools.includes('optical_qkd_decryptor');
-      case 'obj_m9_fiber_breach':
-        return (
-          hasFile('evidence_subsea_repeater') &&
-          !logsDirtyOnServer['102.16.88.12'] &&
-          connectedIp !== '102.16.88.12'
+          hasFile("evidence_scada_trip") &&
+          !logsDirtyOnServer["217.182.80.50"] &&
+          connectedIp !== "217.182.80.50"
         );
 
-      case 'obj_m10_buy_paradox':
-        return ownedTools.includes('zero_paradox_injector');
-      case 'obj_m10_bunker_breach':
+      case "obj_m9_kai_intel":
         return (
-          hasFile('evidence_ouroboros_kernel') &&
-          !logsDirtyOnServer['185.190.20.1'] &&
-          connectedIp !== '185.190.20.1'
+          crackedEmails.includes("k.thorne@oceaniclink-telecom.net") ||
+          hasClueId("clue_subsea_fiber_ip") ||
+          successfulPhishes.includes("phish_kai")
         );
-      case 'obj_m10_final_destiny':
+      case "obj_m9_buy_qkd":
+        return ownedTools.includes("optical_qkd_decryptor");
+      case "obj_m9_fiber_breach":
+        return (
+          hasFile("evidence_subsea_repeater") &&
+          !logsDirtyOnServer["102.16.88.12"] &&
+          connectedIp !== "102.16.88.12"
+        );
+
+      case "obj_m10_buy_paradox":
+        return ownedTools.includes("zero_paradox_injector");
+      case "obj_m10_bunker_breach":
+        return (
+          hasFile("evidence_ouroboros_kernel") &&
+          !logsDirtyOnServer["185.190.20.1"] &&
+          connectedIp !== "185.190.20.1"
+        );
+      case "obj_m10_final_destiny":
         return chosenEnding !== null;
 
       default:
@@ -856,14 +1147,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Watch when all objectives become complete -> transition to 'report_ready' and notify player to report in WhisperChat!
   useEffect(() => {
     if (campaignFinished) return;
-    if (missionStage === 'investigating' && areAllObjectivesComplete()) {
+    if (missionStage === "investigating" && areAllObjectivesComplete()) {
       sound.playSuccess();
-      setMissionStage('report_ready');
-      setUnreadMessages((u) => (activeApp === 'whisper' ? 0 : u + 1));
+      setMissionStage("report_ready");
+      setUnreadMessages((u) => (activeApp === "whisper" ? 0 : u + 1));
       addNotification(
-        'All Evidence Collected!',
-        'Open WhisperChat to transmit your findings to the client and claim your bounty.',
-        'mission'
+        "All Evidence Collected!",
+        "Open WhisperChat to transmit your findings to the client and claim your bounty.",
+        "mission",
       );
     }
   }, [
@@ -886,36 +1177,44 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const playerMsg: ChatMessage = {
       id: `accept_${currentMission.id}_${Date.now()}`,
-      sender: 'player',
-      senderName: 'OPERATOR',
-      timestamp: 'Now',
+      sender: "player",
+      senderName: "OPERATOR",
+      timestamp: "Now",
       text: replyText,
     };
 
     setChatHistory((prev) => [...prev, playerMsg]);
-    setMissionStage(areAllObjectivesComplete() ? 'report_ready' : 'investigating');
-    addNotification('Operation Accepted', 'Objectives pinned to your Clue Board.', 'mission');
+    setMissionStage(
+      areAllObjectivesComplete() ? "report_ready" : "investigating",
+    );
+    addNotification(
+      "Operation Accepted",
+      "Objectives pinned to your Clue Board.",
+      "mission",
+    );
   };
 
   const submitMissionReport = (reportText: string) => {
     const currentMission = MISSIONS[currentMissionIndex];
-    if (!currentMission || missionStage === 'reporting') return;
+    if (!currentMission || missionStage === "reporting") return;
 
     sound.playClick();
-    setMissionStage('reporting');
+    setMissionStage("reporting");
 
     const playerReport: ChatMessage = {
       id: `report_${currentMission.id}_${Date.now()}`,
-      sender: 'player',
-      senderName: 'OPERATOR',
-      timestamp: 'Now',
+      sender: "player",
+      senderName: "OPERATOR",
+      timestamp: "Now",
       text: reportText,
     };
 
     setChatHistory((prev) => [...prev, playerReport]);
     setClientIsTyping(true);
 
-    const clientReply = currentMission.completionMessages[1] || currentMission.completionMessages[0];
+    const clientReply =
+      currentMission.completionMessages[1] ||
+      currentMission.completionMessages[0];
 
     setTimeout(() => {
       setClientIsTyping(false);
@@ -926,7 +1225,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       addNotification(
         `Bounty Received: +${currentMission.reward} ◈`,
         `${currentMission.title} completed.`,
-        'mission'
+        "mission",
       );
 
       const nextIndex = currentMissionIndex + 1;
@@ -938,15 +1237,15 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           clientReply,
           {
             id: `sys_div_${currentMission.id}`,
-            sender: 'system',
-            senderName: 'NEXUS RELAY',
-            timestamp: 'SYSTEM',
+            sender: "system",
+            senderName: "NEXUS RELAY",
+            timestamp: "SYSTEM",
             text: `━━━ CONTRACT CLEARED (+${currentMission.reward} ◈) // INCOMING TRANSMISSION: ${nextMission.clientName.toUpperCase()} ━━━`,
           },
         ]);
         setTimeout(() => {
           setCurrentMissionIndex(nextIndex);
-          setMissionStage('briefing');
+          setMissionStage("briefing");
           setCampaignFinished(false);
         }, 900);
       } else {
@@ -955,13 +1254,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           clientReply,
           {
             id: `sys_end_campaign`,
-            sender: 'system',
-            senderName: 'NEXUS RELAY',
-            timestamp: 'SYSTEM',
+            sender: "system",
+            senderName: "NEXUS RELAY",
+            timestamp: "SYSTEM",
             text: `━━━ ALL 10 OPERATIONS CLEARED (+${currentMission.reward} ◈) // STATUS: OUROBOROS CONQUERED ━━━`,
           },
         ]);
-        setMissionStage('completed');
+        setMissionStage("completed");
         setCampaignFinished(true);
       }
     }, 1300);
@@ -972,9 +1271,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const nextIndex = currentMissionIndex + 1;
     if (nextIndex < MISSIONS.length) {
       setCurrentMissionIndex(nextIndex);
-      setMissionStage('briefing');
+      setMissionStage("briefing");
       setCampaignFinished(false);
-      addNotification('Chapter Progression', `Starting ${MISSIONS[nextIndex].title}`, 'mission');
+      addNotification(
+        "Chapter Progression",
+        `Starting ${MISSIONS[nextIndex].title}`,
+        "mission",
+      );
     }
   };
 
@@ -986,7 +1289,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       [id]: { ...prev[id], zIndex: nextZ, isMinimized: false },
     }));
     setActiveApp(id);
-    if (id === 'whisper') {
+    if (id === "whisper") {
       setUnreadMessages(0);
     }
   };
@@ -1000,7 +1303,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       [id]: { ...prev[id], isOpen: true, isMinimized: false, zIndex: nextZ },
     }));
     setActiveApp(id);
-    if (id === 'whisper') {
+    if (id === "whisper") {
       setUnreadMessages(0);
     }
   };
@@ -1060,7 +1363,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       return next;
     });
-    addNotification('Window Layout Reset', 'All windows aligned to tactical grid positions.', 'mission');
+    addNotification(
+      "Window Layout Reset",
+      "All windows aligned to tactical grid positions.",
+      "mission",
+    );
   };
 
   const centerWindow = (id: AppId) => {
@@ -1085,16 +1392,22 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const deleteDownloadedFile = (fileName: string) => {
     sound.playClick();
     setDownloadedFiles((prev) => prev.filter((f) => f.name !== fileName));
-    addNotification('File Shredded', `${fileName} securely purged with zeros.`, 'warning');
+    addNotification(
+      "File Shredded",
+      `${fileName} securely purged with zeros.`,
+      "warning",
+    );
   };
 
-  const [terminalCommandToRun, setTerminalCommandToRun] = useState<string | null>(null);
+  const [terminalCommandToRun, setTerminalCommandToRun] = useState<
+    string | null
+  >(null);
   const [inspectedFile, setInspectedFile] = useState<ServerFile | null>(null);
 
   const executeTerminalCommand = (cmd: string) => {
     sound.playTerminalExec();
     setTerminalCommandToRun(cmd);
-    openApp('terminal');
+    openApp("terminal");
   };
 
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
@@ -1120,72 +1433,105 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Deep-linking helper for IntraWeb Browser
-  const navigateBrowser = (page: IntraWebPage, query?: string, prefillEmail?: string) => {
+  const navigateBrowser = (
+    page: IntraWebPage,
+    query?: string,
+    prefillEmail?: string,
+  ) => {
     setBrowserPage(page);
-    if (typeof query === 'string') setBrowserSearchQuery(query);
-    if (typeof prefillEmail === 'string') setWebmailPrefillEmail(prefillEmail);
-    openApp('intraweb');
+    if (typeof query === "string") setBrowserSearchQuery(query);
+    if (typeof prefillEmail === "string") setWebmailPrefillEmail(prefillEmail);
+    openApp("intraweb");
   };
 
   const togglePassWeaverClue = (clueId: string) => {
     sound.playClick();
     setPassWeaverSelectedClues((prev) =>
-      prev.includes(clueId) ? prev.filter((id) => id !== clueId) : [...prev, clueId]
+      prev.includes(clueId)
+        ? prev.filter((id) => id !== clueId)
+        : [...prev, clueId],
     );
   };
 
   // Smart Contextual Action when clicking any clue on the Clue Board!
   const sendClueToApp = (clue: Clue) => {
     sound.playClick();
-    if (clue.category === 'ip') {
+    if (clue.category === "ip") {
       setTerminalSelectedIp(clue.value);
-      openApp('terminal');
-      addNotification('Target IP Loaded', `${clue.value} selected in Terminal`, 'clue');
+      openApp("terminal");
+      addNotification(
+        "Target IP Loaded",
+        `${clue.value} selected in Terminal`,
+        "clue",
+      );
       return;
     }
 
-    if (clue.id === 'clue_marcus_email' || clue.id === 'clue_julian_email') {
+    if (clue.id === "clue_marcus_email" || clue.id === "clue_julian_email") {
       setPassWeaverTargetEmail(clue.value);
       setPassWeaverSelectedClues([]);
-      openApp('passweaver');
-      addNotification('Target Principal Set', `${clue.value} loaded in PassWeaver`, 'clue');
+      openApp("passweaver");
+      addNotification(
+        "Target Principal Set",
+        `${clue.value} loaded in PassWeaver`,
+        "clue",
+      );
       return;
     }
 
-    if (clue.id === 'clue_vault_override') {
-      setTerminalSelectedIp('203.0.113.88');
-      openApp('terminal');
-      addNotification('Vault Token Ready', `Token ${clue.value} ready for 203.0.113.88 breach`, 'clue');
+    if (clue.id === "clue_vault_override") {
+      setTerminalSelectedIp("203.0.113.88");
+      openApp("terminal");
+      addNotification(
+        "Vault Token Ready",
+        `Token ${clue.value} ready for 203.0.113.88 breach`,
+        "clue",
+      );
       return;
     }
 
-    if (clue.id === 'clue_sat_relay_ip') {
-      setTerminalSelectedIp('185.220.101.5');
-      openApp('terminal');
-      addNotification('Satellite Target Loaded', `Downlink IP ${clue.value} selected in Terminal`, 'clue');
+    if (clue.id === "clue_sat_relay_ip") {
+      setTerminalSelectedIp("185.220.101.5");
+      openApp("terminal");
+      addNotification(
+        "Satellite Target Loaded",
+        `Downlink IP ${clue.value} selected in Terminal`,
+        "clue",
+      );
       return;
     }
 
-    if (clue.id === 'clue_datacenter_core_ip') {
-      setTerminalSelectedIp('194.165.16.100');
-      openApp('terminal');
-      addNotification('Supercluster Target Loaded', `Core IP ${clue.value} selected in Terminal`, 'clue');
+    if (clue.id === "clue_datacenter_core_ip") {
+      setTerminalSelectedIp("194.165.16.100");
+      openApp("terminal");
+      addNotification(
+        "Supercluster Target Loaded",
+        `Core IP ${clue.value} selected in Terminal`,
+        "clue",
+      );
       return;
     }
 
     // Personal / Date / Code clue -> Load into PassWeaver and auto-select it!
-    if (clue.targetPerson.includes('Marcus')) {
-      setPassWeaverTargetEmail('m.cole@velox-ai.io');
-    } else if (clue.targetPerson.includes('Julian')) {
-      setPassWeaverTargetEmail('j.sterling@aethelgard.corp');
-    } else if (clue.targetPerson.includes('Reyes') || clue.targetPerson.includes('Viktor')) {
-      setPassWeaverTargetEmail('v.reyes@aethelgard.corp');
+    if (clue.targetPerson.includes("Marcus")) {
+      setPassWeaverTargetEmail("m.cole@velox-ai.io");
+    } else if (clue.targetPerson.includes("Julian")) {
+      setPassWeaverTargetEmail("j.sterling@aethelgard.corp");
+    } else if (
+      clue.targetPerson.includes("Reyes") ||
+      clue.targetPerson.includes("Viktor")
+    ) {
+      setPassWeaverTargetEmail("v.reyes@aethelgard.corp");
     }
     setPassWeaverSelectedClues((prev) =>
-      prev.includes(clue.id) ? prev : [...prev, clue.id]
+      prev.includes(clue.id) ? prev : [...prev, clue.id],
     );
-    openApp('passweaver');
-    addNotification('Clue Loaded into PassWeaver', `"${clue.value}" added to synthesis slots`, 'clue');
+    openApp("passweaver");
+    addNotification(
+      "Clue Loaded into PassWeaver",
+      `"${clue.value}" added to synthesis slots`,
+      "clue",
+    );
   };
 
   const discoverClue = (clueId: string) => {
@@ -1200,12 +1546,17 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return prev;
       }
       sound.playClueFound();
-      addNotification(`Clue Found: ${clue.label}`, `"${clue.value}" pinned to Clue Board`, 'clue');
+      addNotification(
+        `Clue Found: ${clue.label}`,
+        `"${clue.value}" pinned to Clue Board`,
+        "clue",
+      );
       return [...prev, clue];
     });
   };
 
-  const hasClue = (clueId: string) => discoveredClues.some((c) => c.id === clueId);
+  const hasClue = (clueId: string) =>
+    discoveredClues.some((c) => c.id === clueId);
 
   const markEmailCracked = (email: string) => {
     if (!crackedEmails.includes(email)) {
@@ -1215,9 +1566,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const acc = EMAIL_ACCOUNTS[email];
       if (acc) {
         addNotification(
-          'Password Cracked!',
+          "Password Cracked!",
           `${email} → "${acc.password}" ready for WebMail`,
-          'mission'
+          "mission",
         );
       }
     }
@@ -1239,7 +1590,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     sound.playCryptoCoin();
     setCrypto((c) => c - item.price);
     setOwnedTools((prev) => [...prev, itemId]);
-    addNotification('Tool Installed', `${item.name} ${item.version} ready in Terminal`, 'mission');
+    addNotification(
+      "Tool Installed",
+      `${item.name} ${item.version} ready in Terminal`,
+      "mission",
+    );
     return true;
   };
 
@@ -1264,9 +1619,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setTracePercent(5);
         setTraceActive(true);
         addNotification(
-          'WARNING: ACTIVE TRACE DETECTED',
+          "WARNING: ACTIVE TRACE DETECTED",
           `Download target files, run 'wipe_logs', and 'disconnect' before 100%!`,
-          'warning'
+          "warning",
         );
       }
     }
@@ -1280,10 +1635,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLogsDirtyOnServer((prev) => ({ ...prev, [ip]: true }));
       }
     } else {
-      if (traceActive && !logsDirtyOnServer['203.0.113.88']) {
+      if (traceActive && !logsDirtyOnServer["203.0.113.88"]) {
         setTraceActive(false);
         setTracePercent(0);
-        addNotification('Trace Evaded', 'Disconnected cleanly with zero forensic footprint.', 'mission');
+        addNotification(
+          "Trace Evaded",
+          "Disconnected cleanly with zero forensic footprint.",
+          "mission",
+        );
       }
     }
   };
@@ -1292,13 +1651,21 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!downloadedFiles.some((f) => f.name === file.name)) {
       sound.playSuccess();
       setDownloadedFiles((prev) => [...prev, file]);
-      addNotification('File Exfiltrated', `${file.name} saved to DataVault`, 'mission');
+      addNotification(
+        "File Exfiltrated",
+        `${file.name} saved to DataVault`,
+        "mission",
+      );
     }
     if (file.clues) {
       file.clues.forEach((c) => {
         if (!discoveredClues.some((dc) => dc.id === c.id)) {
           setDiscoveredClues((prev) => [...prev, c]);
-          addNotification(`Clue Extracted: ${c.label}`, `"${c.value}" pinned to Clue Board`, 'clue');
+          addNotification(
+            `Clue Extracted: ${c.label}`,
+            `"${c.value}" pinned to Clue Board`,
+            "clue",
+          );
         }
       });
     }
@@ -1310,7 +1677,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setTraceActive(false);
       setTracePercent(0);
       sound.playSuccess();
-      addNotification('Forensic Logs Purged', 'Active Trace neutralized! Type `disconnect` to complete extraction.', 'mission');
+      addNotification(
+        "Forensic Logs Purged",
+        "Active Trace neutralized! Type `disconnect` to complete extraction.",
+        "mission",
+      );
     }
   };
 
@@ -1326,42 +1697,17 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const resetGame = () => {
-    if (currentUser && !currentUser.id.startsWith('guest_')) {
-      fetch('/api/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: currentUser.id, state: null }),
+    if (currentUser) {
+      fetch(`/api/save/${encodeURIComponent(currentUser.id)}`, {
+        method: "DELETE",
       }).catch(() => {});
     }
-    setCrypto(50);
-    setOwnedTools([]);
-    setDiscoveredClues([]);
-    setCrackedEmails([]);
-    setLoggedIntoEmails([]);
-    setScannedIps([]);
-    setCrackedPorts({});
-    setConnectedIp(null);
-    setDownloadedFiles([]);
-    setLogsDirtyOnServer({});
-    setTraceActive(false);
-    setTracePercent(0);
-    setUnderAttack(false);
-    setFirewallHealth(100);
-    setHoneypotActive(false);
-    setCapturedAttackerIp(null);
-    setSuccessfulPhishes([]);
-    setActiveProxyChain(['node_zurich', 'node_montreal']);
-    setCompletedBounties([]);
-    setChosenEnding(null);
-    setCurrentMissionIndex(0);
-    setMissionStage('briefing');
-    setCompletedMissionIds([]);
-    setChatHistory([]);
-    setCampaignFinished(false);
-    setWindows(INITIAL_WINDOWS);
-    setActiveApp('whisper');
-    setBrowserPage('search');
-    setBrowserSearchQuery('');
+    resetLocalGameState();
+    addNotification(
+      "DOSSIER PURGED",
+      "All mission progress, wallet balance, and forensic traces wiped. Starting fresh from Operation 01.",
+      "warning",
+    );
   };
 
   return (
@@ -1462,6 +1808,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         claimBounty,
         chosenEnding,
         chooseEnding,
+        moralChoices,
+        handleMonetizeArchive,
+        activeAlignment,
+        traceSensitivityMultiplier,
+        camStatus,
       }}
     >
       {children}
@@ -1471,6 +1822,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useGame = () => {
   const ctx = useContext(GameContext);
-  if (!ctx) throw new Error('useGame must be used inside GameProvider');
+  if (!ctx) throw new Error("useGame must be used inside GameProvider");
   return ctx;
 };

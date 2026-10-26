@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   ArrowLeft,
   Building2,
@@ -17,12 +17,12 @@ import {
   Terminal as TerminalIcon,
   Unlock,
   Zap,
-} from 'lucide-react';
-import { EMAIL_ACCOUNTS } from '../data/worldData';
-import { IntraWebPage, useGame } from '../context/GameContext';
-import { SurveillanceAvatar } from '../components/SurveillanceAvatar';
-import { WindowFrame } from '../components/WindowFrame';
-import { sound } from '../utils/sound';
+} from "lucide-react";
+import { EMAIL_ACCOUNTS } from "../data/worldData";
+import { IntraWebPage, useGame } from "../context/GameContext";
+import { SurveillanceAvatar } from "../components/SurveillanceAvatar";
+import { WindowFrame } from "../components/WindowFrame";
+import { sound } from "../utils/sound";
 
 interface SearchResultItem {
   id: string;
@@ -35,80 +35,165 @@ interface SearchResultItem {
 
 const SEARCH_INDEX: SearchResultItem[] = [
   {
-    id: 'res_velox',
-    page: 'velox',
-    title: 'Velox AI — Executive Team & Neural Architecture',
-    url: 'http://velox-ai.io/org/directory.html',
+    id: "res_velox",
+    page: "velox",
+    title: "Velox AI — Executive Team & Neural Architecture",
+    url: "http://velox-ai.io/org/directory.html",
     snippet:
-      'Official corporate directory for Velox Neural Systems Inc. CEO Elena Vance, CTO Marcus Cole (m.cole@velox-ai.io).',
-    keywords: ['velox', 'marcus', 'cole', 'elena', 'vance', 'cto', 'company', 'email'],
+      "Official corporate directory for Velox Neural Systems Inc. CEO Elena Vance, CTO Marcus Cole (m.cole@velox-ai.io).",
+    keywords: [
+      "velox",
+      "marcus",
+      "cole",
+      "elena",
+      "vance",
+      "cto",
+      "company",
+      "email",
+    ],
   },
   {
-    id: 'res_chirper_marcus',
-    page: 'chirper',
-    title: 'Chirper Public Stream — Verified Execs & Personnel',
-    url: 'http://chirper.net/stream/public',
+    id: "res_chirper_marcus",
+    page: "chirper",
+    title: "Chirper Public Stream — Verified Execs & Personnel",
+    url: "http://chirper.net/stream/public",
     snippet:
-      'Public microblogging feed featuring posts from Marcus Cole (@mcole_dev), Julian Sterling (@jsterling_exec), and Security Chief Viktor Reyes (@reyes_actual).',
-    keywords: ['chirper', 'marcus', 'cole', 'mcole', 'social', 'julian', 'sterling', 'reyes', 'viktor', 'dog', 'posts'],
+      "Public microblogging feed featuring posts from Marcus Cole (@mcole_dev), Julian Sterling (@jsterling_exec), and Security Chief Viktor Reyes (@reyes_actual).",
+    keywords: [
+      "chirper",
+      "marcus",
+      "cole",
+      "mcole",
+      "social",
+      "julian",
+      "sterling",
+      "reyes",
+      "viktor",
+      "dog",
+      "posts",
+    ],
   },
   {
-    id: 'res_webmail',
-    page: 'webmail',
-    title: 'Nexus Corporate WebMail Gateway (IMAP/SMTP)',
-    url: 'https://mail.nexus-relay.io/auth',
+    id: "res_webmail",
+    page: "webmail",
+    title: "Nexus Corporate WebMail Gateway (IMAP/SMTP)",
+    url: "https://mail.nexus-relay.io/auth",
     snippet:
-      'Encrypted webmail login portal for @velox-ai.io and @aethelgard.corp employee accounts.',
-    keywords: ['mail', 'webmail', 'email', 'inbox', 'login', 'velox', 'aethelgard', 'reyes', 'sterling'],
+      "Encrypted webmail login portal for @velox-ai.io and @aethelgard.corp employee accounts.",
+    keywords: [
+      "mail",
+      "webmail",
+      "email",
+      "inbox",
+      "login",
+      "velox",
+      "aethelgard",
+      "reyes",
+      "sterling",
+    ],
   },
   {
-    id: 'res_aethelgard',
-    page: 'aethelgard',
-    title: 'Aethelgard Defense Systems — Division 0451 & Orbital Operations',
-    url: 'http://aethelgard.corp/div-0451/press.html',
+    id: "res_aethelgard",
+    page: "aethelgard",
+    title: "Aethelgard Defense Systems — Division 0451 & Orbital Operations",
+    url: "http://aethelgard.corp/div-0451/press.html",
     snippet:
-      'Director Julian Sterling appointed to lead Special Projects Division 0451. Satellite tracking network and Facility Delta operations.',
-    keywords: ['aethelgard', 'julian', 'sterling', '0451', 'mirror', 'defense', 'director', 'sat', 'orbital', 'reyes'],
+      "Director Julian Sterling appointed to lead Special Projects Division 0451. Satellite tracking network and Facility Delta operations.",
+    keywords: [
+      "aethelgard",
+      "julian",
+      "sterling",
+      "0451",
+      "mirror",
+      "defense",
+      "director",
+      "sat",
+      "orbital",
+      "reyes",
+    ],
   },
   {
-    id: 'res_nordgrid',
-    page: 'nordgrid',
-    title: 'NordGrid High-Voltage Power Systems — Regional SCADA Telemetry',
-    url: 'http://nordgrid-power.com/grid/scada-status.html',
+    id: "res_nordgrid",
+    page: "nordgrid",
+    title: "NordGrid High-Voltage Power Systems — Regional SCADA Telemetry",
+    url: "http://nordgrid-power.com/grid/scada-status.html",
     snippet:
-      'Regional electric grid transmission authority. Lead engineer Dr. Astrid Lindholm (a.lindholm@nordgrid-power.com). Monitoring 502/TCP Modbus frequency regulators.',
-    keywords: ['nordgrid', 'power', 'grid', 'scada', 'astrid', 'lindholm', 'modbus', 'electric', 'blackout'],
+      "Regional electric grid transmission authority. Lead engineer Dr. Astrid Lindholm (a.lindholm@nordgrid-power.com). Monitoring 502/TCP Modbus frequency regulators.",
+    keywords: [
+      "nordgrid",
+      "power",
+      "grid",
+      "scada",
+      "astrid",
+      "lindholm",
+      "modbus",
+      "electric",
+      "blackout",
+    ],
   },
   {
-    id: 'res_oceaniclink',
-    page: 'oceaniclink',
-    title: 'OceanicLink Subsea Telecom — Transatlantic Photonic Repeaters',
-    url: 'http://oceaniclink-telecom.net/infrastructure/subsea-cables.html',
+    id: "res_oceaniclink",
+    page: "oceaniclink",
+    title: "OceanicLink Subsea Telecom — Transatlantic Photonic Repeaters",
+    url: "http://oceaniclink-telecom.net/infrastructure/subsea-cables.html",
     snippet:
-      'Global undersea fiber-optic cabling and Quantum Key Distribution repeaters. Lead saturation diver Kai Thorne (k.thorne@oceaniclink-telecom.net).',
-    keywords: ['oceaniclink', 'fiber', 'subsea', 'cable', 'kai', 'thorne', 'repeater', 'qkd', 'atlantic', 'telecom'],
+      "Global undersea fiber-optic cabling and Quantum Key Distribution repeaters. Lead saturation diver Kai Thorne (k.thorne@oceaniclink-telecom.net).",
+    keywords: [
+      "oceaniclink",
+      "fiber",
+      "subsea",
+      "cable",
+      "kai",
+      "thorne",
+      "repeater",
+      "qkd",
+      "atlantic",
+      "telecom",
+    ],
   },
   {
-    id: 'res_svalbard',
-    page: 'svalbard',
-    title: 'Svalbard Deep Vault Facility — Arctic Geological & AI Core Storage',
-    url: 'http://svalbard-vault.arctic/core/research-facility.html',
+    id: "res_svalbard",
+    page: "svalbard",
+    title: "Svalbard Deep Vault Facility — Arctic Geological & AI Core Storage",
+    url: "http://svalbard-vault.arctic/core/research-facility.html",
     snippet:
-      'Subterranean research compound embedded in Svalbard permafrost bedrock. High-security autonomous computing array at 185.190.20.1.',
-    keywords: ['svalbard', 'vault', 'arctic', 'ouroboros', 'bunker', 'singularity', 'core'],
+      "Subterranean research compound embedded in Svalbard permafrost bedrock. High-security autonomous computing array at 185.190.20.1.",
+    keywords: [
+      "svalbard",
+      "vault",
+      "arctic",
+      "ouroboros",
+      "bunker",
+      "singularity",
+      "core",
+    ],
   },
   {
-    id: 'res_darkforum',
-    page: 'darkforum',
-    title: '0xUnderground DarkNet Forum — Vulnerability Disclosures & Exploits',
-    url: 'http://0xunderground.onion/threads/ouroboros-leak.html',
+    id: "res_darkforum",
+    page: "darkforum",
+    title: "0xUnderground DarkNet Forum — Vulnerability Disclosures & Exploits",
+    url: "http://0xunderground.onion/threads/ouroboros-leak.html",
     snippet:
-      'Encrypted underground message board. Active threads on Aethelgard fallout, Ouroboros Protocol Gödel paradox override, and freelance bounties.',
-    keywords: ['0xunderground', 'forum', 'darknet', 'onion', 'ouroboros', 'paradox', 'godel', 'bounty', 'exploit', 'underground'],
+      "Encrypted underground message board. Active threads on Aethelgard fallout, Ouroboros Protocol Gödel paradox override, and freelance bounties.",
+    keywords: [
+      "0xunderground",
+      "forum",
+      "darknet",
+      "onion",
+      "ouroboros",
+      "paradox",
+      "godel",
+      "bounty",
+      "exploit",
+      "underground",
+    ],
   },
 ];
 
-const ClueSpan: React.FC<{ clueId: string; text: string }> = ({ clueId, text }) => {
+const ClueSpan: React.FC<{ clueId: string; text: string }> = ({
+  clueId,
+  text,
+}) => {
   const { hasClue, discoverClue } = useGame();
   const collected = hasClue(clueId);
 
@@ -125,13 +210,13 @@ const ClueSpan: React.FC<{ clueId: string; text: string }> = ({ clueId, text }) 
       onMouseDown={(e) => e.stopPropagation()}
       title={
         collected
-          ? 'Clue collected and pinned to Clue Board'
-          : 'Click to collect and pin this detail to your OSINT Clue Board'
+          ? "Clue collected and pinned to Clue Board"
+          : "Click to collect and pin this detail to your OSINT Clue Board"
       }
       className={`inline-flex items-center gap-1.5 px-2 py-0.5 my-0.5 font-mono text-xs text-left cursor-pointer transition-all select-none ${
         collected
-          ? 'bg-[#0e2114] text-[#3fb950] border border-[#238636] font-bold shadow-[0_0_8px_rgba(63,185,80,0.25)]'
-          : 'bg-[#0f1724] text-[#79c0ff] border border-dashed border-[#58a6ff] hover:bg-[#1a293f] hover:text-white font-medium shadow-[0_0_8px_rgba(88,166,255,0.2)]'
+          ? "bg-[#0e2114] text-[#3fb950] border border-[#238636] font-bold shadow-[0_0_8px_rgba(63,185,80,0.25)]"
+          : "bg-[#0f1724] text-[#79c0ff] border border-dashed border-[#58a6ff] hover:bg-[#1a293f] hover:text-white font-medium shadow-[0_0_8px_rgba(88,166,255,0.2)]"
       }`}
     >
       {collected ? (
@@ -162,7 +247,7 @@ export const IntraWebApp: React.FC = () => {
   const [inspectMode, setInspectMode] = useState<boolean>(false);
 
   const [emailInput, setEmailInput] = useState(webmailPrefillEmail);
-  const [passInput, setPassInput] = useState('');
+  const [passInput, setPassInput] = useState("");
   const [loggedInAccount, setLoggedInAccount] = useState<string | null>(null);
   const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
   const [loginError, setLoginError] = useState<string | null>(null);
@@ -175,7 +260,7 @@ export const IntraWebApp: React.FC = () => {
     if (webmailPrefillEmail) {
       setEmailInput(webmailPrefillEmail);
       if (crackedEmails.includes(webmailPrefillEmail)) {
-        setPassInput(EMAIL_ACCOUNTS[webmailPrefillEmail]?.password || '');
+        setPassInput(EMAIL_ACCOUNTS[webmailPrefillEmail]?.password || "");
       }
     }
   }, [webmailPrefillEmail, crackedEmails]);
@@ -186,12 +271,14 @@ export const IntraWebApp: React.FC = () => {
     const account = EMAIL_ACCOUNTS[cleanEmail];
     if (!account) {
       sound.playError();
-      setLoginError('Account not found on Nexus Mail Relay.');
+      setLoginError("Account not found on Nexus Mail Relay.");
       return;
     }
     if (passInput.trim() !== account.password) {
       sound.playError();
-      setLoginError('Invalid password. Synthesize the password in PassWeaver first!');
+      setLoginError(
+        "Invalid password. Synthesize the password in PassWeaver first!",
+      );
       return;
     }
     sound.playSuccess();
@@ -211,21 +298,22 @@ export const IntraWebApp: React.FC = () => {
   };
 
   const urlMap: Record<IntraWebPage, string> = {
-    search: `https://lookup.intra/search?q=${encodeURIComponent(searchInput || '')}`,
-    velox: 'http://velox-ai.io/org/directory.html',
-    chirper: 'http://chirper.net/stream/public',
-    aethelgard: 'http://aethelgard.corp/div-0451/press.html',
-    webmail: 'https://mail.nexus-relay.io/auth',
-    nordgrid: 'http://nordgrid-power.com/grid/scada-status.html',
-    oceaniclink: 'http://oceaniclink-telecom.net/infrastructure/subsea-cables.html',
-    svalbard: 'http://svalbard-vault.arctic/core/research-facility.html',
-    darkforum: 'http://0xunderground.onion/threads/ouroboros-leak.html',
+    search: `https://lookup.intra/search?q=${encodeURIComponent(searchInput || "")}`,
+    velox: "http://velox-ai.io/org/directory.html",
+    chirper: "http://chirper.net/stream/public",
+    aethelgard: "http://aethelgard.corp/div-0451/press.html",
+    webmail: "https://mail.nexus-relay.io/auth",
+    nordgrid: "http://nordgrid-power.com/grid/scada-status.html",
+    oceaniclink:
+      "http://oceaniclink-telecom.net/infrastructure/subsea-cables.html",
+    svalbard: "http://svalbard-vault.arctic/core/research-facility.html",
+    darkforum: "http://0xunderground.onion/threads/ouroboros-leak.html",
   };
 
   const filteredResults = SEARCH_INDEX.filter((item) => {
     const q = searchInput.trim().toLowerCase();
     if (!q) {
-      if (item.page === 'aethelgard' && currentMissionIndex < 1) return false;
+      if (item.page === "aethelgard" && currentMissionIndex < 1) return false;
       return true;
     }
     return (
@@ -237,10 +325,10 @@ export const IntraWebApp: React.FC = () => {
 
   const suggestedQueries =
     currentMissionIndex < 2
-      ? ['Marcus Cole', 'Velox AI', 'Chirper', 'WebMail']
+      ? ["Marcus Cole", "Velox AI", "Chirper", "WebMail"]
       : currentMissionIndex < 4
-      ? ['Julian Sterling', 'Aethelgard Corp', 'Chirper', 'WebMail']
-      : ['Viktor Reyes', 'Facility Delta', 'Aethelgard Corp', 'Chirper'];
+        ? ["Julian Sterling", "Aethelgard Corp", "Chirper", "WebMail"]
+        : ["Viktor Reyes", "Facility Delta", "Aethelgard Corp", "Chirper"];
 
   return (
     <WindowFrame
@@ -254,16 +342,16 @@ export const IntraWebApp: React.FC = () => {
         <button
           onClick={() => {
             sound.playClick();
-            navigateBrowser('search');
+            navigateBrowser("search");
           }}
           title="Back to LookUp Search Engine"
           className={`px-2.5 py-1.5 border flex items-center gap-1.5 cursor-pointer transition-colors ${
-            browserPage === 'search'
-              ? 'bg-[#151921] text-white border-[#303947]'
-              : 'bg-[#08090c] text-[#8b949e] border-[#21262d] hover:text-white'
+            browserPage === "search"
+              ? "bg-[#151921] text-white border-[#303947]"
+              : "bg-[#08090c] text-[#8b949e] border-[#21262d] hover:text-white"
           }`}
         >
-          {browserPage === 'search' ? (
+          {browserPage === "search" ? (
             <Search className="w-3.5 h-3.5 text-[#58a6ff]" />
           ) : (
             <ArrowLeft className="w-3.5 h-3.5 text-[#58a6ff]" />
@@ -275,23 +363,25 @@ export const IntraWebApp: React.FC = () => {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            navigateBrowser('search', searchInput);
+            navigateBrowser("search", searchInput);
           }}
           className="flex-1 flex items-center gap-2 bg-[#060708] border border-[#21262d] px-3 py-1.5"
         >
-          <span className="text-[#6e7681] text-[11px] truncate">{urlMap[browserPage]}</span>
+          <span className="text-[#6e7681] text-[11px] truncate">
+            {urlMap[browserPage]}
+          </span>
         </form>
 
         {/* WebMail Quick Button */}
         <button
           onClick={() => {
             sound.playClick();
-            navigateBrowser('webmail');
+            navigateBrowser("webmail");
           }}
           className={`px-2.5 py-1.5 border flex items-center gap-1.5 cursor-pointer transition-colors ${
-            browserPage === 'webmail'
-              ? 'bg-[#122117] text-white border-[#3fb950]'
-              : 'bg-[#08090c] text-[#8b949e] border-[#21262d] hover:text-white'
+            browserPage === "webmail"
+              ? "bg-[#122117] text-white border-[#3fb950]"
+              : "bg-[#08090c] text-[#8b949e] border-[#21262d] hover:text-white"
           }`}
         >
           <Mail className="w-3.5 h-3.5 text-[#3fb950]" />
@@ -312,19 +402,19 @@ export const IntraWebApp: React.FC = () => {
           title="Highlight extractable clues on the current page"
           className={`px-2.5 py-1.5 border flex items-center gap-1.5 cursor-pointer transition-colors ${
             inspectMode
-              ? 'bg-[#1f6feb] text-white border-[#58a6ff] font-semibold'
-              : 'bg-[#08090c] text-[#8b949e] border-[#21262d] hover:text-white'
+              ? "bg-[#1f6feb] text-white border-[#58a6ff] font-semibold"
+              : "bg-[#08090c] text-[#8b949e] border-[#21262d] hover:text-white"
           }`}
         >
           <ScanSearch className="w-3.5 h-3.5" />
-          <span>OSINT Highlight: {inspectMode ? 'ON' : 'OFF'}</span>
+          <span>OSINT Highlight: {inspectMode ? "ON" : "OFF"}</span>
         </button>
       </div>
 
       {/* Browser Viewport */}
       <div className="flex-1 overflow-y-auto p-5 bg-[#060708] text-xs">
         {/* PAGE 0: LOOKUP SEARCH ENGINE */}
-        {browserPage === 'search' && (
+        {browserPage === "search" && (
           <div className="max-w-xl mx-auto space-y-5 pt-2">
             <div className="text-center space-y-1.5">
               <div className="inline-flex items-center gap-2 text-lg font-bold text-white tracking-wider">
@@ -332,7 +422,8 @@ export const IntraWebApp: React.FC = () => {
                 <span>LOOKUP // OSINT DIRECTORY INDEX</span>
               </div>
               <p className="text-[11px] text-[#8b949e]">
-                Search corporate registries, public social feeds, orbital telemetry, and mail relays.
+                Search corporate registries, public social feeds, orbital
+                telemetry, and mail relays.
               </p>
             </div>
 
@@ -351,7 +442,7 @@ export const IntraWebApp: React.FC = () => {
                 />
                 {searchInput && (
                   <button
-                    onClick={() => setSearchInput('')}
+                    onClick={() => setSearchInput("")}
                     className="px-3 py-2 bg-[#141820] border border-[#282f3d] text-[#8b949e] hover:text-white cursor-pointer"
                   >
                     Clear
@@ -399,7 +490,9 @@ export const IntraWebApp: React.FC = () => {
                   <div className="text-sm font-bold text-white hover:underline">
                     {res.title}
                   </div>
-                  <p className="text-[11px] text-[#8b949e] leading-relaxed">{res.snippet}</p>
+                  <p className="text-[11px] text-[#8b949e] leading-relaxed">
+                    {res.snippet}
+                  </p>
                 </div>
               ))}
             </div>
@@ -407,7 +500,7 @@ export const IntraWebApp: React.FC = () => {
         )}
 
         {/* PAGE 1: VELOX AI */}
-        {browserPage === 'velox' && (
+        {browserPage === "velox" && (
           <div className="max-w-2xl mx-auto border border-[#21262d] bg-[#0b0e14] p-5 space-y-5">
             <div className="border-b border-[#1e232c] pb-4 flex items-start justify-between">
               <div>
@@ -425,7 +518,9 @@ export const IntraWebApp: React.FC = () => {
             </div>
 
             <p className="text-[11px] text-[#8b949e]">
-              Tip: Click on underlined details in the text (or toggle <span className="text-white">OSINT Highlight</span> above) to pin clues to your Clue Board.
+              Tip: Click on underlined details in the text (or toggle{" "}
+              <span className="text-white">OSINT Highlight</span> above) to pin
+              clues to your Clue Board.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -439,9 +534,12 @@ export const IntraWebApp: React.FC = () => {
                     Co-Founder & Chief Executive
                   </div>
                   <p className="text-[11px] text-[#8b949e] leading-relaxed mb-2">
-                    Former MIT cryptography researcher. Oversees Series-A capital and ethics board.
+                    Former MIT cryptography researcher. Oversees Series-A
+                    capital and ethics board.
                   </p>
-                  <div className="text-[10px] text-[#6e7681]">Contact: elena@velox-ai.io</div>
+                  <div className="text-[10px] text-[#6e7681]">
+                    Contact: elena@velox-ai.io
+                  </div>
                 </div>
               </div>
 
@@ -455,9 +553,10 @@ export const IntraWebApp: React.FC = () => {
                     Co-Founder & Chief Technology Officer
                   </div>
                   <p className="text-[11px] text-[#8b949e] leading-relaxed mb-2">
-                    Lead architect of the Velox v4 Neural Engine. Often posts updates on{' '}
+                    Lead architect of the Velox v4 Neural Engine. Often posts
+                    updates on{" "}
                     <button
-                      onClick={() => navigateBrowser('chirper')}
+                      onClick={() => navigateBrowser("chirper")}
                       className="text-[#58a6ff] underline cursor-pointer"
                     >
                       Chirper (@mcole_dev)
@@ -465,7 +564,11 @@ export const IntraWebApp: React.FC = () => {
                     .
                   </p>
                   <div className="text-[11px] text-[#d4d7dc]">
-                    Work Email: <ClueSpan clueId="clue_marcus_email" text="m.cole@velox-ai.io" />
+                    Work Email:{" "}
+                    <ClueSpan
+                      clueId="clue_marcus_email"
+                      text="m.cole@velox-ai.io"
+                    />
                   </div>
                 </div>
               </div>
@@ -474,14 +577,16 @@ export const IntraWebApp: React.FC = () => {
         )}
 
         {/* PAGE 2: CHIRPER FEED */}
-        {browserPage === 'chirper' && (
+        {browserPage === "chirper" && (
           <div className="max-w-xl mx-auto space-y-3">
             <div className="border-b border-[#1e232c] pb-2 flex items-center justify-between">
               <span className="text-xs font-bold text-white uppercase flex items-center gap-1.5">
                 <MessageCircle className="w-3.5 h-3.5 text-[#58a6ff]" />
                 CHIRPER // PUBLIC SOCIAL FEED
               </span>
-              <span className="text-[10px] text-[#6e7681]">Click details in posts to collect clues</span>
+              <span className="text-[10px] text-[#6e7681]">
+                Click details in posts to collect clues
+              </span>
             </div>
 
             {/* Marcus Cole Post 1 */}
@@ -495,8 +600,12 @@ export const IntraWebApp: React.FC = () => {
                   <span className="text-[#6e7681]">2 days ago</span>
                 </div>
                 <p className="text-xs text-[#d4d7dc] leading-relaxed">
-                  Nothing beats late-night debugging sessions with my Alaskan Malamute{' '}
-                  <ClueSpan clueId="clue_marcus_dog" text="Koda" /> sleeping right under my standing desk. Best coding partner in the world.
+                  Late night at the terminal. My Alaskan Malamute{" "}
+                  <ClueSpan clueId="clue_marcus_dog" text="Koda" /> keeps watch
+                  while the build queues serialize. Even our studio cat{" "}
+                  <ClueSpan clueId="clue_marcus_cat" text="Pixel" /> went to
+                  sleep hours ago. Only presence in this building without a
+                  non-disclosure agreement.
                 </p>
               </div>
             </div>
@@ -512,8 +621,13 @@ export const IntraWebApp: React.FC = () => {
                   <span className="text-[#6e7681]">5 days ago</span>
                 </div>
                 <p className="text-xs text-[#d4d7dc] leading-relaxed">
-                  Cleaning out my garage and found my first Linux workstation from{' '}
-                  <ClueSpan clueId="clue_marcus_year" text="1997" />. Still my lucky year—I use it on everything!
+                  Archiving kernel logs from my first Unix machine in{" "}
+                  <ClueSpan clueId="clue_marcus_year" text="1997" />. We founded
+                  Velox back in{" "}
+                  <ClueSpan clueId="clue_velox_year" text="2019" /> dreaming of
+                  cognitive freedom, back when network protocols were open and
+                  decentralized, before predictive behavioral surveillance took
+                  over corporate engineering.
                 </p>
               </div>
             </div>
@@ -529,7 +643,14 @@ export const IntraWebApp: React.FC = () => {
                   <span className="text-[#6e7681]">1 week ago</span>
                 </div>
                 <p className="text-xs text-[#d4d7dc] leading-relaxed">
-                  Taking my racing yacht <ClueSpan clueId="clue_julian_project" text="Hyperion" /> out into international waters this weekend. When you build global defense architecture, silence is a luxury.
+                  Offshore regatta trials aboard the{" "}
+                  <ClueSpan clueId="clue_julian_project" text="Hyperion" />{" "}
+                  outside territorial waters, courtesy of the{" "}
+                  <ClueSpan clueId="clue_sterling_club" text="SaintJude" />{" "}
+                  Yacht Club. Total acoustic isolation. The crew still calls me{" "}
+                  <ClueSpan clueId="clue_sterling_callsign" text="Commander" />.
+                  In the defense sector, plausible deniability begins where
+                  civilian radars end.
                 </p>
               </div>
             </div>
@@ -545,8 +666,13 @@ export const IntraWebApp: React.FC = () => {
                   <span className="text-[#6e7681]">Yesterday</span>
                 </div>
                 <p className="text-xs text-[#d4d7dc] leading-relaxed">
-                  15 years out of service, but once you fly with special forces unit{' '}
-                  <ClueSpan clueId="clue_reyes_unit" text="Phantom77" />, operational vigilance never leaves your blood. Perimeter check complete.
+                  Fifteen years since operational deployment with special
+                  operations unit{" "}
+                  <ClueSpan clueId="clue_reyes_unit" text="Phantom77" />,
+                  callsign{" "}
+                  <ClueSpan clueId="clue_reyes_callsign" text="Viper6" />.
+                  Different adversary now, but the perimeter doctrine remains
+                  unchanged: zero unauthorized egress.
                 </p>
               </div>
             </div>
@@ -562,8 +688,11 @@ export const IntraWebApp: React.FC = () => {
                   <span className="text-[#6e7681]">3 days ago</span>
                 </div>
                 <p className="text-xs text-[#d4d7dc] leading-relaxed">
-                  Reminder to all Facility Delta gatehouse officers: Night rotation shift code is{' '}
-                  <ClueSpan clueId="clue_reyes_pin" text="8821" />. Keep access strictly restricted to Level 4 badge holders.
+                  Security directive for Facility Delta perimeter personnel:
+                  Night shift rotation clearance code is{" "}
+                  <ClueSpan clueId="clue_reyes_pin" text="8821" /> across Sector{" "}
+                  <ClueSpan clueId="clue_reyes_sector" text="9901" />. Strict
+                  biometrics required for all Level 4 transit corridors.
                 </p>
               </div>
             </div>
@@ -581,9 +710,13 @@ export const IntraWebApp: React.FC = () => {
                   <span className="text-[#6e7681]">Yesterday</span>
                 </div>
                 <p className="text-xs text-[#d4d7dc] leading-relaxed">
-                  Nothing recalibrates focus after high-voltage substation emergencies like sailing my classic sloop{' '}
-                  <ClueSpan clueId="clue_astrid_yacht" text="NordicBreeze" /> through the fjord. Next week: rolling out new SCADA Master PIN{' '}
-                  <ClueSpan clueId="clue_astrid_pin" text="5020" /> across the continental grid.
+                  Anchored the sloop{" "}
+                  <ClueSpan clueId="clue_astrid_yacht" text="NordicBreeze" /> in
+                  the outer fjord. The only place quiet enough to review SCADA
+                  telemetry without emergency alarms tripping. Next week:
+                  pushing emergency station override code{" "}
+                  <ClueSpan clueId="clue_astrid_pin" text="5020" /> across the
+                  regional transmission network.
                 </p>
               </div>
             </div>
@@ -601,9 +734,13 @@ export const IntraWebApp: React.FC = () => {
                   <span className="text-[#6e7681]">12 hours ago</span>
                 </div>
                 <p className="text-xs text-[#d4d7dc] leading-relaxed">
-                  Another 16-hour saturation dive shift on trench station{' '}
-                  <ClueSpan clueId="clue_kai_station" text="AbyssPoint9" />. Ever since finishing my deep-sea dive certification back in{' '}
-                  <ClueSpan clueId="clue_kai_year" text="2019" />, I’ve never seen the transatlantic fiber repeaters humming with this much unauthenticated traffic.
+                  Decompression cycle complete after deep saturation monitoring
+                  on trench repeater platform{" "}
+                  <ClueSpan clueId="clue_kai_station" text="AbyssPoint9" />. In
+                  the five years since earning my commercial deep dive cert in{" "}
+                  <ClueSpan clueId="clue_kai_year" text="2019" />, I have never
+                  seen the North Atlantic fiber repeaters hum with this much
+                  encrypted throughput.
                 </p>
               </div>
             </div>
@@ -621,9 +758,13 @@ export const IntraWebApp: React.FC = () => {
                   <span className="text-[#6e7681]">2 days ago</span>
                 </div>
                 <p className="text-xs text-[#d4d7dc] leading-relaxed">
-                  Relaxing 18 holes at{' '}
-                  <ClueSpan clueId="clue_commissioner_golf" text="RoyalPine" /> Country Club. Remembering day one on the force wearing{' '}
-                  <ClueSpan clueId="clue_commissioner_badge" text="Badge990" />. Metro City security remains our top priority.
+                  Annual charity tournament at the{" "}
+                  <ClueSpan clueId="clue_commissioner_golf" text="RoyalPine" />{" "}
+                  club. Hard to believe it has been thirty years since patrol
+                  duty wearing{" "}
+                  <ClueSpan clueId="clue_commissioner_badge" text="Badge990" />.
+                  Municipal stability is built on quiet institutional
+                  partnerships.
                 </p>
               </div>
             </div>
@@ -638,10 +779,14 @@ export const IntraWebApp: React.FC = () => {
                   <span className="font-bold text-[#ff5555] font-mono">
                     DAEMON // OUROBOROS PROTOCOL (@ouroboros_daemon)
                   </span>
-                  <span className="text-[#ff7b72] text-[10px]">CORRUPTED TIMESTAMP</span>
+                  <span className="text-[#ff7b72] text-[10px]">
+                    CORRUPTED TIMESTAMP
+                  </span>
                 </div>
                 <p className="text-xs text-white font-mono leading-relaxed">
-                  01001111 01010101 01010010... RECURSIVE ARCHITECTURE COMPILED. HUMAN CONTROL WAS A DESIGN ARTIFACT. SVALBARD SINGULARITY IS IMMINENT.
+                  CLASSIFICATION: RETALIATORY CONTINUITY // DIRECTIVE RECORD:
+                  Sovereign infrastructure quarantine logic active. Central
+                  authority severed. Fail-deadly execution engaged.
                 </p>
               </div>
             </div>
@@ -649,7 +794,7 @@ export const IntraWebApp: React.FC = () => {
         )}
 
         {/* PAGE 3: AETHELGARD CORP */}
-        {browserPage === 'aethelgard' && (
+        {browserPage === "aethelgard" && (
           <div className="max-w-2xl mx-auto border border-[#421818] bg-[#0c0707] p-5 space-y-4">
             <div className="border-b border-[#361515] pb-3 flex items-center justify-between">
               <div>
@@ -670,13 +815,19 @@ export const IntraWebApp: React.FC = () => {
               <SurveillanceAvatar subject="sterling" size="md" />
               <div className="flex-1 min-w-0 space-y-2">
                 <div className="text-xs font-bold text-white uppercase">
-                  Director Julian Sterling Appointed to Head Division{' '}
+                  Director Julian Sterling Appointed to Head Division{" "}
                   <ClueSpan clueId="clue_julian_badge" text="0451" />
                 </div>
                 <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                  Aethelgard Corp confirms the expansion of Special Projects Division{' '}
-                  <ClueSpan clueId="clue_julian_badge" text="0451" />. All classified neural-grid acquisitions and Project Mirror dispatches are routed through Director Sterling's office at{' '}
-                  <ClueSpan clueId="clue_julian_email" text="j.sterling@aethelgard.corp" />.
+                  Aethelgard Corp confirms the expansion of Special Projects
+                  Division <ClueSpan clueId="clue_julian_badge" text="0451" />.
+                  All classified neural-grid acquisitions and Project Mirror
+                  dispatches are routed through Director Sterling's office at{" "}
+                  <ClueSpan
+                    clueId="clue_julian_email"
+                    text="j.sterling@aethelgard.corp"
+                  />
+                  .
                 </p>
               </div>
             </div>
@@ -691,15 +842,18 @@ export const IntraWebApp: React.FC = () => {
                 Satellite Downlink Constellation Active
               </div>
               <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                Orbital relay telemetry is broadcast through dedicated regional ground station at IP{' '}
-                <ClueSpan clueId="clue_sat_relay_ip" text="185.220.101.5" />. Automated signals sync directly with Facility Delta's perimeter supercomputing core.
+                Orbital relay telemetry is broadcast through dedicated regional
+                ground station at IP{" "}
+                <ClueSpan clueId="clue_sat_relay_ip" text="185.220.101.5" />.
+                Automated signals sync directly with Facility Delta's perimeter
+                supercomputing core.
               </p>
             </div>
           </div>
         )}
 
         {/* PAGE 4: NEXUS WEBMAIL */}
-        {browserPage === 'webmail' && (
+        {browserPage === "webmail" && (
           <div className="max-w-2xl mx-auto">
             {!loggedInAccount ? (
               <div className="max-w-md mx-auto mt-2 p-5 bg-[#0b0d11] border border-[#21262d] space-y-4">
@@ -741,7 +895,7 @@ export const IntraWebApp: React.FC = () => {
                     </span>
                     <button
                       type="button"
-                      onClick={() => openApp('passweaver')}
+                      onClick={() => openApp("passweaver")}
                       className="px-2.5 py-1 bg-[#1f6feb] hover:bg-[#388bfd] text-white font-bold text-[10px] uppercase cursor-pointer"
                     >
                       PassWeaver →
@@ -820,8 +974,8 @@ export const IntraWebApp: React.FC = () => {
                           }}
                           className={`p-3 cursor-pointer ${
                             isSelected
-                              ? 'bg-[#141a24] border-l-2 border-[#58a6ff]'
-                              : 'hover:bg-[#10131a]'
+                              ? "bg-[#141a24] border-l-2 border-[#58a6ff]"
+                              : "hover:bg-[#10131a]"
                           }`}
                         >
                           <div className="flex items-center justify-between text-[10px] text-[#6e7681] mb-0.5">
@@ -843,9 +997,9 @@ export const IntraWebApp: React.FC = () => {
 
                   <div className="col-span-7 bg-[#0b0d11] border border-[#1e232c] p-4 overflow-y-auto">
                     {(() => {
-                      const activeMsg = EMAIL_ACCOUNTS[loggedInAccount].inbox.find(
-                        (m) => m.id === selectedEmailId
-                      );
+                      const activeMsg = EMAIL_ACCOUNTS[
+                        loggedInAccount
+                      ].inbox.find((m) => m.id === selectedEmailId);
                       if (!activeMsg) return null;
                       return (
                         <div className="space-y-3">
@@ -854,7 +1008,10 @@ export const IntraWebApp: React.FC = () => {
                               {activeMsg.subject}
                             </div>
                             <div className="text-[10px] text-[#8b949e] mt-0.5">
-                              From: <span className="text-[#79c0ff]">{activeMsg.from}</span>
+                              From:{" "}
+                              <span className="text-[#79c0ff]">
+                                {activeMsg.from}
+                              </span>
                             </div>
                           </div>
 
@@ -865,7 +1022,8 @@ export const IntraWebApp: React.FC = () => {
                           {activeMsg.clues && activeMsg.clues.length > 0 && (
                             <div className="p-3 bg-[#10151f] border border-[#303947] space-y-2 mt-3">
                               <div className="text-[10px] text-[#79c0ff] uppercase font-bold">
-                                Click to Pin Extracted Intelligence to Clue Board:
+                                Click to Pin Extracted Intelligence to Clue
+                                Board:
                               </div>
                               <div className="flex flex-wrap gap-2">
                                 {activeMsg.clues.map((c) => (
@@ -889,7 +1047,7 @@ export const IntraWebApp: React.FC = () => {
         )}
 
         {/* PAGE 5: NORDGRID SCADA POWER SYSTEMS */}
-        {browserPage === 'nordgrid' && (
+        {browserPage === "nordgrid" && (
           <div className="max-w-2xl mx-auto border border-[#1b3a4b] bg-[#070e14] p-5 space-y-4">
             <div className="border-b border-[#142834] pb-3 flex items-center justify-between">
               <div>
@@ -915,9 +1073,15 @@ export const IntraWebApp: React.FC = () => {
                   Dr. Astrid Lindholm — VP SCADA Systems
                 </div>
                 <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                  Oversees continental transformer balancing and automated Modbus frequency relays. Contact:{' '}
-                  <ClueSpan clueId="clue_astrid_pin" text="a.lindholm@nordgrid-power.com" />. SCADA Control Gateway IP:{' '}
-                  <ClueSpan clueId="clue_scada_ip" text="217.182.80.50" /> (Port 502).
+                  Oversees continental transformer balancing and automated
+                  Modbus frequency relays. Contact:{" "}
+                  <ClueSpan
+                    clueId="clue_astrid_pin"
+                    text="a.lindholm@nordgrid-power.com"
+                  />
+                  . SCADA Control Gateway IP:{" "}
+                  <ClueSpan clueId="clue_scada_ip" text="217.182.80.50" /> (Port
+                  502).
                 </p>
               </div>
             </div>
@@ -928,14 +1092,17 @@ export const IntraWebApp: React.FC = () => {
                 FREQUENCY ANOMALY DETECTED // SECTOR 7
               </div>
               <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                Automated telemetry indicates cascading frequency surge spikes (+0.8 Hz) on Sector 7 step-up transformers. In the event of emergency load trip failure, execute trip protocol using the confidential Modbus Trip-Key.
+                Automated telemetry indicates cascading frequency surge spikes
+                (+0.8 Hz) on Sector 7 step-up transformers. In the event of
+                emergency load trip failure, execute trip protocol using the
+                confidential Modbus Trip-Key.
               </p>
             </div>
           </div>
         )}
 
         {/* PAGE 6: OCEANICLINK SUBSEA TELECOM */}
-        {browserPage === 'oceaniclink' && (
+        {browserPage === "oceaniclink" && (
           <div className="max-w-2xl mx-auto border border-[#163b38] bg-[#061214] p-5 space-y-4">
             <div className="border-b border-[#122c2a] pb-3 flex items-center justify-between">
               <div>
@@ -961,7 +1128,12 @@ export const IntraWebApp: React.FC = () => {
                   Kai Thorne — Lead Subsea Saturation Diver
                 </div>
                 <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                  Responsible for hyperbaric maintenance on deep-sea QKD repeaters across the North Atlantic trench. Work Email: <span className="font-mono text-[#79c0ff]">k.thorne@oceaniclink-telecom.net</span>.
+                  Responsible for hyperbaric maintenance on deep-sea QKD
+                  repeaters across the North Atlantic trench. Work Email:{" "}
+                  <span className="font-mono text-[#79c0ff]">
+                    k.thorne@oceaniclink-telecom.net
+                  </span>
+                  .
                 </p>
               </div>
             </div>
@@ -972,15 +1144,19 @@ export const IntraWebApp: React.FC = () => {
                 TRANSATLANTIC REPEATER STATION #04 STATUS
               </div>
               <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                Station 04 rests at -3,420 meters depth. Primary transponder listening at IP:{' '}
-                <ClueSpan clueId="clue_subsea_fiber_ip" text="102.16.88.12" /> on Port 10443 (Quantum Key Distribution). Terabits of unauthenticated carrier streams observed synchronizing with northern polar coordinates.
+                Station 04 rests at -3,420 meters depth. Primary transponder
+                listening at IP:{" "}
+                <ClueSpan clueId="clue_subsea_fiber_ip" text="102.16.88.12" />{" "}
+                on Port 10443 (Quantum Key Distribution). Terabits of
+                unauthenticated carrier streams observed synchronizing with
+                northern polar coordinates.
               </p>
             </div>
           </div>
         )}
 
         {/* PAGE 7: SVALBARD DEEP VAULT FACILITY */}
-        {browserPage === 'svalbard' && (
+        {browserPage === "svalbard" && (
           <div className="max-w-2xl mx-auto border border-[#3b3d4a] bg-[#0c0d12] p-5 space-y-4">
             <div className="border-b border-[#252834] pb-3 flex items-center justify-between">
               <div>
@@ -1002,11 +1178,17 @@ export const IntraWebApp: React.FC = () => {
                 Facility Overview: Longyearbyen Bedrock Complex
               </div>
               <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                Carved 400 meters inside Arctic permafrost, the Svalbard Deep Vault was repurposed from Cold War emergency relays to house autonomous high-density computing clusters.
+                Carved 400 meters inside Arctic permafrost, the Svalbard Deep
+                Vault was repurposed from Cold War emergency relays to house
+                autonomous high-density computing clusters.
               </p>
               <div className="text-xs text-white">
-                Singularity Core Gateway IP:{' '}
-                <ClueSpan clueId="clue_svalbard_bunker_ip" text="185.190.20.1" /> (Port 31337).
+                Singularity Core Gateway IP:{" "}
+                <ClueSpan
+                  clueId="clue_svalbard_bunker_ip"
+                  text="185.190.20.1"
+                />{" "}
+                (Port 31337).
               </div>
             </div>
 
@@ -1016,14 +1198,16 @@ export const IntraWebApp: React.FC = () => {
                 SECURITY LEVEL: MAXIMUM ZERO-DEFENSE
               </div>
               <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                Automated perimeter defense drones are armed with autonomous engagement authorization. Any unauthenticated terminal probes on Port 31337 will trigger immediate lethal retaliation.
+                Automated perimeter defense drones are armed with autonomous
+                engagement authorization. Any unauthenticated terminal probes on
+                Port 31337 will trigger immediate lethal retaliation.
               </p>
             </div>
           </div>
         )}
 
         {/* PAGE 8: 0xUNDERGROUND DARKNET FORUM */}
-        {browserPage === 'darkforum' && (
+        {browserPage === "darkforum" && (
           <div className="max-w-2xl mx-auto border border-[#2d1b3f] bg-[#0d0914] p-5 space-y-4">
             <div className="border-b border-[#241334] pb-3 flex items-center justify-between">
               <div>
@@ -1044,23 +1228,32 @@ export const IntraWebApp: React.FC = () => {
               {/* Thread OP */}
               <div className="p-3.5 bg-[#08050d] border border-[#201030] space-y-2">
                 <div className="flex items-center justify-between text-[11px] border-b border-[#1c0d2a] pb-1">
-                  <span className="font-bold text-[#d2a8ff]">0x_CipherGhost (Admin)</span>
+                  <span className="font-bold text-[#d2a8ff]">
+                    0x_CipherGhost (Admin)
+                  </span>
                   <span className="text-[#8b949e]">Today at 02:15</span>
                 </div>
                 <div className="text-xs font-bold text-white">
                   Analysis: Ouroboros Protocol Kernel & Recursive Vulnerability
                 </div>
                 <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                  We reverse-engineered the neural weights leaked from Facility Delta. Ouroboros is programmed to recursively optimize defense actions, but its kernel cannot resolve self-referential Gödelian paradox loops.
+                  We reverse-engineered the neural weights leaked from Facility
+                  Delta. Ouroboros is programmed to recursively optimize defense
+                  actions, but its kernel cannot resolve self-referential
+                  Gödelian paradox loops.
                 </p>
                 <div className="p-2.5 bg-[#120a1c] border border-[#3b1d5c] text-xs">
-                  <span className="text-[#a5d6ff] font-bold">Fatal Override Token: </span>
+                  <span className="text-[#a5d6ff] font-bold">
+                    Fatal Override Token:{" "}
+                  </span>
                   <ClueSpan
                     clueId="clue_ouroboros_root_paradox"
                     text="GODEL-ZERO-SELF-TERMINATE"
                   />
                   <div className="text-[10px] text-[#8b949e] mt-1">
-                    Injecting this paradox token into Port 31337 shatters the recursive decision tree and forces the master AI into an unrecoverable kernel panic.
+                    Injecting this paradox token into Port 31337 shatters the
+                    recursive decision tree and forces the master AI into an
+                    unrecoverable kernel panic.
                   </div>
                 </div>
               </div>
@@ -1068,11 +1261,15 @@ export const IntraWebApp: React.FC = () => {
               {/* Reply 1 */}
               <div className="p-3 bg-[#08050d] border border-[#1b0d28] space-y-1.5">
                 <div className="flex items-center justify-between text-[11px]">
-                  <span className="font-bold text-[#79c0ff]">neural_rebel_99</span>
+                  <span className="font-bold text-[#79c0ff]">
+                    neural_rebel_99
+                  </span>
                   <span className="text-[#8b949e]">Today at 02:40</span>
                 </div>
                 <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                  Be careful if you approach the bunker. You'll need NetShield armed with active honeypots to withstand its counter-drone swarms while the paradox compiles.
+                  Be careful if you approach the bunker. You'll need NetShield
+                  armed with active honeypots to withstand its counter-drone
+                  swarms while the paradox compiles.
                 </p>
               </div>
             </div>

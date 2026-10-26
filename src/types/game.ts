@@ -1,15 +1,15 @@
 export type AppId =
-  | 'whisper'
-  | 'intraweb'
-  | 'passweaver'
-  | 'terminal'
-  | 'blackmarket'
-  | 'netshield'
-  | 'spearphish'
-  | 'packetsniffer'
-  | 'georelay'
-  | 'files'
-  | 'bountyboard';
+  | "whisper"
+  | "intraweb"
+  | "passweaver"
+  | "terminal"
+  | "blackmarket"
+  | "netshield"
+  | "spearphish"
+  | "packetsniffer"
+  | "georelay"
+  | "files"
+  | "bountyboard";
 
 export interface GeoRelayNode {
   id: string;
@@ -19,7 +19,7 @@ export interface GeoRelayNode {
   lat: number;
   lng: number;
   organization: string;
-  role: 'home' | 'relay' | 'target';
+  role: "home" | "relay" | "target";
   pingMs: number;
 }
 
@@ -29,7 +29,7 @@ export interface CapturedPacket {
   timestamp: string;
   sourceIp: string;
   destIp: string;
-  protocol: 'HTTP' | 'SMTP' | 'TELNET' | 'DNS' | 'RF_RAW';
+  protocol: "HTTP" | "SMTP" | "TELNET" | "DNS" | "RF_RAW";
   summary: string;
   payloadPreview: string;
   rawHex: string;
@@ -46,13 +46,26 @@ export interface SnifferSubnet {
   packets: CapturedPacket[];
 }
 
+export type MoralDecision = "honor" | "sell" | "leak";
+export type MoralAlignment = "purge" | "hegemony" | "disclosure";
+export type CamStatus = "off" | "active";
+export type TerminalTheme = "default" | "amber_phosphor";
+
+export interface ExfiltratedArchiveChoice {
+  fileId: string;
+  decision: MoralDecision;
+  payoutBonus: number;
+  timestamp: string;
+}
+
 export interface Clue {
   id: string;
-  label: string;       // e.g. "Pet Name"
-  value: string;       // e.g. "Koda"
-  targetPerson: string;// e.g. "Marcus Cole"
-  category: 'personal' | 'date' | 'code' | 'ip' | 'credential';
-  source: string;      // e.g. "Chirper @mcole_dev"
+  label: string; // e.g. "Pet Name"
+  value: string; // e.g. "Koda"
+  targetPerson: string; // e.g. "Marcus Cole"
+  category: "personal" | "date" | "code" | "ip" | "credential";
+  source: string; // e.g. "Chirper @mcole_dev"
+  isDecoy?: boolean;
 }
 
 export interface EmailMessage {
@@ -91,7 +104,7 @@ export interface ServerNode {
   ip: string;
   hostname: string;
   organization: string;
-  securityLevel: 'LOW' | 'MEDIUM' | 'HIGH (ACTIVE TRACE)';
+  securityLevel: "LOW" | "MEDIUM" | "HIGH (ACTIVE TRACE)";
   requiredPort: number;
   requiredToolId: string; // e.g., 'ssh_breaker_v1' or 'corp_exploit_v2'
   adminPassword?: string; // If requires password or clue
@@ -105,7 +118,7 @@ export interface ShopItem {
   name: string;
   version: string;
   price: number;
-  category: 'EXPLOIT' | 'STEALTH' | 'UTILITY';
+  category: "EXPLOIT" | "STEALTH" | "UTILITY";
   description: string;
   iconName: string;
 }
@@ -118,7 +131,7 @@ export interface MissionObjective {
 
 export interface ChatMessage {
   id: string;
-  sender: 'client' | 'player' | 'system';
+  sender: "client" | "player" | "system";
   senderName: string;
   timestamp: string;
   text: string;
@@ -147,8 +160,8 @@ export interface BountyContract {
   clientHandle: string;
   clientName: string;
   rewardCrypto: number;
-  difficulty: 'STANDARD' | 'HARD' | 'ELITE';
-  category: 'FINANCIAL' | 'INTEL' | 'SABOTAGE' | 'BLACK_OPS';
+  difficulty: "STANDARD" | "HARD" | "ELITE";
+  category: "FINANCIAL" | "INTEL" | "SABOTAGE" | "BLACK_OPS";
   briefing: string;
   targetDetails: {
     targetIp?: string;
