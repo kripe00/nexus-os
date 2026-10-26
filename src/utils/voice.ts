@@ -35,7 +35,7 @@ class VoiceSynthesizer {
   private synth: SpeechSynthesis | null = null;
   public enabled: boolean = true;
   public volume: number = 0.85;
-  public selectedVoiceName: string = "Daniel";
+  public selectedVoiceName: string = "Rocko";
   private selectedVoice: SpeechSynthesisVoice | null = null;
   private lastSpokenText: string = "";
   private lastSpokenTime: number = 0;
@@ -52,8 +52,10 @@ class VoiceSynthesizer {
       } catch {}
 
       const savedVoice = localStorage.getItem("nexus_voice_name");
-      if (savedVoice) {
+      if (savedVoice && !savedVoice.includes("Daniel")) {
         this.selectedVoiceName = savedVoice;
+      } else {
+        this.selectedVoiceName = "Rocko";
       }
 
       this.resolveEnglishVoice();
@@ -116,19 +118,23 @@ class VoiceSynthesizer {
 
     // Check if user's saved preference exists in English voices
     if (this.selectedVoiceName) {
-      const match = english.find((v) => v.name === this.selectedVoiceName);
+      const match =
+        english.find((v) => v.name === this.selectedVoiceName) ||
+        english.find((v) => v.name.includes(this.selectedVoiceName));
       if (match) {
         this.selectedVoice = match;
+        this.selectedVoiceName = match.name;
         this.notify();
         return;
       }
     }
 
     // Top tactical AI voices on macOS / Chrome:
-    // 1. Daniel (British JARVIS - calm, masculine, authentic UK accent)
-    // 2. Samantha (US Command Siri - clean, crisp American accent)
-    // 3. Serena / Karen / Google UK
+    // 1. Rocko (Cool, confident, tactical cyberpunk tone)
+    // 2. Daniel (British JARVIS)
+    // 3. Samantha (US Command Siri)
     const preferred =
+      english.find((v) => v.name.includes("Rocko")) ||
       english.find((v) => v.name.includes("Daniel")) ||
       english.find((v) => v.name.includes("Samantha")) ||
       english.find((v) => v.name.includes("Google UK English")) ||
