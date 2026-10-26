@@ -120,6 +120,7 @@ interface GameContextType {
   clientIsTyping: boolean;
   acceptCurrentMission: (replyText: string) => void;
   submitMissionReport: (reportText: string) => void;
+  advanceToNextMission: () => void;
   completedMissionIds: string[];
   chatHistory: ChatMessage[];
   unreadMessages: number;
@@ -369,13 +370,32 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (Array.isArray(saved.scannedIps)) setScannedIps(saved.scannedIps);
     if (saved.crackedPorts) setCrackedPorts(saved.crackedPorts);
     if (Array.isArray(saved.downloadedFiles)) setDownloadedFiles(saved.downloadedFiles);
-    if (typeof saved.currentMissionIndex === 'number') setCurrentMissionIndex(saved.currentMissionIndex);
-    if (saved.missionStage) setMissionStage(saved.missionStage);
-    if (Array.isArray(saved.completedMissionIds)) setCompletedMissionIds(saved.completedMissionIds);
+    let effectiveIndex = typeof saved.currentMissionIndex === 'number' ? saved.currentMissionIndex : 0;
+    const completedIds = Array.isArray(saved.completedMissionIds) ? saved.completedMissionIds : [];
+
+    // If mission_3 was completed, advance to 3 (Chapter 2: Orbital Eye)
+    if (completedIds.includes('mission_3') && effectiveIndex <= 2) {
+      effectiveIndex = 3;
+    }
+
+    setCurrentMissionIndex(effectiveIndex);
+    setCompletedMissionIds(completedIds);
+
+    // Only allow campaignFinished if at the final operation (Operation 10)
+    const isReallyCampaignFinished = Boolean(saved.campaignFinished) && effectiveIndex >= MISSIONS.length - 1;
+    setCampaignFinished(isReallyCampaignFinished);
+
+    if (saved.missionStage) {
+      if (saved.missionStage === 'completed' && effectiveIndex < MISSIONS.length - 1) {
+        setMissionStage('briefing');
+      } else {
+        setMissionStage(saved.missionStage);
+      }
+    }
+
     if (Array.isArray(saved.chatHistory) && saved.chatHistory.length > 0) {
       setChatHistory(saved.chatHistory);
     }
-    if (typeof saved.campaignFinished === 'boolean') setCampaignFinished(saved.campaignFinished);
     if (typeof saved.firewallHealth === 'number') setFirewallHealth(saved.firewallHealth);
     if (typeof saved.honeypotActive === 'boolean') setHoneypotActive(saved.honeypotActive);
     if (typeof saved.capturedAttackerIp === 'string' || saved.capturedAttackerIp === null) {
@@ -927,23 +947,35 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setTimeout(() => {
           setCurrentMissionIndex(nextIndex);
           setMissionStage('briefing');
+          setCampaignFinished(false);
         }, 900);
       } else {
         setChatHistory((prev) => [
           ...prev,
           clientReply,
           {
-            id: `sys_end_ch1`,
+            id: `sys_end_campaign`,
             sender: 'system',
             senderName: 'NEXUS RELAY',
             timestamp: 'SYSTEM',
-            text: `━━━ CHAPTER 1 COMPLETE (+${currentMission.reward} ◈) // STATUS: TARGET #002 ON AETHELGARD WATCHLIST ━━━`,
+            text: `━━━ ALL 10 OPERATIONS CLEARED (+${currentMission.reward} ◈) // STATUS: OUROBOROS CONQUERED ━━━`,
           },
         ]);
         setMissionStage('completed');
         setCampaignFinished(true);
       }
     }, 1300);
+  };
+
+  const advanceToNextMission = () => {
+    sound.playSuccess();
+    const nextIndex = currentMissionIndex + 1;
+    if (nextIndex < MISSIONS.length) {
+      setCurrentMissionIndex(nextIndex);
+      setMissionStage('briefing');
+      setCampaignFinished(false);
+      addNotification('Chapter Progression', `Starting ${MISSIONS[nextIndex].title}`, 'mission');
+    }
   };
 
   const focusApp = (id: AppId) => {
@@ -1412,6 +1444,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         clientIsTyping,
         acceptCurrentMission,
         submitMissionReport,
+        advanceToNextMission,
         completedMissionIds,
         chatHistory,
         unreadMessages,

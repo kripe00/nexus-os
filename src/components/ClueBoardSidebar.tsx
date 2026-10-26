@@ -95,7 +95,9 @@ export const ClueBoardSidebar: React.FC = () => {
         <div className="flex items-center justify-between text-[11px] text-[#7c8594] mb-1.5">
           <span className="flex items-center gap-1.5 text-[#58a6ff] font-semibold">
             <Crosshair className="w-3.5 h-3.5" />
-            {campaignFinished ? 'CHAPTER 1 COMPLETE' : `OPERATION 0${currentMissionIndex + 1}`}
+            {campaignFinished && currentMissionIndex >= MISSIONS.length - 1
+              ? 'CAMPAIGN COMPLETE'
+              : `OPERATION 0${currentMissionIndex + 1}`}
           </span>
           <span className="text-[#3fb950] font-bold">+{currentMission.reward} ◈</span>
         </div>

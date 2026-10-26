@@ -23,6 +23,8 @@ export const WhisperChatApp: React.FC = () => {
     clientIsTyping,
     acceptCurrentMission,
     submitMissionReport,
+    advanceToNextMission,
+    completedMissionIds,
     isObjectiveComplete,
     navigateBrowser,
     openApp,
@@ -292,7 +294,7 @@ export const WhisperChatApp: React.FC = () => {
               </button>
             </div>
           </div>
-        ) : campaignFinished ? (
+        ) : campaignFinished && currentMissionIndex >= MISSIONS.length - 1 ? (
           <div className="p-3 bg-[#0d140f] border border-[#238636] space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-[#3fb950] font-bold text-xs flex items-center gap-1.5">
@@ -322,6 +324,25 @@ export const WhisperChatApp: React.FC = () => {
             <p className="text-[11px] text-[#8b949e]">
               You have completed all 10 operations of the NexusOS storyline. All systems remain open for freelance bounties, terminal attacks, network sniffing, and exploration.
             </p>
+          </div>
+        ) : (campaignFinished || missionStage === 'completed' || completedMissionIds.includes(currentMission.id)) && currentMissionIndex < MISSIONS.length - 1 ? (
+          <div className="p-3 bg-[#0c1624] border border-[#388bfd] flex items-center justify-between gap-3 shadow-[0_0_20px_rgba(56,139,253,0.25)]">
+            <div className="space-y-0.5">
+              <div className="font-bold text-white text-xs uppercase flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-[#3fb950]" />
+                {currentMission.title} CLEARED // CHAPTER PROGRESSION READY
+              </div>
+              <div className="text-[11px] text-[#79c0ff]">
+                Next Contract: <span className="font-bold text-white">{MISSIONS[currentMissionIndex + 1]?.title}</span>
+              </div>
+            </div>
+            <button
+              onClick={advanceToNextMission}
+              className="px-4 py-2 bg-[#238636] hover:bg-[#2ea043] text-white font-bold text-xs uppercase cursor-pointer border border-[#3fb950] flex items-center gap-2 shadow-[0_0_12px_rgba(63,185,80,0.6)] animate-pulse"
+            >
+              <span>PROCEED TO OPERATION 0{currentMissionIndex + 2} →</span>
+              <ArrowUpRight className="w-4 h-4" />
+            </button>
           </div>
         ) : missionStage === 'briefing' ? (
           <div className="text-[11px] text-[#8b949e] flex items-center gap-2 py-1">
@@ -421,6 +442,16 @@ export const WhisperChatApp: React.FC = () => {
                 >
                   <Terminal className="w-3.5 h-3.5 text-[#3fb950]" />
                   Open Terminal
+                </button>
+              )}
+              {currentMissionIndex === 2 && (
+                <button
+                  onClick={advanceToNextMission}
+                  className="px-3 py-1.5 bg-[#238636] hover:bg-[#2ea043] border border-[#3fb950] text-white font-bold text-[11px] cursor-pointer flex items-center gap-1 shadow-[0_0_8px_rgba(63,185,80,0.4)]"
+                  title="Fast-forward to Chapter 2 (Operation 04: Orbital Eye)"
+                >
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                  Proceed to Chapter 2 (Op 04) →
                 </button>
               )}
             </div>
