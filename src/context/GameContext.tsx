@@ -99,6 +99,7 @@ interface GameContextType {
 
   // Player Progression & Economy
   crypto: number;
+  addCrypto: (amount: number, reason?: string) => void;
   ownedTools: string[];
   buyTool: (itemId: string) => boolean;
 
@@ -727,6 +728,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
     const timeout = setTimeout(() => {
       const data = {
         crypto,
+        addCrypto,
         ownedTools,
         discoveredClues,
         crackedEmails,
@@ -1595,6 +1597,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const addCrypto = (amount: number, reason?: string) => {
+    setCrypto((c) => c + amount);
+    if (reason) {
+      sound.playCryptoCoin();
+      addNotification(`CREDIT ALLOCATION (+${amount} ◈)`, reason, "mission");
+    }
+  };
+
   const buyTool = (itemId: string): boolean => {
     if (ownedTools.includes(itemId)) return false;
     const item = SHOP_ITEMS.find((i) => i.id === itemId);
@@ -1771,6 +1781,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
         setPassWeaverTargetEmail,
         setTerminalSelectedIp,
         crypto,
+        addCrypto,
         ownedTools,
         buyTool,
         discoveredClues,

@@ -4,6 +4,7 @@ import {
   AlertTriangle,
   Briefcase,
   Coins,
+  Compass,
   Cpu,
   Fish,
   FolderLock,
@@ -42,6 +43,7 @@ import { ClueBoardSidebar } from "./components/ClueBoardSidebar";
 import { ContextMenu } from "./components/ContextMenu";
 import { DesktopWallpaper } from "./components/DesktopWallpaper";
 import { HexInspectorModal } from "./components/HexInspectorModal";
+import { OnboardingHUD } from "./components/OnboardingHUD";
 import { OperatorLoginScreen } from "./components/OperatorLoginScreen";
 import { GameProvider, useGame } from "./context/GameContext";
 import { AppId } from "./types/game";
@@ -89,6 +91,23 @@ const DesktopEnvironment: React.FC = () => {
   const [audioMixerOpen, setAudioMixerOpen] = useState<boolean>(false);
   const [wipeModalOpen, setWipeModalOpen] = useState<boolean>(false);
   const [isMusicPlaying, setIsMusicPlaying] = useState<boolean>(() => sound.isMusicPlaying());
+  const [onboardingOpen, setOnboardingOpen] = useState<boolean>(
+    () => localStorage.getItem("nexus_tutorial_dismissed_v1") !== "true",
+  );
+
+  const handleDismissOnboarding = () => {
+    setOnboardingOpen(false);
+    localStorage.setItem("nexus_tutorial_dismissed_v1", "true");
+  };
+
+  const handleToggleOnboarding = () => {
+    setOnboardingOpen((prev) => {
+      const next = !prev;
+      if (!next) localStorage.setItem("nexus_tutorial_dismissed_v1", "true");
+      else localStorage.removeItem("nexus_tutorial_dismissed_v1");
+      return next;
+    });
+  };
 
   useEffect(() => {
     return sound.subscribe((playing) => {
@@ -106,6 +125,12 @@ const DesktopEnvironment: React.FC = () => {
             icon: <Terminal className="w-3.5 h-3.5" />,
             shortcut: "CTRL+T",
             onClick: () => openApp("terminal"),
+          },
+          {
+            label: `${onboardingOpen ? "Hide" : "Show"} Orientation HUD`,
+            icon: <Compass className="w-3.5 h-3.5" />,
+            shortcut: "TUTOR",
+            onClick: handleToggleOnboarding,
           },
           {
             label: "Minimize All Windows",
@@ -450,6 +475,22 @@ const DesktopEnvironment: React.FC = () => {
                 <button
                   onClick={() => {
                     setStartMenuOpen(false);
+                    handleToggleOnboarding();
+                  }}
+                  className="w-full p-2 bg-[#121722] hover:bg-[#182334] border border-[#1f6feb]/50 text-[#79c0ff] flex items-center justify-between text-xs font-bold cursor-pointer transition-colors"
+                >
+                  <span className="flex items-center gap-1.5">
+                    <Compass className="w-3.5 h-3.5 text-[#58a6ff]" />
+                    ORIENTATION HUD
+                  </span>
+                  <span className="text-[10px] text-[#58a6ff]">
+                    {onboardingOpen ? "HIDE" : "SHOW"}
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setStartMenuOpen(false);
                     setWipeModalOpen(true);
                   }}
                   className="w-full p-2 bg-[#1b1012] hover:bg-[#2e1215] border border-[#ff3b3b]/40 text-[#ff7b72] flex items-center justify-between text-xs font-bold cursor-pointer transition-colors"
@@ -657,6 +698,11 @@ const DesktopEnvironment: React.FC = () => {
           </div>
         </div>
       </footer>
+
+      {/* Tactical Orientation HUD */}
+      {onboardingOpen && (
+        <OnboardingHUD onClose={handleDismissOnboarding} />
+      )}
 
       {/* Audio Mixer Popover */}
       {audioMixerOpen && (
