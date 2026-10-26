@@ -361,8 +361,9 @@ export const WhisperChatApp: React.FC = () => {
                 </div>
                 <div className="text-[10px] text-[#8b949e]">
                   Reroute administrative tokens into an encrypted offshore
-                  enclave. Seize +100,000 ◈ slush fund and rule intelligence
-                  from the shadows with ZERO.
+                  enclave. Seize +100,000 ◈ slush fund and merge your
+                  administrative control into the Ouroboros/ZERO AI enclave,
+                  commanding global intelligence from the shadows.
                 </div>
               </button>
               <button
