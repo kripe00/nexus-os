@@ -88,6 +88,13 @@ const DesktopEnvironment: React.FC = () => {
   const [startMenuOpen, setStartMenuOpen] = useState<boolean>(false);
   const [audioMixerOpen, setAudioMixerOpen] = useState<boolean>(false);
   const [wipeModalOpen, setWipeModalOpen] = useState<boolean>(false);
+  const [isMusicPlaying, setIsMusicPlaying] = useState<boolean>(() => sound.isMusicPlaying());
+
+  useEffect(() => {
+    return sound.subscribe((playing) => {
+      setIsMusicPlaying(playing);
+    });
+  }, []);
 
   const handleDesktopContextMenu = (e: React.MouseEvent) => {
     showContextMenu(e, [
@@ -185,18 +192,16 @@ const DesktopEnvironment: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Seamlessly unlock and start ambient music on first user click
+  // Seamlessly unlock and ensure ambient music is playing on user interaction
   useEffect(() => {
-    const handleFirstInteraction = () => {
-      sound.startMusic();
-      window.removeEventListener("pointerdown", handleFirstInteraction);
-      window.removeEventListener("keydown", handleFirstInteraction);
+    const handleInteraction = () => {
+      sound.ensureMusicPlaying();
     };
-    window.addEventListener("pointerdown", handleFirstInteraction);
-    window.addEventListener("keydown", handleFirstInteraction);
+    window.addEventListener("pointerdown", handleInteraction);
+    window.addEventListener("keydown", handleInteraction);
     return () => {
-      window.removeEventListener("pointerdown", handleFirstInteraction);
-      window.removeEventListener("keydown", handleFirstInteraction);
+      window.removeEventListener("pointerdown", handleInteraction);
+      window.removeEventListener("keydown", handleInteraction);
     };
   }, []);
 
@@ -533,9 +538,41 @@ const DesktopEnvironment: React.FC = () => {
             <span className="text-[10px]">CRT</span>
           </button>
 
+          {/* One-Click OST Play/Pause Button */}
+          <button
+            onClick={() => {
+              sound.toggleMusicPlayback();
+              sound.playClick();
+            }}
+            title={isMusicPlaying ? "Pause Ambient Soundtrack" : "Play Ambient Soundtrack"}
+            className={`h-8 px-2.5 bg-[#111620] border text-[10px] font-mono flex items-center gap-1.5 cursor-pointer transition-colors ${
+              isMusicPlaying
+                ? "border-[#3fb950] text-[#3fb950] bg-[#122217]"
+                : "border-[#e3b341] text-[#e3b341] hover:border-[#f0883e] bg-[#1c180d]"
+            }`}
+          >
+            <span
+              className={`w-2 h-2 rounded-full ${
+                isMusicPlaying
+                  ? "bg-[#3fb950] shadow-[0_0_8px_#3fb950] animate-pulse"
+                  : "bg-[#e3b341]"
+              }`}
+            />
+            <span className="font-bold tracking-wider">
+              {isMusicPlaying
+                ? traceActive || underAttack
+                  ? "OST: COMBAT [❚❚]"
+                  : "OST: PLAYING [❚❚]"
+                : "OST: PAUSED [▶ PLAY]"}
+            </span>
+          </button>
+
           {/* Tactical Audio Mixer Popover Toggle */}
           <button
-            onClick={() => setAudioMixerOpen(!audioMixerOpen)}
+            onClick={() => {
+              setAudioMixerOpen(!audioMixerOpen);
+              sound.ensureMusicPlaying();
+            }}
             title="Tactical Audio Mixer (Music & SFX Volume)"
             className={`h-8 px-2.5 bg-[#111620] border text-[10px] font-mono flex items-center gap-1.5 cursor-pointer transition-colors ${
               audioMixerOpen

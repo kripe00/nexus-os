@@ -49,6 +49,7 @@ export const OperatorLoginScreen: React.FC<OperatorLoginScreenProps> = ({
           setError(res.error || 'Authentication rejected. Invalid credentials.');
         } else {
           sound.playSuccess();
+          sound.ensureMusicPlaying();
         }
       } else {
         const res = await onRegister(username, password);
@@ -57,6 +58,7 @@ export const OperatorLoginScreen: React.FC<OperatorLoginScreenProps> = ({
           setError(res.error || 'Operator registration failed.');
         } else {
           sound.playSuccess();
+          sound.ensureMusicPlaying();
         }
       }
     } catch (err: unknown) {
@@ -69,6 +71,7 @@ export const OperatorLoginScreen: React.FC<OperatorLoginScreenProps> = ({
 
   const handleGuestClick = () => {
     sound.playClick();
+    sound.ensureMusicPlaying();
     onGuest();
   };
 

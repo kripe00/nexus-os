@@ -4,9 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently -k -p \"[{name}]\" -n \"SERVER,CLIENT\" -c \"cyan,blue\" \"node server/index.js\" \"vite --host 127.0.0.1 --port 5173\"",
+    "dev": "concurrently -k -p \"[{name}]\" -n \"SERVER,CLIENT\" -c \"cyan,blue\" \"node server/index.js\" \"vite\"",
     "server": "node server/index.js",
-    "client": "vite --host 127.0.0.1 --port 5173",
+    "client": "vite",
     "build": "tsc -b && vite build",
     "test": "vitest run",
     "preview": "vite preview"

@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Bell,
   Check,
   Disc3,
   Headphones,
   Music,
+  Pause,
+  Play,
   Sliders,
   Volume1,
   Volume2,
@@ -30,6 +32,14 @@ export const AudioMixerPopover: React.FC<AudioMixerPopoverProps> = ({ onClose })
     underAttack,
   } = useGame();
 
+  const [isPlaying, setIsPlaying] = useState<boolean>(() => sound.isMusicPlaying());
+
+  useEffect(() => {
+    return sound.subscribe((playing) => {
+      setIsPlaying(playing);
+    });
+  }, []);
+
   const handleTestSfx = () => {
     sound.playCryptoCoin();
   };
@@ -41,6 +51,11 @@ export const AudioMixerPopover: React.FC<AudioMixerPopoverProps> = ({ onClose })
 
   const handleToggleSfxMute = () => {
     sound.toggleSfxMute();
+    sound.playClick();
+  };
+
+  const handlePlayPause = () => {
+    sound.toggleMusicPlayback();
     sound.playClick();
   };
 
@@ -73,9 +88,22 @@ export const AudioMixerPopover: React.FC<AudioMixerPopoverProps> = ({ onClose })
             {traceActive || underAttack ? 'THREAT OST' : 'AMBIENT OST'}
           </span>
         </div>
-        <div className="text-xs font-bold text-[#79c0ff] truncate flex items-center gap-1.5">
-          <Disc3 className="w-3.5 h-3.5 text-[#58a6ff] animate-spin" />
-          <span className="truncate">{activeTrackName}</span>
+        <div className="flex items-center justify-between gap-1 pt-0.5">
+          <div className="text-xs font-bold text-[#79c0ff] truncate flex items-center gap-1.5 flex-1">
+            <Disc3 className={`w-3.5 h-3.5 text-[#58a6ff] ${isPlaying ? 'animate-spin' : ''}`} />
+            <span className="truncate">{activeTrackName}</span>
+          </div>
+          <button
+            onClick={handlePlayPause}
+            className={`px-2 py-0.5 border text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors ${
+              isPlaying
+                ? 'bg-[#15231c] border-[#3fb950] text-[#3fb950]'
+                : 'bg-[#1f2838] border-[#58a6ff] text-[#79c0ff] hover:text-white'
+            }`}
+          >
+            {isPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+            <span>{isPlaying ? 'PAUSE' : 'PLAY'}</span>
+          </button>
         </div>
       </div>
 

@@ -14,21 +14,53 @@ class SoundEngine {
   private traceAudio: HTMLAudioElement | null = null;
   private musicStarted: boolean = false;
   private isTraceMusicActive: boolean = false;
+  private listeners: Set<(playing: boolean) => void> = new Set();
   private droneOsc: OscillatorNode | null = null;
   private droneGain: GainNode | null = null;
   private gridHumOsc: OscillatorNode | null = null;
   private gridHumGain: GainNode | null = null;
 
+  public subscribe(cb: (playing: boolean) => void): () => void {
+    this.listeners.add(cb);
+    cb(this.isMusicPlaying());
+    return () => this.listeners.delete(cb);
+  }
+
+  private notifyState() {
+    const playing = this.isMusicPlaying();
+    this.listeners.forEach((cb) => {
+      try {
+        cb(playing);
+      } catch {}
+    });
+  }
+
   public initMusic() {
     if (typeof window === "undefined") return;
-    if (!this.ambientAudio) {
+    if (!this.ambientAudio || this.ambientAudio.error) {
       this.ambientAudio = new Audio("/audio/ambient_theme.mp3");
       this.ambientAudio.loop = true;
+      this.ambientAudio.preload = "auto";
+      this.ambientAudio.addEventListener("play", () => this.notifyState());
+      this.ambientAudio.addEventListener("pause", () => this.notifyState());
+      this.ambientAudio.addEventListener("playing", () => this.notifyState());
+      this.ambientAudio.addEventListener("error", (e) => {
+        console.warn("[SoundEngine] ambientAudio error:", e);
+        this.notifyState();
+      });
       this.applyMusicVolume();
     }
-    if (!this.traceAudio) {
+    if (!this.traceAudio || this.traceAudio.error) {
       this.traceAudio = new Audio("/audio/active_trace_theme.mp3");
       this.traceAudio.loop = true;
+      this.traceAudio.preload = "auto";
+      this.traceAudio.addEventListener("play", () => this.notifyState());
+      this.traceAudio.addEventListener("pause", () => this.notifyState());
+      this.traceAudio.addEventListener("playing", () => this.notifyState());
+      this.traceAudio.addEventListener("error", (e) => {
+        console.warn("[SoundEngine] traceAudio error:", e);
+        this.notifyState();
+      });
       this.applyMusicVolume();
     }
   }
@@ -39,20 +71,63 @@ class SoundEngine {
     if (this.ambientAudio) {
       this.ambientAudio.volume = Math.max(
         0,
-        Math.min(1, effectiveMusicVol * 0.4),
+        Math.min(1, effectiveMusicVol * 0.7),
       );
     }
     if (this.traceAudio) {
       this.traceAudio.volume = Math.max(
         0,
-        Math.min(1, effectiveMusicVol * 0.5),
+        Math.min(1, effectiveMusicVol * 0.8),
       );
+    }
+  }
+
+  public isMusicPlaying(): boolean {
+    const active = this.isTraceMusicActive ? this.traceAudio : this.ambientAudio;
+    return Boolean(active && !active.paused && !active.ended);
+  }
+
+  public ensureMusicPlaying() {
+    if (this.muted || this.musicMuted) return;
+    this.initMusic();
+    const active = this.isTraceMusicActive ? this.traceAudio : this.ambientAudio;
+    if (active && active.paused) {
+      active
+        .play()
+        .then(() => {
+          this.musicStarted = true;
+          this.notifyState();
+        })
+        .catch((err) => {
+          console.warn("[SoundEngine] ensureMusicPlaying autoplay wait:", err);
+        });
+    }
+  }
+
+  public toggleMusicPlayback(): boolean {
+    this.initMusic();
+    const active = this.isTraceMusicActive ? this.traceAudio : this.ambientAudio;
+    if (!active) return false;
+
+    if (!active.paused) {
+      this.pauseMusic();
+      return false;
+    } else {
+      if (this.muted) this.muted = false;
+      if (this.musicMuted) this.musicMuted = false;
+      this.applyMusicVolume();
+      this.startMusic();
+      return true;
     }
   }
 
   public setMusicVolume(vol: number) {
     this.musicVolume = Math.max(0, Math.min(1, vol));
     this.applyMusicVolume();
+    if (this.musicVolume > 0 && !this.musicMuted && !this.muted) {
+      this.ensureMusicPlaying();
+    }
+    this.notifyState();
   }
 
   public setSfxVolume(vol: number) {
@@ -63,28 +138,46 @@ class SoundEngine {
     if (this.muted || this.musicMuted) return;
     this.initMusic();
     this.musicStarted = true;
-    if (this.isTraceMusicActive) {
-      this.traceAudio?.play().catch(() => {});
-    } else {
-      this.ambientAudio?.play().catch(() => {});
+    const active = this.isTraceMusicActive ? this.traceAudio : this.ambientAudio;
+    if (active) {
+      active
+        .play()
+        .then(() => {
+          this.notifyState();
+        })
+        .catch((err) => {
+          console.warn("[SoundEngine] startMusic autoplay prevented:", err);
+        });
     }
   }
 
+  public pauseMusic() {
+    this.musicStarted = false;
+    this.ambientAudio?.pause();
+    this.traceAudio?.pause();
+    this.notifyState();
+  }
+
   public setTraceMusic(active: boolean) {
+    const changed = this.isTraceMusicActive !== active;
     this.isTraceMusicActive = active;
-    if (!this.musicStarted || this.muted || this.musicMuted) return;
     this.initMusic();
 
     if (active) {
       this.ambientAudio?.pause();
-      if (this.traceAudio) {
-        this.traceAudio.currentTime = 0;
-        this.traceAudio.play().catch(() => {});
+      if (!this.muted && !this.musicMuted && this.musicStarted) {
+        if (this.traceAudio) {
+          if (changed) this.traceAudio.currentTime = 0;
+          this.traceAudio.play().catch(() => {});
+        }
       }
     } else {
       this.traceAudio?.pause();
-      this.ambientAudio?.play().catch(() => {});
+      if (!this.muted && !this.musicMuted && this.musicStarted) {
+        this.ambientAudio?.play().catch(() => {});
+      }
     }
+    this.notifyState();
   }
 
   public toggleMute(): boolean {
@@ -93,13 +186,10 @@ class SoundEngine {
     if (this.muted) {
       this.ambientAudio?.pause();
       this.traceAudio?.pause();
-    } else if (this.musicStarted && !this.musicMuted) {
-      if (this.isTraceMusicActive) {
-        this.traceAudio?.play().catch(() => {});
-      } else {
-        this.ambientAudio?.play().catch(() => {});
-      }
+    } else {
+      this.ensureMusicPlaying();
     }
+    this.notifyState();
     return this.muted;
   }
 
@@ -109,13 +199,10 @@ class SoundEngine {
     if (this.musicMuted) {
       this.ambientAudio?.pause();
       this.traceAudio?.pause();
-    } else if (this.musicStarted && !this.muted) {
-      if (this.isTraceMusicActive) {
-        this.traceAudio?.play().catch(() => {});
-      } else {
-        this.ambientAudio?.play().catch(() => {});
-      }
+    } else {
+      this.ensureMusicPlaying();
     }
+    this.notifyState();
     return this.musicMuted;
   }
 
