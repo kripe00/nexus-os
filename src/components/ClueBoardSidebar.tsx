@@ -9,6 +9,7 @@ import {
   KeyRound,
   PanelRightClose,
   PanelRightOpen,
+  ScanSearch,
   Send,
   Server,
   Square,
@@ -34,6 +35,8 @@ export const ClueBoardSidebar: React.FC = () => {
     showContextMenu,
     executeTerminalCommand,
     addNotification,
+    osintHighlight,
+    toggleOsintHighlight,
   } = useGame();
 
   const handleClueContextMenu = (e: React.MouseEvent, clue: Clue) => {
@@ -245,6 +248,21 @@ export const ClueBoardSidebar: React.FC = () => {
             <Fingerprint className="w-3.5 h-3.5 text-[#58a6ff]" />
             Clue Board ({discoveredClues.length})
           </span>
+          <button
+            onClick={() => {
+              sound.playClick();
+              toggleOsintHighlight();
+            }}
+            title="Toggle OSINT visual highlights for clues in IntraWeb"
+            className={`px-2 py-0.5 text-[10px] border flex items-center gap-1 cursor-pointer transition-colors ${
+              osintHighlight
+                ? "bg-[#1f6feb]/20 text-[#58a6ff] border-[#388bfd] font-bold"
+                : "bg-[#0d1117] text-[#6e7681] border-[#21262d] hover:text-[#8b949e]"
+            }`}
+          >
+            <ScanSearch className="w-3 h-3" />
+            <span>Scanner: {osintHighlight ? "ON" : "OFF"}</span>
+          </button>
         </div>
 
         {discoveredClues.length === 0 ? (
@@ -253,7 +271,7 @@ export const ClueBoardSidebar: React.FC = () => {
             <p className="text-[11px] text-[#8b949e] leading-relaxed mb-3">
               Search for targets on{" "}
               <span className="text-white font-semibold">IntraWeb</span> and
-              click underlined details to pin them here.
+              inspect records carefully to pin intel here (or activate Scanner).
             </p>
             <button
               onClick={() => navigateBrowser("search", "Marcus Cole")}

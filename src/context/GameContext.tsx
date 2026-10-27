@@ -221,6 +221,9 @@ interface GameContextType {
   crtMode: boolean;
   setCrtMode: (enabled: boolean) => void;
   toggleCrtMode: () => void;
+  osintHighlight: boolean;
+  setOsintHighlight: (enabled: boolean) => void;
+  toggleOsintHighlight: () => void;
 
   // Recon Hints
   requestClientHint: () => { hintText: string; cost: number } | null;
@@ -380,6 +383,17 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
     localStorage.setItem("nexus_crt_mode", String(enabled));
   };
   const toggleCrtMode = () => setCrtMode(!crtMode);
+
+  // OSINT Highlight / Scanner overlay (default: false for authentic unassisted detective recon)
+  const [osintHighlight, setOsintHighlightState] = useState<boolean>(() => {
+    const saved = localStorage.getItem("nexus_osint_highlight");
+    return saved !== null ? saved === "true" : false;
+  });
+  const setOsintHighlight = (enabled: boolean) => {
+    setOsintHighlightState(enabled);
+    localStorage.setItem("nexus_osint_highlight", String(enabled));
+  };
+  const toggleOsintHighlight = () => setOsintHighlight(!osintHighlight);
 
   // Save Slots Profile System (Offline-first + SQLite bridge)
   const [saveSlots, setSaveSlots] = useState<SaveSlotProfile[]>(() => {
@@ -570,7 +584,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const chooseEnding = (ending: "purge" | "subjugate" | "leak") => {
     sound.playSuccess();
-    voice.speak("Campaign resolution locked. World status updated.", { priority: true });
+    voice.speak("Campaign resolution locked. World status updated.", {
+      priority: true,
+    });
     setChosenEnding(ending);
     setCampaignFinished(true);
     if (ending === "subjugate") {
@@ -2255,6 +2271,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
         crtMode,
         setCrtMode,
         toggleCrtMode,
+        osintHighlight,
+        setOsintHighlight,
+        toggleOsintHighlight,
         requestClientHint,
         droneBreachPanic,
         emergencyRebootSeconds,
