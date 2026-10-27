@@ -44,6 +44,7 @@ import { ClueBoardSidebar } from "./components/ClueBoardSidebar";
 import { ContextMenu } from "./components/ContextMenu";
 import { DesktopWallpaper } from "./components/DesktopWallpaper";
 import { HexInspectorModal } from "./components/HexInspectorModal";
+import { NexusStartMenu } from "./components/NexusStartMenu";
 import { OnboardingHUD } from "./components/OnboardingHUD";
 import { OperatorLoginScreen } from "./components/OperatorLoginScreen";
 import { GameProvider, useGame } from "./context/GameContext";
@@ -547,111 +548,46 @@ const DesktopEnvironment: React.FC = () => {
         <div className="flex items-center gap-2 overflow-x-auto relative">
           <button
             onClick={() => setStartMenuOpen(!startMenuOpen)}
-            title="Nexus OS Menu"
+            title="Start / System Applications (Ctrl+Esc)"
             className={`h-8 px-3 border font-bold flex items-center gap-2 mr-1 cursor-pointer transition-colors ${
               startMenuOpen
-                ? "bg-[#1f6feb] border-[#58a6ff] text-white"
-                : "bg-[#151921] border-[#303947] text-[#e6edf3] hover:border-[#58a6ff]"
+                ? "bg-[#1f6feb] border-[#58a6ff] text-white shadow-[0_0_12px_rgba(31,111,235,0.6)]"
+                : "bg-[#161d28] border-[#303947] text-[#e6edf3] hover:border-[#58a6ff] hover:bg-[#1c2533]"
             }`}
           >
-            <Cpu className="w-4 h-4 text-[#58a6ff]" />
-            <span>NEXUS</span>
+            <div className="w-4 h-4 bg-[#1f6feb]/30 border border-[#58a6ff] flex items-center justify-center text-[#58a6ff]">
+              <Cpu className="w-3 h-3" />
+            </div>
+            <span className="font-mono tracking-wider text-[11px]">NEXUS</span>
           </button>
 
-          {/* Start Menu Quick Launcher */}
-          {startMenuOpen && (
-            <div className="absolute bottom-11 left-0 w-64 bg-[#0c0f16] border border-[#303947] p-2 shadow-[0_16px_50px_rgba(0,0,0,0.95)] z-50 space-y-1 text-xs">
-              <div className="px-2 py-1.5 border-b border-[#21262d] text-[10px] uppercase font-bold text-[#8b949e] flex items-center justify-between">
-                <span>SYSTEM APPLICATIONS</span>
-                <span className="text-[#3fb950]">v6.4</span>
-              </div>
-              <div className="grid grid-cols-1 gap-1 pt-1">
-                {apps.map((app) => {
-                  const isOpen = windows[app.id].isOpen;
-                  return (
-                    <button
-                      key={app.id}
-                      onClick={() => {
-                        openApp(app.id);
-                        setStartMenuOpen(false);
-                      }}
-                      className={`p-2 flex items-center justify-between border cursor-pointer transition-colors ${
-                        isOpen
-                          ? "bg-[#161c26] border-[#3b4659] text-white"
-                          : "bg-[#08090d] border-[#1e232c] hover:border-[#58a6ff] text-[#c9d1d9]"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-[#58a6ff] [&>svg]:w-4 [&>svg]:h-4">
-                          {app.icon}
-                        </span>
-                        <span className="font-semibold text-[11px]">
-                          {app.label}
-                        </span>
-                      </div>
-                      <span
-                        className={`text-[10px] font-mono ${isOpen ? "text-[#3fb950]" : "text-[#6e7681]"}`}
-                      >
-                        {isOpen ? "ACTIVE" : "LAUNCH"}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="pt-2 border-t border-[#21262d] mt-2 space-y-1.5">
-                <button
-                  onClick={() => {
-                    setStartMenuOpen(false);
-                    handleToggleOnboarding();
-                  }}
-                  className="w-full p-2 bg-[#121722] hover:bg-[#182334] border border-[#1f6feb]/50 text-[#79c0ff] flex items-center justify-between text-xs font-bold cursor-pointer transition-colors"
-                >
-                  <span className="flex items-center gap-1.5">
-                    <Compass className="w-3.5 h-3.5 text-[#58a6ff]" />
-                    ORIENTATION HUD
-                  </span>
-                  <span className="text-[10px] text-[#58a6ff]">
-                    {onboardingOpen ? "HIDE" : "SHOW"}
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    setStartMenuOpen(false);
-                    setWipeModalOpen(true);
-                  }}
-                  className="w-full p-2 bg-[#1b1012] hover:bg-[#2e1215] border border-[#ff3b3b]/40 text-[#ff7b72] flex items-center justify-between text-xs font-bold cursor-pointer transition-colors"
-                >
-                  <span className="flex items-center gap-1.5">
-                    <Trash2 className="w-3.5 h-3.5 text-[#ff5555]" />
-                    WIPE DOSSIER // RESTART
-                  </span>
-                  <span className="text-[10px] text-[#ff7b72]/60">PURGE</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    setStartMenuOpen(false);
-                    if (
-                      window.confirm(
-                        `Log out operator session (${currentUser.username})?`,
-                      )
-                    ) {
-                      logout();
-                    }
-                  }}
-                  className="w-full p-2 bg-[#151921] hover:bg-[#1f2633] border border-[#303947] text-[#c9d1d9] hover:text-white flex items-center justify-between text-xs font-bold cursor-pointer transition-colors"
-                >
-                  <span className="flex items-center gap-1.5">
-                    <LogOut className="w-3.5 h-3.5 text-[#8b949e]" />
-                    LOG OUT / SWITCH OPERATOR
-                  </span>
-                  <span className="text-[10px] text-[#8b949e]">DISCONNECT</span>
-                </button>
-              </div>
-            </div>
-          )}
+          {/* Classic Windows-Style Diegetic Start Menu */}
+          <NexusStartMenu
+            isOpen={startMenuOpen}
+            onClose={() => setStartMenuOpen(false)}
+            onOpenApp={openApp}
+            windows={windows}
+            currentUser={currentUser}
+            crypto={crypto}
+            difficulty={difficulty}
+            uiScale={uiScale}
+            onToggleUiScale={() => {
+              const nextScale =
+                uiScale === "100%"
+                  ? "125%"
+                  : uiScale === "125%"
+                    ? "150%"
+                    : "100%";
+              setUiScale(nextScale);
+            }}
+            crtMode={crtMode}
+            onToggleCrt={toggleCrtMode}
+            onOpenMixer={() => setAudioMixerOpen(true)}
+            onOpenWipeModal={() => setWipeModalOpen(true)}
+            onToggleOnboarding={handleToggleOnboarding}
+            onboardingOpen={onboardingOpen}
+            onLogout={logout}
+          />
 
           {openAppsList.map((app) => {
             const win = windows[app.id];
