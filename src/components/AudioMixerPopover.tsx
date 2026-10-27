@@ -270,7 +270,22 @@ export const AudioMixerPopover: React.FC<AudioMixerPopoverProps> = ({
         </div>
 
         {voiceState.enabled && availableVoices.length > 0 && (
-          <div className="pt-0.5">
+          <div className="pt-0.5 space-y-1">
+            <div className="flex items-center justify-between text-[10px]">
+              <span className="text-[#8b949e]">VOICE PROFILE:</span>
+              <button
+                type="button"
+                onClick={() => {
+                  voice.resetToDefaultVoice();
+                  sound.playClick();
+                  voice.speak('Reset to default voice profile.', { priority: true });
+                }}
+                className="text-[9px] text-[#58a6ff] hover:underline cursor-pointer"
+                title="Reset to default tactical AI voice (Rocko/UK fallback)"
+              >
+                [RESET DEFAULT]
+              </button>
+            </div>
             <select
               value={voiceState.voiceName}
               onChange={(e) => {

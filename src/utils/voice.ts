@@ -31,7 +31,7 @@ const NOVELTY_VOICES = new Set([
   "stine",
 ]);
 
-class VoiceSynthesizer {
+export class VoiceSynthesizer {
   private synth: SpeechSynthesis | null = null;
   public enabled: boolean = true;
   public volume: number = 0.85;
@@ -51,8 +51,15 @@ class VoiceSynthesizer {
         this.synth.cancel();
       } catch {}
 
-      const savedVoice = localStorage.getItem("nexus_voice_name");
-      if (savedVoice && !savedVoice.includes("Daniel")) {
+      const userChosen =
+        typeof localStorage !== "undefined" &&
+        localStorage.getItem("nexus_voice_user_chosen") === "true";
+      const savedVoice =
+        typeof localStorage !== "undefined"
+          ? localStorage.getItem("nexus_voice_name")
+          : null;
+
+      if (userChosen && savedVoice) {
         this.selectedVoiceName = savedVoice;
       } else {
         this.selectedVoiceName = "Rocko";
@@ -90,7 +97,7 @@ class VoiceSynthesizer {
   }
 
   // Strictly filter for English voices (ignoring Nora, Henrik, or other non-English system voices)
-  private getEnglishVoices(): SpeechSynthesisVoice[] {
+  public getEnglishVoices(): SpeechSynthesisVoice[] {
     if (!this.synth) return [];
     const all = this.synth.getVoices();
     if (!all || all.length === 0) return [];
@@ -112,15 +119,21 @@ class VoiceSynthesizer {
     }));
   }
 
-  private resolveEnglishVoice() {
+  public resolveEnglishVoice() {
     const english = this.getEnglishVoices();
     if (english.length === 0) return;
 
-    // Check if user's saved preference exists in English voices
-    if (this.selectedVoiceName) {
+    // 1. If user explicitly chose a voice in the UI, check if it exists in available English voices
+    const userChosen =
+      typeof localStorage !== "undefined" &&
+      localStorage.getItem("nexus_voice_user_chosen") === "true";
+
+    if (userChosen && this.selectedVoiceName) {
       const match =
         english.find((v) => v.name === this.selectedVoiceName) ||
-        english.find((v) => v.name.includes(this.selectedVoiceName));
+        english.find((v) =>
+          v.name.toLowerCase().includes(this.selectedVoiceName.toLowerCase()),
+        );
       if (match) {
         this.selectedVoice = match;
         this.selectedVoiceName = match.name;
@@ -129,26 +142,34 @@ class VoiceSynthesizer {
       }
     }
 
-    // Top tactical AI voices on macOS / Chrome:
-    // 1. Rocko (Cool, confident, tactical cyberpunk tone)
-    // 2. Daniel (British JARVIS)
-    // 3. Samantha (US Command Siri)
+    // 2. Tactical Platform Fallback Sequence:
+    // Priority 1: Rocko (macOS studio cyberpunk default)
+    // Priority 2: Daniel (British JARVIS)
+    // Priority 3: Google UK English Male / Google UK English (Chrome natural studio voice)
+    // Priority 4: George (Windows UK voice)
+    // Priority 5: Microsoft David / David (Windows default, military tuned)
+    // Priority 6: Samantha (US Command)
+    // Priority 7: Google US English
+    // Priority 8: Serena / Karen / Moira
+    // Priority 9: Any verified English voice
     const preferred =
-      english.find((v) => v.name.includes("Rocko")) ||
-      english.find((v) => v.name.includes("Daniel")) ||
-      english.find((v) => v.name.includes("Samantha")) ||
-      english.find((v) => v.name.includes("Google UK English")) ||
-      english.find((v) => v.name.includes("Serena")) ||
-      english.find((v) => v.name.includes("Karen")) ||
-      english.find((v) => v.name.includes("Moira")) ||
+      english.find((v) => v.name.toLowerCase().includes("rocko")) ||
+      english.find((v) => v.name.toLowerCase().includes("daniel")) ||
+      english.find((v) => v.name.toLowerCase().includes("google uk english male")) ||
+      english.find((v) => v.name.toLowerCase().includes("google uk english")) ||
+      english.find((v) => v.name.toLowerCase().includes("george")) ||
+      english.find((v) => v.name.toLowerCase().includes("david")) ||
+      english.find((v) => v.name.toLowerCase().includes("samantha")) ||
+      english.find((v) => v.name.toLowerCase().includes("google us english")) ||
+      english.find((v) => v.name.toLowerCase().includes("serena")) ||
+      english.find((v) => v.name.toLowerCase().includes("karen")) ||
+      english.find((v) => v.name.toLowerCase().includes("moira")) ||
       english[0];
 
     if (preferred) {
       this.selectedVoice = preferred;
       this.selectedVoiceName = preferred.name;
-      try {
-        localStorage.setItem("nexus_voice_name", preferred.name);
-      } catch {}
+      // Do NOT overwrite localStorage with auto-fallback to preserve user standard across platforms
       this.notify();
     }
   }
@@ -161,9 +182,19 @@ class VoiceSynthesizer {
       this.selectedVoiceName = found.name;
       try {
         localStorage.setItem("nexus_voice_name", found.name);
+        localStorage.setItem("nexus_voice_user_chosen", "true");
       } catch {}
       this.notify();
     }
+  }
+
+  public resetToDefaultVoice() {
+    try {
+      localStorage.removeItem("nexus_voice_name");
+      localStorage.removeItem("nexus_voice_user_chosen");
+    } catch {}
+    this.selectedVoiceName = "Rocko";
+    this.resolveEnglishVoice();
   }
 
   public setEnabled(enable: boolean) {
@@ -221,9 +252,20 @@ class VoiceSynthesizer {
     utterance.lang = this.selectedVoice.lang || "en-GB";
 
     utterance.volume = this.volume;
-    // Studio-clean pitch and rate (1.0 = clean, un-distorted human delivery)
-    utterance.rate = options?.rate ?? 1.0;
-    utterance.pitch = options?.pitch ?? 1.0;
+
+    // Platform tactical tuning:
+    // If fallback is Microsoft David or Windows desktop voice, default pitch/rate slightly lowered for military radio feel
+    const voiceLower = (this.selectedVoice.name || "").toLowerCase();
+    const isWindowsDesktopVoice =
+      voiceLower.includes("david") ||
+      voiceLower.includes("zira") ||
+      voiceLower.includes("mark");
+
+    const defaultRate = isWindowsDesktopVoice ? 0.98 : 1.0;
+    const defaultPitch = isWindowsDesktopVoice ? 0.92 : 1.0;
+
+    utterance.rate = options?.rate ?? defaultRate;
+    utterance.pitch = options?.pitch ?? defaultPitch;
 
     this.synth.speak(utterance);
   }
