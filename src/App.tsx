@@ -547,9 +547,9 @@ const DesktopEnvironment: React.FC = () => {
         {/* Left: OS Brand Button + Open Windows */}
         <div className="flex items-center gap-2 overflow-x-auto relative">
           <button
-            onClick={() => setStartMenuOpen(!startMenuOpen)}
+            onClick={() => setStartMenuOpen((prev) => !prev)}
             title="Start / System Applications (Ctrl+Esc)"
-            className={`h-8 px-3 border font-bold flex items-center gap-2 mr-1 cursor-pointer transition-colors ${
+            className={`h-8 px-3 border font-bold flex items-center gap-2 mr-1 cursor-pointer transition-colors shadow-sm ${
               startMenuOpen
                 ? "bg-[#1f6feb] border-[#58a6ff] text-white shadow-[0_0_12px_rgba(31,111,235,0.6)]"
                 : "bg-[#161d28] border-[#303947] text-[#e6edf3] hover:border-[#58a6ff] hover:bg-[#1c2533]"
@@ -560,34 +560,6 @@ const DesktopEnvironment: React.FC = () => {
             </div>
             <span className="font-mono tracking-wider text-[11px]">NEXUS</span>
           </button>
-
-          {/* Classic Windows-Style Diegetic Start Menu */}
-          <NexusStartMenu
-            isOpen={startMenuOpen}
-            onClose={() => setStartMenuOpen(false)}
-            onOpenApp={openApp}
-            windows={windows}
-            currentUser={currentUser}
-            crypto={crypto}
-            difficulty={difficulty}
-            uiScale={uiScale}
-            onToggleUiScale={() => {
-              const nextScale =
-                uiScale === "100%"
-                  ? "125%"
-                  : uiScale === "125%"
-                    ? "150%"
-                    : "100%";
-              setUiScale(nextScale);
-            }}
-            crtMode={crtMode}
-            onToggleCrt={toggleCrtMode}
-            onOpenMixer={() => setAudioMixerOpen(true)}
-            onOpenWipeModal={() => setWipeModalOpen(true)}
-            onToggleOnboarding={handleToggleOnboarding}
-            onboardingOpen={onboardingOpen}
-            onLogout={logout}
-          />
 
           {openAppsList.map((app) => {
             const win = windows[app.id];
@@ -802,6 +774,34 @@ const DesktopEnvironment: React.FC = () => {
           </div>
         </div>
       </footer>
+
+      {/* Classic Windows-Style Diegetic Start Menu */}
+      <NexusStartMenu
+        isOpen={startMenuOpen}
+        onClose={() => setStartMenuOpen(false)}
+        onOpenApp={openApp}
+        windows={windows}
+        currentUser={currentUser}
+        crypto={crypto}
+        difficulty={difficulty}
+        uiScale={uiScale}
+        onToggleUiScale={() => {
+          const nextScale =
+            uiScale === "100%"
+              ? "125%"
+              : uiScale === "125%"
+                ? "150%"
+                : "100%";
+          setUiScale(nextScale);
+        }}
+        crtMode={crtMode}
+        onToggleCrt={toggleCrtMode}
+        onOpenMixer={() => setAudioMixerOpen(true)}
+        onOpenWipeModal={() => setWipeModalOpen(true)}
+        onToggleOnboarding={handleToggleOnboarding}
+        onboardingOpen={onboardingOpen}
+        onLogout={logout}
+      />
 
       {/* Tactical Orientation HUD */}
       {onboardingOpen && (

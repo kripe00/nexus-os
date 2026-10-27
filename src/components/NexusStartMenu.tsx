@@ -77,18 +77,6 @@ export const NexusStartMenu: React.FC<NexusStartMenuProps> = ({
     }
   }, [isOpen]);
 
-  // Click outside listener
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        onClose();
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isOpen, onClose]);
-
   if (!isOpen) return null;
 
   const handleLaunch = (appId: AppId) => {
@@ -101,7 +89,7 @@ export const NexusStartMenu: React.FC<NexusStartMenuProps> = ({
     <>
       {/* Invisible Backdrop to trap stray clicks */}
       <div
-        className="fixed inset-0 z-45"
+        className="fixed inset-0 z-[9998]"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -109,7 +97,7 @@ export const NexusStartMenu: React.FC<NexusStartMenuProps> = ({
       <div
         ref={menuRef}
         onClick={(e) => e.stopPropagation()}
-        className="absolute bottom-11 left-0 z-50 flex shadow-[0_20px_60px_rgba(0,0,0,0.95)] animate-window-in font-mono select-none"
+        className="fixed bottom-11 left-2 sm:left-3 z-[9999] flex shadow-[0_20px_60px_rgba(0,0,0,0.95)] animate-window-in font-mono select-none"
         style={{
           borderTop: "2px solid #3b4659",
           borderLeft: "2px solid #3b4659",
