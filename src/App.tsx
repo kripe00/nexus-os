@@ -186,6 +186,10 @@ const DesktopEnvironment: React.FC = () => {
         } else if (e.key === "m" || e.key === "M") {
           e.preventDefault();
           toggleMute();
+        } else if (e.key === "0") {
+          e.preventDefault();
+          sound.playClick();
+          setUiScale("100%");
         } else if (e.key >= "1" && e.key <= "9") {
           e.preventDefault();
           const appMap: Record<string, AppId> = {
@@ -219,7 +223,18 @@ const DesktopEnvironment: React.FC = () => {
     toggleMute,
     openApp,
     setInspectedFile,
+    setUiScale,
   ]);
+
+  // Apply UI scale to root document so the taskbar and desktop layout never clip off-screen
+  useEffect(() => {
+    const factor =
+      uiScale === "150%" ? "1.25" : uiScale === "125%" ? "1.12" : "1.0";
+    document.documentElement.style.zoom = factor;
+    return () => {
+      document.documentElement.style.zoom = "1.0";
+    };
+  }, [uiScale]);
 
   const handleDesktopContextMenu = (e: React.MouseEvent) => {
     showContextMenu(e, [
@@ -448,9 +463,6 @@ const DesktopEnvironment: React.FC = () => {
 
   return (
     <div
-      style={{
-        zoom: uiScale === "150%" ? 1.25 : uiScale === "125%" ? 1.1 : 1.0,
-      }}
       className={`relative w-full h-full min-h-screen overflow-hidden flex flex-col bg-[#060708] ${
         traceActive ? "trace-danger-frame border-2 border-[#ff3b3b]" : ""
       } ${underAttack && firewallHealth < 50 ? "screen-glitch-shake" : ""}`}
@@ -482,22 +494,22 @@ const DesktopEnvironment: React.FC = () => {
           onContextMenu={handleDesktopContextMenu}
           className="flex-1 h-full relative overflow-hidden"
         >
-          {/* Desktop Shortcut Icons (Classic OS Grid on Left) */}
-          <div className="p-5 grid grid-cols-1 gap-3 w-28 relative z-20 select-none">
+          {/* Desktop Shortcut Icons: Responsive multi-column grid that flows downwards then across */}
+          <div className="p-4 grid grid-flow-col grid-rows-6 auto-cols-[88px] gap-2 max-h-[calc(100vh-64px)] relative z-20 select-none">
             {apps.map((app) => (
               <button
                 key={app.id}
                 onClick={() => openApp(app.id)}
-                className="group flex flex-col items-center gap-1.5 p-2.5 border border-transparent hover:border-[#282f3d] hover:bg-[#11151d]/80 transition-all cursor-pointer relative"
+                className="group w-[88px] flex flex-col items-center gap-1 p-2 border border-transparent hover:border-[#282f3d] hover:bg-[#11151d]/90 transition-all cursor-pointer relative"
               >
-                <div className="w-11 h-11 bg-[#0e1218] border border-[#222834] group-hover:border-[#58a6ff] flex items-center justify-center text-[#79c0ff] transition-colors">
+                <div className="w-10 h-10 bg-[#0e1218] border border-[#222834] group-hover:border-[#58a6ff] flex items-center justify-center text-[#79c0ff] transition-colors shadow-sm">
                   {app.icon}
                 </div>
-                <span className="text-[11px] text-[#c9d1d9] font-medium tracking-tight text-center leading-tight">
+                <span className="text-[10px] text-[#c9d1d9] font-medium tracking-tight text-center leading-tight truncate w-full px-0.5">
                   {app.label}
                 </span>
                 {app.badge && (
-                  <span className="absolute top-1.5 right-3 px-1.5 py-0.2 bg-[#1f6feb] text-white text-[10px] font-bold">
+                  <span className="absolute top-1 right-2 px-1.5 py-0.2 bg-[#1f6feb] text-white text-[9px] font-bold">
                     {app.badge}
                   </span>
                 )}
@@ -608,8 +620,8 @@ const DesktopEnvironment: React.FC = () => {
                     : "100%";
               setUiScale(nextScale);
             }}
-            title="Toggle UI Scaling (100% / 125% / 150%)"
-            className="hidden lg:flex h-8 px-2 bg-[#111620] border border-[#21262d] text-[#8b949e] hover:text-white cursor-pointer text-[10px] font-mono items-center"
+            title="Toggle UI Scaling (100% / 125% / 150%) - Press Ctrl+0 to reset"
+            className="flex h-8 px-2 bg-[#111620] border border-[#21262d] text-[#8b949e] hover:text-white cursor-pointer text-[10px] font-mono items-center shrink-0"
           >
             SCALE: {uiScale}
           </button>
