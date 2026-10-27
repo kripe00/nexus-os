@@ -18,10 +18,13 @@ import {
   CamStatus,
   ChatMessage,
   Clue,
+  DifficultyPreset,
   ExfiltratedArchiveChoice,
   MoralAlignment,
   MoralDecision,
+  SaveSlotProfile,
   ServerFile,
+  UiScaleOption,
 } from "../types/game";
 import { ContextMenuGroup, ContextMenuState } from "../components/ContextMenu";
 import { sound } from "../utils/sound";
@@ -209,6 +212,33 @@ interface GameContextType {
   resetGame: () => void;
   isMuted: boolean;
   toggleMute: () => void;
+
+  // Game Settings & Accessibility
+  difficulty: DifficultyPreset;
+  setDifficulty: (diff: DifficultyPreset) => void;
+  uiScale: UiScaleOption;
+  setUiScale: (scale: UiScaleOption) => void;
+  crtMode: boolean;
+  setCrtMode: (enabled: boolean) => void;
+  toggleCrtMode: () => void;
+
+  // Recon Hints
+  requestClientHint: () => { hintText: string; cost: number } | null;
+
+  // Drone Breach / Kernel Panic Fail-State
+  droneBreachPanic: boolean;
+  emergencyRebootSeconds: number;
+  triggerEmergencyReboot: () => void;
+
+  // Trace Lockout
+  egressLockoutSeconds: number;
+
+  // Profiles & Save Slots
+  saveSlots: SaveSlotProfile[];
+  activeSlotId: string | null;
+  loadProfileSlot: (slotId: string) => void;
+  createProfileSlot: (name: string, diff: DifficultyPreset) => void;
+  deleteProfileSlot: (slotId: string) => void;
 }
 
 const INITIAL_WINDOWS: Record<AppId, WindowState> = {
@@ -319,6 +349,85 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
   } | null>(null);
   const [musicVolume, setMusicVolumeState] = useState<number>(0.7);
   const [sfxVolume, setSfxVolumeState] = useState<number>(0.8);
+
+  // Settings & Accessibility
+  const [difficulty, setDifficultyState] = useState<DifficultyPreset>(() => {
+    const saved = localStorage.getItem("nexus_difficulty");
+    return saved === "analyst" || saved === "ghost" ? saved : "operative";
+  });
+  const setDifficulty = (diff: DifficultyPreset) => {
+    setDifficultyState(diff);
+    localStorage.setItem("nexus_difficulty", diff);
+  };
+
+  const [uiScale, setUiScaleState] = useState<UiScaleOption>(() => {
+    const saved = localStorage.getItem("nexus_ui_scale");
+    return saved === "125%" || saved === "150%"
+      ? (saved as UiScaleOption)
+      : "100%";
+  });
+  const setUiScale = (scale: UiScaleOption) => {
+    setUiScaleState(scale);
+    localStorage.setItem("nexus_ui_scale", scale);
+  };
+
+  const [crtMode, setCrtModeState] = useState<boolean>(() => {
+    const saved = localStorage.getItem("nexus_crt_mode");
+    return saved !== null ? saved === "true" : true;
+  });
+  const setCrtMode = (enabled: boolean) => {
+    setCrtModeState(enabled);
+    localStorage.setItem("nexus_crt_mode", String(enabled));
+  };
+  const toggleCrtMode = () => setCrtMode(!crtMode);
+
+  // Save Slots Profile System (Offline-first + SQLite bridge)
+  const [saveSlots, setSaveSlots] = useState<SaveSlotProfile[]>(() => {
+    try {
+      const stored = localStorage.getItem("nexus_save_slots");
+      if (stored) return JSON.parse(stored);
+    } catch {}
+    return [
+      {
+        id: "slot_1",
+        operatorHandle: "KODEX_01",
+        difficulty: "operative",
+        updatedAt: new Date().toLocaleDateString(),
+        currentMissionIndex: 0,
+        crypto: 50,
+        completedMissionsCount: 0,
+      },
+      {
+        id: "slot_2",
+        operatorHandle: "EMPTY_SLOT",
+        difficulty: "analyst",
+        updatedAt: "",
+        currentMissionIndex: 0,
+        crypto: 50,
+        completedMissionsCount: 0,
+      },
+      {
+        id: "slot_3",
+        operatorHandle: "EMPTY_SLOT",
+        difficulty: "ghost",
+        updatedAt: "",
+        currentMissionIndex: 0,
+        crypto: 50,
+        completedMissionsCount: 0,
+      },
+    ];
+  });
+  const [activeSlotId, setActiveSlotId] = useState<string | null>(() => {
+    return localStorage.getItem("nexus_active_slot") || null;
+  });
+
+  // Drone Breach / Kernel Panic Fail-State
+  const [droneBreachPanic, setDroneBreachPanic] = useState<boolean>(false);
+  const [emergencyRebootSeconds, setEmergencyRebootSeconds] =
+    useState<number>(0);
+
+  // Egress Lockout Fail-State
+  const [egressLockoutSeconds, setEgressLockoutSeconds] = useState<number>(0);
 
   // Cross-App Deep-Link states
   const [browserPage, setBrowserPage] = useState<IntraWebPage>("search");
@@ -722,7 +831,183 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
     resetLocalGameState();
   };
 
-  // Sync state changes with SQLite backend (debounced)
+  const createProfileSlot = (name: string, diff: DifficultyPreset) => {
+    const slotId = activeSlotId || "slot_1";
+    const cleanHandle =
+      name.trim() || `OPERATOR_${Math.floor(1000 + Math.random() * 9000)}`;
+    const newProfile: SaveSlotProfile = {
+      id: slotId,
+      operatorHandle: cleanHandle,
+      difficulty: diff,
+      updatedAt: new Date().toLocaleDateString(),
+      currentMissionIndex: 0,
+      crypto: 50,
+      completedMissionsCount: 0,
+    };
+
+    setDifficulty(diff);
+    setCurrentUser({ id: slotId, username: cleanHandle });
+    setActiveSlotId(slotId);
+    localStorage.setItem("nexus_active_slot", slotId);
+
+    setSaveSlots((prev) => {
+      const updated = prev.map((s) => (s.id === slotId ? newProfile : s));
+      localStorage.setItem("nexus_save_slots", JSON.stringify(updated));
+      return updated;
+    });
+
+    resetLocalGameState();
+    setLoadedFromSave(true);
+    sound.playSuccess();
+    addNotification(
+      "Operator Rig Initialized",
+      `Dossier created for ${cleanHandle} [${diff.toUpperCase()}].`,
+      "mission",
+    );
+  };
+
+  const loadProfileSlot = (slotId: string) => {
+    const slot = saveSlots.find((s) => s.id === slotId);
+    if (!slot || slot.operatorHandle === "EMPTY_SLOT") {
+      createProfileSlot(`OPERATOR_${slotId.slice(-1)}`, "operative");
+      return;
+    }
+
+    resetLocalGameState();
+    setDifficulty(slot.difficulty);
+    setCurrentUser({ id: slot.id, username: slot.operatorHandle });
+    setActiveSlotId(slot.id);
+    localStorage.setItem("nexus_active_slot", slot.id);
+
+    try {
+      const rawData = localStorage.getItem("nexus_save_data_" + slot.id);
+      if (rawData) {
+        const parsed = JSON.parse(rawData);
+        applySavedState(parsed);
+      }
+    } catch {}
+
+    setLoadedFromSave(true);
+    sound.playSuccess();
+    addNotification(
+      "Dossier Loaded",
+      `Resumed operator session: ${slot.operatorHandle}`,
+      "mission",
+    );
+  };
+
+  const deleteProfileSlot = (slotId: string) => {
+    localStorage.removeItem("nexus_save_data_" + slotId);
+    setSaveSlots((prev) => {
+      const updated = prev.map((s) =>
+        s.id === slotId
+          ? {
+              ...s,
+              operatorHandle: "EMPTY_SLOT",
+              updatedAt: "",
+              currentMissionIndex: 0,
+              crypto: 50,
+              completedMissionsCount: 0,
+            }
+          : s,
+      );
+      localStorage.setItem("nexus_save_slots", JSON.stringify(updated));
+      return updated;
+    });
+
+    if (activeSlotId === slotId) {
+      setActiveSlotId(null);
+      localStorage.removeItem("nexus_active_slot");
+      setCurrentUser(null);
+      resetLocalGameState();
+    }
+
+    sound.playTrashPurge();
+    addNotification(
+      "Slot Cleared",
+      `Profile slot ${slotId} was purged.`,
+      "warning",
+    );
+  };
+
+  const requestClientHint = (): { hintText: string; cost: number } | null => {
+    if (difficulty === "ghost") {
+      sound.playError();
+      addNotification(
+        "Recon Blocked",
+        "Live client telemetry hints are disabled on Zero-Ghost difficulty.",
+        "warning",
+      );
+      return null;
+    }
+
+    const currentMission = MISSIONS[currentMissionIndex];
+    if (!currentMission || missionStage !== "investigating") {
+      sound.playError();
+      addNotification(
+        "No Active Recon",
+        "Accept the contract before requesting client intelligence.",
+        "warning",
+      );
+      return null;
+    }
+
+    const cost = difficulty === "analyst" ? 0 : Math.min(crypto, 50);
+    if (cost > 0) {
+      setCrypto((c) => Math.max(0, c - cost));
+    }
+
+    const nextObj = currentMission.objectives.find(
+      (o) => !isObjectiveComplete(o.id),
+    );
+    let hintMsg = "";
+
+    if (currentMissionIndex === 0) {
+      if (!isObjectiveComplete("obj_m1_clues")) {
+        hintMsg = `${currentMission.clientName}: Marcus posts constantly on Chirper (@mcole_dev). Search 'Marcus Cole' on IntraWeb, browse his feed, and click his dog's name (Koda) and lucky year (1997) to extract them to your Clue Board.`;
+      } else if (!isObjectiveComplete("obj_m1_passweaver")) {
+        hintMsg = `${currentMission.clientName}: Open PassWeaver from your taskbar. Select m.cole@velox-ai.io, inject the Koda and 1997 clues into the permutation slots, and hit Synthesize to derive his password.`;
+      } else {
+        hintMsg = `${currentMission.clientName}: Open Nexus WebMail in IntraWeb, log in with Marcus's synthesized password, and read his unread threads for the offshore drop-off IP.`;
+      }
+    } else if (currentMissionIndex === 1) {
+      if (!ownedTools.includes("ssh_breaker_v1")) {
+        hintMsg = `${currentMission.clientName}: The offshore dead-drop runs hardened SSH on Port 22. Open BlackMarket and acquire 'SSH-Breaker v1.4' for 200 ◈.`;
+      } else if (!crackedPorts["198.51.100.42"]?.includes(22)) {
+        hintMsg = `${currentMission.clientName}: Open Smart Terminal. Execute 'scan 198.51.100.42', then 'crack 22' to inject your SSH-Breaker payload.`;
+      } else {
+        hintMsg = `${currentMission.clientName}: Connect to 198.51.100.42 in Terminal ('connect 198.51.100.42'), execute 'ls', and 'download transfer_manifest.log' to capture proof of Aethelgard's involvement.`;
+      }
+    } else if (currentMissionIndex === 2) {
+      if (!discoveredClues.some((c) => c.id === "clue_vault_override")) {
+        hintMsg = `${currentMission.clientName}: Director Julian Sterling controls the vault keys. Search his Chirper posts (@jsterling_exec) for his yacht name and military division, crack his WebMail, and extract the 'OMEGA-99-KEY'.`;
+      } else {
+        hintMsg = `${currentMission.clientName}: Arm yourself with HyperSSL Zero-Day from the BlackMarket, then breach 203.0.113.88 on Port 443. Download the dossier, run 'wipe_logs', and disconnect before the 100% active trace!`;
+      }
+    } else {
+      hintMsg = `${currentMission.clientName}: Focus on objective: "${nextObj?.description || "Gather remaining evidence"}". Cross-reference targets on IntraWeb, extract credentials with PassWeaver or SpearPhish, and monitor your port scans.`;
+    }
+
+    const hintChatMessage: ChatMessage = {
+      id: `hint_${Date.now()}`,
+      sender: "client",
+      senderName: currentMission.clientName,
+      timestamp: "Now",
+      text: `[ENCRYPTED CLIENT RECON INTEL // -${cost} ◈]: ${hintMsg}`,
+    };
+
+    sound.playHintReceived();
+    setChatHistory((prev) => [...prev, hintChatMessage]);
+    addNotification(
+      "Recon Intel Received",
+      `New advisory from ${currentMission.clientName} delivered to WhisperChat.`,
+      "clue",
+    );
+
+    return { hintText: hintMsg, cost };
+  };
+
+  // Sync state changes with SQLite backend & localStorage (debounced)
   useEffect(() => {
     if (!loadedFromSave || !currentUser) return;
     const timeout = setTimeout(() => {
@@ -749,6 +1034,33 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
         completedBounties,
         chosenEnding,
       };
+
+      // 1. Offline-first localStorage persistence
+      try {
+        localStorage.setItem(
+          "nexus_save_data_" + currentUser.id,
+          JSON.stringify(data),
+        );
+        setSaveSlots((prev) => {
+          const updated = prev.map((s) =>
+            s.id === currentUser.id
+              ? {
+                  ...s,
+                  operatorHandle: currentUser.username,
+                  difficulty,
+                  updatedAt: new Date().toLocaleDateString(),
+                  currentMissionIndex,
+                  crypto,
+                  completedMissionsCount: completedMissionIds.length,
+                }
+              : s,
+          );
+          localStorage.setItem("nexus_save_slots", JSON.stringify(updated));
+          return updated;
+        });
+      } catch {}
+
+      // 2. Synchronize with SQLite if backend is available
       fetch("/api/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -779,6 +1091,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
     successfulPhishes,
     completedBounties,
     chosenEnding,
+    difficulty,
   ]);
 
   // Step-by-step Briefing Message Streamer (when missionStage === 'briefing')
@@ -932,19 +1245,66 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
           sound.playTraceTick(next < 30);
         }
         if (next <= 0) {
-          sound.playError();
+          sound.playKernelPanic();
+          setDroneBreachPanic(true);
+          setEmergencyRebootSeconds(15);
           addNotification(
-            "FIREWALL BREACHED",
-            "Hostile drone penetrated local ports! Reinforcing emergency circuit.",
+            "CRITICAL FIREWALL BREACH",
+            "Hostile combat drone bypassed local port filters! Manual hardware reboot required within 15s!",
             "warning",
           );
-          return 50; // Emergency recovery
+          return 0;
         }
         return next;
       });
     }, 1000);
     return () => clearInterval(interval);
   }, [underAttack, honeypotActive]);
+
+  // Drone Breach Panic countdown effect
+  useEffect(() => {
+    if (!droneBreachPanic) return;
+    const interval = setInterval(() => {
+      setEmergencyRebootSeconds((prev) => {
+        if (prev <= 1) {
+          sound.playError();
+          setDroneBreachPanic(false);
+          setCrypto((c) => Math.max(0, c - 200));
+          setConnectedIp(null);
+          setFirewallHealth(35);
+          addNotification(
+            "EMERGENCY LOCKDOWN TIMEOUT",
+            "Hostile drone penetrated local bus! Siphoned 200 ◈ and severed active links. Emergency circuits restored to 35%.",
+            "warning",
+          );
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [droneBreachPanic]);
+
+  const triggerEmergencyReboot = () => {
+    sound.playEmergencyReboot();
+    setDroneBreachPanic(false);
+    setEmergencyRebootSeconds(0);
+    setFirewallHealth(40);
+    addNotification(
+      "CIRCUIT PURGED",
+      "Local hardware buffers purged and restored to 40% integrity.",
+      "mission",
+    );
+  };
+
+  // Egress Lockout countdown timer
+  useEffect(() => {
+    if (egressLockoutSeconds <= 0) return;
+    const timer = setInterval(() => {
+      setEgressLockoutSeconds((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [egressLockoutSeconds]);
 
   const activateHoneypot = () => {
     setHoneypotActive(true);
@@ -982,6 +1342,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
       );
     }
   };
+
   useEffect(() => {
     if (!traceActive) return;
 
@@ -990,7 +1351,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
 
     const hasVpn = ownedTools.includes("proxy_shield_v1");
     const proxyDampener = Math.max(0.25, 1 - activeProxyChain.length * 0.2);
-    const speedMultiplier = (hasVpn ? 0.5 : 1.0) * proxyDampener;
+    const diffMultiplier =
+      difficulty === "analyst" ? 0.75 : difficulty === "ghost" ? 1.35 : 1.0;
+    const speedMultiplier =
+      (hasVpn ? 0.5 : 1.0) * proxyDampener * diffMultiplier;
     const baseSpeed = 2.0 * speedMultiplier * traceSensitivityMultiplier;
 
     const interval = setInterval(() => {
@@ -1010,16 +1374,26 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
           clearInterval(interval);
           sound.playError();
           setTraceActive(false);
+          const currentTarget = connectedIp || "203.0.113.88";
           setConnectedIp(null);
           setTraceFailedAlert(true);
+          setEgressLockoutSeconds(15);
+          setCrypto((c) => Math.max(0, c - 100));
           setCrackedPorts((cp) => ({
             ...cp,
+            [currentTarget]: [],
             "203.0.113.88": [],
           }));
           setLogsDirtyOnServer((ld) => ({
             ...ld,
+            [currentTarget]: false,
             "203.0.113.88": false,
           }));
+          addNotification(
+            "HOSTILE TRACE COMPLETE",
+            "Egress subnet burned (-100 ◈). 15s quarantine active while proxy circuits rebuild.",
+            "warning",
+          );
           return 0;
         }
         return next;
@@ -1341,18 +1715,42 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
     }));
   };
 
+  const clampPos = (x: number, y: number) => {
+    const maxX = Math.max(8, window.innerWidth - 340);
+    const maxY = Math.max(8, window.innerHeight - 80);
+    return {
+      x: Math.max(8, Math.min(maxX, x)),
+      y: Math.max(8, Math.min(maxY, y)),
+    };
+  };
+
   const moveWindow = (id: AppId, x: number, y: number) => {
     setWindows((prev) => ({
       ...prev,
       [id]: {
         ...prev[id],
-        position: {
-          x: Math.max(8, Math.min(window.innerWidth - 360, x)),
-          y: Math.max(8, Math.min(window.innerHeight - 100, y)),
-        },
+        position: clampPos(x, y),
       },
     }));
   };
+
+  // Automatically re-clamp all windows on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      setWindows((prev) => {
+        const next = { ...prev };
+        (Object.keys(next) as AppId[]).forEach((key) => {
+          next[key] = {
+            ...next[key],
+            position: clampPos(next[key].position.x, next[key].position.y),
+          };
+        });
+        return next;
+      });
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const minimizeAll = () => {
     sound.playWindowClose();
@@ -1654,6 +2052,15 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const connectToServer = (ip: string | null) => {
+    if (ip && egressLockoutSeconds > 0) {
+      sound.playError();
+      addNotification(
+        "EGRESS QUARANTINE ACTIVE",
+        `Proxy circuit rebuilding in progress (${egressLockoutSeconds}s remaining). Remote terminal links temporarily blocked.`,
+        "warning",
+      );
+      return;
+    }
     setConnectedIp(ip);
     if (ip) {
       const node = SERVER_NODES[ip];
@@ -1841,6 +2248,23 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
         activeAlignment,
         traceSensitivityMultiplier,
         camStatus,
+        difficulty,
+        setDifficulty,
+        uiScale,
+        setUiScale,
+        crtMode,
+        setCrtMode,
+        toggleCrtMode,
+        requestClientHint,
+        droneBreachPanic,
+        emergencyRebootSeconds,
+        triggerEmergencyReboot,
+        egressLockoutSeconds,
+        saveSlots,
+        activeSlotId,
+        loadProfileSlot,
+        createProfileSlot,
+        deleteProfileSlot,
       }}
     >
       {children}

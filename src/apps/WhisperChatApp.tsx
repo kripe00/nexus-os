@@ -2,11 +2,13 @@ import React, { useEffect, useRef } from "react";
 import {
   ArrowUpRight,
   CheckCircle2,
+  HelpCircle,
   Lock,
   MessageSquare,
   Radio,
   Send,
   ShieldCheck,
+  Sparkles,
   Terminal,
   Zap,
 } from "lucide-react";
@@ -35,6 +37,8 @@ export const WhisperChatApp: React.FC = () => {
     chosenEnding,
     chooseEnding,
     activeAlignment,
+    difficulty,
+    requestClientHint,
   } = useGame();
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
@@ -235,6 +239,59 @@ export const WhisperChatApp: React.FC = () => {
           --- ENCRYPTED SESSION ESTABLISHED WITH{" "}
           {currentMission.clientHandle.toUpperCase()} ---
         </div>
+
+        {/* Onboarding Visual Guide for Operation 01 */}
+        {currentMissionIndex === 0 && (
+          <div className="p-3 bg-[#0c1420] border border-[#1f375e] space-y-2 mb-3">
+            <div className="flex items-center justify-between text-[#79c0ff] text-xs font-bold uppercase">
+              <span className="flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-[#58a6ff]" />
+                OPERATOR ONBOARDING PROTOCOL // 4 STAGES
+              </span>
+              <span className="text-[10px] text-[#8b949e]">NEW RIG INTEL</span>
+            </div>
+            <div className="grid grid-cols-4 gap-1.5 text-[10px]">
+              <div
+                className={`p-1.5 border ${
+                  !isObjectiveComplete("obj_m1_clues")
+                    ? "bg-[#15233b] border-[#58a6ff] text-white font-bold"
+                    : "bg-[#090d14] border-[#162030] text-[#6e7681]"
+                }`}
+              >
+                1. RECON (IntraWeb)
+              </div>
+              <div
+                className={`p-1.5 border ${
+                  isObjectiveComplete("obj_m1_clues") &&
+                  !isObjectiveComplete("obj_m1_passweaver")
+                    ? "bg-[#15233b] border-[#58a6ff] text-white font-bold"
+                    : "bg-[#090d14] border-[#162030] text-[#6e7681]"
+                }`}
+              >
+                2. SYNTH (PassWeaver)
+              </div>
+              <div
+                className={`p-1.5 border ${
+                  isObjectiveComplete("obj_m1_passweaver") &&
+                  !isObjectiveComplete("obj_m1_webmail")
+                    ? "bg-[#15233b] border-[#58a6ff] text-white font-bold"
+                    : "bg-[#090d14] border-[#162030] text-[#6e7681]"
+                }`}
+              >
+                3. BREACH (WebMail)
+              </div>
+              <div
+                className={`p-1.5 border ${
+                  isObjectiveComplete("obj_m1_webmail")
+                    ? "bg-[#122316] border-[#3fb950] text-[#56d364] font-bold"
+                    : "bg-[#090d14] border-[#162030] text-[#6e7681]"
+                }`}
+              >
+                4. REPORT (Whisper)
+              </div>
+            </div>
+          </div>
+        )}
 
         {chatHistory.map((msg) => {
           if (msg.sender === "system") {
@@ -511,9 +568,30 @@ export const WhisperChatApp: React.FC = () => {
         ) : (
           /* Investigating State: Show helpful contextual next-step launcher */
           <div className="flex items-center justify-between gap-2">
-            <div className="text-[11px] text-[#8b949e]">
-              Operation in progress. Complete the checklist on the right to
-              report back.
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => requestClientHint()}
+                disabled={difficulty === "ghost"}
+                className={`px-3 py-1.5 border text-[11px] font-bold cursor-pointer flex items-center gap-1.5 transition-colors ${
+                  difficulty === "ghost"
+                    ? "bg-[#140a0a] border-[#381616] text-[#6e4444] cursor-not-allowed"
+                    : "bg-[#171b26] hover:bg-[#202738] border-[#2b3548] hover:border-[#58a6ff] text-white"
+                }`}
+                title={
+                  difficulty === "ghost"
+                    ? "Hints disabled on Zero-Ghost difficulty"
+                    : "Request actionable encrypted recon telemetry from client"
+                }
+              >
+                <HelpCircle className="w-3.5 h-3.5 text-[#e3b341]" />
+                <span>
+                  REQUEST RECON HINT{" "}
+                  {difficulty === "analyst" ? "(FREE)" : "(50 ◈)"}
+                </span>
+              </button>
+              <span className="text-[10px] text-[#6e7681] hidden sm:inline">
+                Complete checklist to report back.
+              </span>
             </div>
 
             <div className="flex items-center gap-1.5 shrink-0">

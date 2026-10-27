@@ -1,23 +1,23 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Layers, Maximize2, Minus, X } from 'lucide-react';
-import { useGame } from '../context/GameContext';
-import { AppId } from '../types/game';
-import { sound } from '../utils/sound';
+import React, { useEffect, useRef, useState } from "react";
+import { Layers, Maximize2, Minus, X } from "lucide-react";
+import { useGame } from "../context/GameContext";
+import { AppId } from "../types/game";
+import { sound } from "../utils/sound";
 
 interface WindowFrameProps {
   id: AppId;
   icon?: React.ReactNode;
   width?: string;
   height?: string;
-  accentColor?: 'cyan' | 'purple' | 'emerald' | 'amber' | 'rose';
+  accentColor?: "cyan" | "purple" | "emerald" | "amber" | "rose";
   children: React.ReactNode;
 }
 
 export const WindowFrame: React.FC<WindowFrameProps> = ({
   id,
   icon,
-  width = 'w-[680px]',
-  height = 'h-[490px]',
+  width = "w-[680px]",
+  height = "h-[490px]",
   children,
 }) => {
   const {
@@ -63,21 +63,21 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
         header: `// WINDOW: ${win.title.toUpperCase()}`,
         items: [
           {
-            label: 'Center on Screen',
+            label: "Center on Screen",
             icon: <Maximize2 className="w-3.5 h-3.5" />,
-            shortcut: 'CENTER',
+            shortcut: "CENTER",
             onClick: () => centerWindow(id),
           },
           {
-            label: 'Send to Back',
+            label: "Send to Back",
             icon: <Layers className="w-3.5 h-3.5" />,
-            shortcut: 'BACK',
+            shortcut: "BACK",
             onClick: () => sendToBack(id),
           },
           {
-            label: 'Minimize Window',
+            label: "Minimize Window",
             icon: <Minus className="w-3.5 h-3.5" />,
-            shortcut: 'MIN',
+            shortcut: "MIN",
             onClick: handleMinimize,
           },
         ],
@@ -85,9 +85,9 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       {
         items: [
           {
-            label: 'Close Window',
+            label: "Close Window",
             icon: <X className="w-3.5 h-3.5" />,
-            shortcut: 'CLOSE',
+            shortcut: "CLOSE",
             danger: true,
             onClick: handleClose,
           },
@@ -105,21 +105,27 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
     };
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
-      moveWindow(
-        id,
-        moveEvent.clientX - dragOffset.current.x,
-        moveEvent.clientY - dragOffset.current.y
+      const maxX = Math.max(8, window.innerWidth - 300);
+      const maxY = Math.max(8, window.innerHeight - 80);
+      const targetX = Math.max(
+        8,
+        Math.min(maxX, moveEvent.clientX - dragOffset.current.x),
       );
+      const targetY = Math.max(
+        8,
+        Math.min(maxY, moveEvent.clientY - dragOffset.current.y),
+      );
+      moveWindow(id, targetX, targetY);
     };
 
     const handleMouseUp = () => {
       setDragging(false);
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
   };
 
   return (
@@ -132,8 +138,8 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       }}
       className={`fixed ${width} ${height} max-w-[calc(100vw-340px)] max-h-[calc(100vh-64px)] bg-[#0b0d12] border animate-window-in ${
         isActive
-          ? 'border-[#4a5870] shadow-[0_24px_70px_rgba(0,0,0,0.95)]'
-          : 'border-[#1e232c] opacity-95'
+          ? "border-[#4a5870] shadow-[0_24px_70px_rgba(0,0,0,0.95)]"
+          : "border-[#1e232c] opacity-95"
       } flex flex-col overflow-hidden transition-colors`}
     >
       {/* Active Tactical HUD Corner Brackets */}
@@ -151,21 +157,26 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
         onMouseDown={handleMouseDown}
         onContextMenu={handleHeaderContextMenu}
         className={`h-9 px-3.5 flex items-center justify-between border-b select-none text-xs ${
-          dragging ? 'cursor-grabbing' : 'cursor-grab'
+          dragging ? "cursor-grabbing" : "cursor-grab"
         } ${
           isActive
-            ? 'bg-[#141820] text-[#e6edf3] border-[#282f3d] font-semibold'
-            : 'bg-[#0e1116] text-[#6e7681] border-[#1e232c]'
+            ? "bg-[#141820] text-[#e6edf3] border-[#282f3d] font-semibold"
+            : "bg-[#0e1116] text-[#6e7681] border-[#1e232c]"
         }`}
       >
         <div className="flex items-center gap-2.5 truncate">
           {icon && (
-            <span className={isActive ? 'text-[#58a6ff]' : 'text-[#6e7681]'}>{icon}</span>
+            <span className={isActive ? "text-[#58a6ff]" : "text-[#6e7681]"}>
+              {icon}
+            </span>
           )}
           <span className="truncate">{win.title}</span>
         </div>
 
-        <div className="flex items-center gap-1 shrink-0" onMouseDown={(e) => e.stopPropagation()}>
+        <div
+          className="flex items-center gap-1 shrink-0"
+          onMouseDown={(e) => e.stopPropagation()}
+        >
           <button
             onClick={handleMinimize}
             title="Minimize"

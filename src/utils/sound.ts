@@ -83,14 +83,18 @@ class SoundEngine {
   }
 
   public isMusicPlaying(): boolean {
-    const active = this.isTraceMusicActive ? this.traceAudio : this.ambientAudio;
+    const active = this.isTraceMusicActive
+      ? this.traceAudio
+      : this.ambientAudio;
     return Boolean(active && !active.paused && !active.ended);
   }
 
   public ensureMusicPlaying() {
     if (this.muted || this.musicMuted) return;
     this.initMusic();
-    const active = this.isTraceMusicActive ? this.traceAudio : this.ambientAudio;
+    const active = this.isTraceMusicActive
+      ? this.traceAudio
+      : this.ambientAudio;
     if (active && active.paused) {
       active
         .play()
@@ -106,7 +110,9 @@ class SoundEngine {
 
   public toggleMusicPlayback(): boolean {
     this.initMusic();
-    const active = this.isTraceMusicActive ? this.traceAudio : this.ambientAudio;
+    const active = this.isTraceMusicActive
+      ? this.traceAudio
+      : this.ambientAudio;
     if (!active) return false;
 
     if (!active.paused) {
@@ -138,7 +144,9 @@ class SoundEngine {
     if (this.muted || this.musicMuted) return;
     this.initMusic();
     this.musicStarted = true;
-    const active = this.isTraceMusicActive ? this.traceAudio : this.ambientAudio;
+    const active = this.isTraceMusicActive
+      ? this.traceAudio
+      : this.ambientAudio;
     if (active) {
       active
         .play()
@@ -721,6 +729,114 @@ class SoundEngine {
         osc.start(start);
         osc.stop(start + 0.11);
       });
+    } catch {}
+  }
+
+  // Critical Kernel Panic / Drone Breach Alarm Siren
+  public playKernelPanic() {
+    const ctx = this.getContext();
+    if (!ctx) return;
+    try {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(440, ctx.currentTime);
+      osc.frequency.linearRampToValueAtTime(880, ctx.currentTime + 0.2);
+      osc.frequency.linearRampToValueAtTime(330, ctx.currentTime + 0.4);
+      osc.frequency.linearRampToValueAtTime(880, ctx.currentTime + 0.6);
+
+      gain.gain.setValueAtTime(0.12 * this.sfxVolume, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.001, ctx.currentTime + 0.65);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.7);
+    } catch {}
+  }
+
+  // Steganography / Forensic Hex Carver Chirp
+  public playCarverChirp() {
+    const ctx = this.getContext();
+    if (!ctx) return;
+    try {
+      for (let i = 0; i < 4; i++) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        const start = ctx.currentTime + i * 0.05;
+        osc.frequency.setValueAtTime(1600 + i * 420, start);
+        gain.gain.setValueAtTime(0.04 * this.sfxVolume, start);
+        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.04);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(start);
+        osc.stop(start + 0.045);
+      }
+    } catch {}
+  }
+
+  // Client Recon Intel / Encrypted Hint Received Chime
+  public playHintReceived() {
+    const ctx = this.getContext();
+    if (!ctx) return;
+    try {
+      const notes = [587.33, 739.99, 880.0, 1174.66]; // D5, F#5, A5, D6
+      notes.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "triangle";
+        const start = ctx.currentTime + idx * 0.06;
+        osc.frequency.setValueAtTime(freq, start);
+        gain.gain.setValueAtTime(0.05 * this.sfxVolume, start);
+        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.12);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(start);
+        osc.stop(start + 0.13);
+      });
+    } catch {}
+  }
+
+  // Trash / Data Purge Noise Burst
+  public playTrashPurge() {
+    const ctx = this.getContext();
+    if (!ctx) return;
+    try {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "square";
+      osc.frequency.setValueAtTime(180, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + 0.12);
+      gain.gain.setValueAtTime(0.06 * this.sfxVolume, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.13);
+    } catch {}
+  }
+
+  // Emergency Circuit Recovery / Reboot Pulse
+  public playEmergencyReboot() {
+    const ctx = this.getContext();
+    if (!ctx) return;
+    try {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(110, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.35);
+
+      gain.gain.setValueAtTime(0.08 * this.sfxVolume, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.38);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.4);
     } catch {}
   }
 }

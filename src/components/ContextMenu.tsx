@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { sound } from '../utils/sound';
+import React, { useEffect, useRef } from "react";
+import { sound } from "../utils/sound";
 
 export interface ContextMenuItem {
   label: string;
@@ -42,7 +42,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ menu, onClose }) => {
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         onClose();
       }
     };
@@ -51,16 +51,16 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ menu, onClose }) => {
       onClose();
     };
 
-    window.addEventListener('mousedown', handleClickOutside);
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('resize', handleWindowResize);
-    window.addEventListener('scroll', handleWindowResize, true);
+    window.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("resize", handleWindowResize);
+    window.addEventListener("scroll", handleWindowResize, true);
 
     return () => {
-      window.removeEventListener('mousedown', handleClickOutside);
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('resize', handleWindowResize);
-      window.removeEventListener('scroll', handleWindowResize, true);
+      window.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("resize", handleWindowResize);
+      window.removeEventListener("scroll", handleWindowResize, true);
     };
   }, [menu.isOpen, onClose]);
 
@@ -70,10 +70,16 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ menu, onClose }) => {
   const menuWidth = 240;
   const menuHeight = menu.groups.reduce(
     (acc, g) => acc + (g.header ? 22 : 0) + g.items.length * 30 + 8,
-    16
+    16,
   );
-  const clampedX = Math.min(Math.max(8, menu.x), window.innerWidth - menuWidth - 8);
-  const clampedY = Math.min(Math.max(8, menu.y), window.innerHeight - menuHeight - 8);
+  const clampedX = Math.min(
+    Math.max(8, menu.x),
+    window.innerWidth - menuWidth - 8,
+  );
+  const clampedY = Math.min(
+    Math.max(8, menu.y),
+    window.innerHeight - menuHeight - 8,
+  );
 
   return (
     <div
@@ -87,7 +93,10 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ menu, onClose }) => {
       }}
     >
       {menu.groups.map((group, gIdx) => (
-        <div key={gIdx} className={gIdx > 0 ? 'border-t border-[#1a212d] pt-1 mt-1' : ''}>
+        <div
+          key={gIdx}
+          className={gIdx > 0 ? "border-t border-[#1a212d] pt-1 mt-1" : ""}
+        >
           {group.header && (
             <div className="px-2.5 py-1 text-[9px] uppercase tracking-wider text-[#6e7681] font-bold">
               {group.header}
@@ -105,17 +114,17 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ menu, onClose }) => {
                 }}
                 className={`w-full px-2 py-1.5 flex items-center justify-between text-left transition-colors cursor-pointer text-xs ${
                   item.disabled
-                    ? 'opacity-40 cursor-not-allowed text-[#6e7681]'
+                    ? "opacity-40 cursor-not-allowed text-[#6e7681]"
                     : item.danger
-                    ? 'text-[#ff5555] hover:bg-[#ff3b3b]/15 hover:text-[#ff7b72]'
-                    : 'text-[#c9d1d9] hover:bg-[#161c26] hover:text-white'
+                      ? "text-[#ff5555] hover:bg-[#ff3b3b]/15 hover:text-[#ff7b72]"
+                      : "text-[#c9d1d9] hover:bg-[#161c26] hover:text-white"
                 }`}
               >
                 <div className="flex items-center gap-2 truncate">
                   {item.icon && (
                     <span
                       className={`w-3.5 h-3.5 shrink-0 ${
-                        item.danger ? 'text-[#ff5555]' : 'text-[#58a6ff]'
+                        item.danger ? "text-[#ff5555]" : "text-[#58a6ff]"
                       }`}
                     >
                       {item.icon}

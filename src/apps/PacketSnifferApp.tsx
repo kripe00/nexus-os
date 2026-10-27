@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   Activity,
   Binary,
@@ -14,12 +14,12 @@ import {
   ShieldAlert,
   Terminal,
   Wifi,
-} from 'lucide-react';
-import { CapturedPacket, SnifferSubnet } from '../types/game';
-import { SNIFFER_SUBNETS } from '../data/worldData';
-import { useGame } from '../context/GameContext';
-import { WindowFrame } from '../components/WindowFrame';
-import { sound } from '../utils/sound';
+} from "lucide-react";
+import { CapturedPacket, SnifferSubnet } from "../types/game";
+import { SNIFFER_SUBNETS } from "../data/worldData";
+import { useGame } from "../context/GameContext";
+import { WindowFrame } from "../components/WindowFrame";
+import { sound } from "../utils/sound";
 
 export const PacketSnifferApp: React.FC = () => {
   const {
@@ -31,23 +31,27 @@ export const PacketSnifferApp: React.FC = () => {
     addNotification,
   } = useGame();
 
-  const [selectedSubnetId, setSelectedSubnetId] = useState<string>('velox_subnet');
-  const [protocolFilter, setProtocolFilter] = useState<string>('ALL');
-  const [selectedPacketId, setSelectedPacketId] = useState<string>('pkt_v_1');
+  const [selectedSubnetId, setSelectedSubnetId] =
+    useState<string>("velox_subnet");
+  const [protocolFilter, setProtocolFilter] = useState<string>("ALL");
+  const [selectedPacketId, setSelectedPacketId] = useState<string>("pkt_v_1");
   const [livePacketCount, setLivePacketCount] = useState<number>(142);
   const [isCapturing, setIsCapturing] = useState<boolean>(true);
 
   const activeSubnet =
-    SNIFFER_SUBNETS.find((s) => s.id === selectedSubnetId) || SNIFFER_SUBNETS[0];
+    SNIFFER_SUBNETS.find((s) => s.id === selectedSubnetId) ||
+    SNIFFER_SUBNETS[0];
 
   // Filtered packets
   const filteredPackets = activeSubnet.packets.filter((p) => {
-    if (protocolFilter === 'ALL') return true;
+    if (protocolFilter === "ALL") return true;
     return p.protocol === protocolFilter;
   });
 
   const activePacket =
-    filteredPackets.find((p) => p.id === selectedPacketId) || filteredPackets[0] || null;
+    filteredPackets.find((p) => p.id === selectedPacketId) ||
+    filteredPackets[0] ||
+    null;
 
   // Simulate live packet rate counter
   useEffect(() => {
@@ -76,7 +80,10 @@ export const PacketSnifferApp: React.FC = () => {
     discoverClue(clueId);
   };
 
-  const handlePacketContextMenu = (e: React.MouseEvent, pkt: CapturedPacket) => {
+  const handlePacketContextMenu = (
+    e: React.MouseEvent,
+    pkt: CapturedPacket,
+  ) => {
     showContextMenu(e, [
       {
         header: `// TARGET RECON: ${pkt.destIp}`,
@@ -84,41 +91,49 @@ export const PacketSnifferApp: React.FC = () => {
           {
             label: `Scan ${pkt.destIp} in Terminal`,
             icon: <Terminal className="w-3.5 h-3.5" />,
-            shortcut: 'SCAN',
+            shortcut: "SCAN",
             onClick: () => executeTerminalCommand(`scan ${pkt.destIp}`),
           },
           {
             label: `Connect to ${pkt.destIp}`,
             icon: <Globe className="w-3.5 h-3.5" />,
-            shortcut: 'SSH',
+            shortcut: "SSH",
             onClick: () => executeTerminalCommand(`connect ${pkt.destIp}`),
           },
           {
-            label: 'Copy Destination IP',
+            label: "Copy Destination IP",
             icon: <Copy className="w-3.5 h-3.5" />,
-            shortcut: 'IP',
+            shortcut: "IP",
             onClick: () => {
               navigator.clipboard.writeText(pkt.destIp);
-              addNotification('IP Copied', `${pkt.destIp} copied to clipboard`, 'clue');
+              addNotification(
+                "IP Copied",
+                `${pkt.destIp} copied to clipboard`,
+                "clue",
+              );
             },
           },
         ],
       },
       {
-        header: '// PACKET PAYLOAD',
+        header: "// PACKET PAYLOAD",
         items: [
           {
-            label: 'Copy Payload Hex',
+            label: "Copy Payload Hex",
             icon: <Binary className="w-3.5 h-3.5" />,
             onClick: () => {
               navigator.clipboard.writeText(pkt.rawHex);
-              addNotification('Hex Copied', `Hex payload of ${pkt.id} copied`, 'clue');
+              addNotification(
+                "Hex Copied",
+                `Hex payload of ${pkt.id} copied`,
+                "clue",
+              );
             },
           },
           ...(pkt.containsCredential && pkt.extractedClueId
             ? [
                 {
-                  label: 'Extract Credential to Clue Board',
+                  label: "Extract Credential to Clue Board",
                   icon: <KeyRound className="w-3.5 h-3.5" />,
                   onClick: () => handleExtractClue(pkt.extractedClueId),
                 },
@@ -168,14 +183,18 @@ export const PacketSnifferApp: React.FC = () => {
                   onClick={() => handleSelectSubnet(sub.id)}
                   className={`px-2.5 py-1 text-[11px] font-mono border cursor-pointer whitespace-nowrap transition-colors ${
                     active
-                      ? 'bg-[#151921] text-white border-[#58a6ff] font-bold'
-                      : 'bg-[#08090d] text-[#8b949e] border-[#21262d] hover:text-white'
+                      ? "bg-[#151921] text-white border-[#58a6ff] font-bold"
+                      : "bg-[#08090d] text-[#8b949e] border-[#21262d] hover:text-white"
                   }`}
                 >
-                  <span className={active ? 'text-[#58a6ff]' : 'text-[#6e7681]'}>
+                  <span
+                    className={active ? "text-[#58a6ff]" : "text-[#6e7681]"}
+                  >
                     [{sub.subnetCidr}]
-                  </span>{' '}
-                  <span>{sub.name.replace(/ Subnet| LAN| Telemetry| Mesh/i, '')}</span>
+                  </span>{" "}
+                  <span>
+                    {sub.name.replace(/ Subnet| LAN| Telemetry| Mesh/i, "")}
+                  </span>
                 </button>
               );
             })}
@@ -187,22 +206,24 @@ export const PacketSnifferApp: React.FC = () => {
               <span className="text-[#6e7681] mr-1 uppercase flex items-center gap-1">
                 <Filter className="w-3 h-3" /> Filter:
               </span>
-              {['ALL', 'HTTP', 'SMTP', 'TELNET', 'DNS', 'RF_RAW'].map((proto) => (
-                <button
-                  key={proto}
-                  onClick={() => {
-                    sound.playClick();
-                    setProtocolFilter(proto);
-                  }}
-                  className={`px-2 py-0.5 border cursor-pointer transition-colors ${
-                    protocolFilter === proto
-                      ? 'bg-[#1f6feb] text-white border-[#58a6ff] font-bold'
-                      : 'bg-[#06070a] text-[#8b949e] border-[#1e232c] hover:text-white'
-                  }`}
-                >
-                  {proto}
-                </button>
-              ))}
+              {["ALL", "HTTP", "SMTP", "TELNET", "DNS", "RF_RAW"].map(
+                (proto) => (
+                  <button
+                    key={proto}
+                    onClick={() => {
+                      sound.playClick();
+                      setProtocolFilter(proto);
+                    }}
+                    className={`px-2 py-0.5 border cursor-pointer transition-colors ${
+                      protocolFilter === proto
+                        ? "bg-[#1f6feb] text-white border-[#58a6ff] font-bold"
+                        : "bg-[#06070a] text-[#8b949e] border-[#1e232c] hover:text-white"
+                    }`}
+                  >
+                    {proto}
+                  </button>
+                ),
+              )}
             </div>
 
             <span className="text-[#6e7681] font-mono truncate max-w-xs">
@@ -230,15 +251,15 @@ export const PacketSnifferApp: React.FC = () => {
                   discoveredClues.some((c) => c.id === pkt.extractedClueId);
 
                 const protoColor =
-                  pkt.protocol === 'HTTP'
-                    ? 'text-[#58a6ff]'
-                    : pkt.protocol === 'SMTP'
-                    ? 'text-[#a371f7]'
-                    : pkt.protocol === 'TELNET'
-                    ? 'text-[#ff5555]'
-                    : pkt.protocol === 'DNS'
-                    ? 'text-[#3fb950]'
-                    : 'text-[#d29922]';
+                  pkt.protocol === "HTTP"
+                    ? "text-[#58a6ff]"
+                    : pkt.protocol === "SMTP"
+                      ? "text-[#a371f7]"
+                      : pkt.protocol === "TELNET"
+                        ? "text-[#ff5555]"
+                        : pkt.protocol === "DNS"
+                          ? "text-[#3fb950]"
+                          : "text-[#d29922]";
 
                 return (
                   <div
@@ -247,16 +268,20 @@ export const PacketSnifferApp: React.FC = () => {
                     onContextMenu={(e) => handlePacketContextMenu(e, pkt)}
                     className={`p-2 cursor-pointer transition-colors ${
                       isSelected
-                        ? 'bg-[#141b26] border-l-2 border-[#58a6ff]'
-                        : 'hover:bg-[#0c0e14]'
+                        ? "bg-[#141b26] border-l-2 border-[#58a6ff]"
+                        : "hover:bg-[#0c0e14]"
                     }`}
                   >
                     <div className="grid grid-cols-12 gap-1 font-mono text-[10px] items-center mb-0.5">
-                      <span className="col-span-3 text-[#6e7681]">{pkt.timestamp}</span>
+                      <span className="col-span-3 text-[#6e7681]">
+                        {pkt.timestamp}
+                      </span>
                       <span className={`col-span-3 font-bold ${protoColor}`}>
                         {pkt.protocol}
                       </span>
-                      <span className="col-span-6 text-white truncate">{pkt.destIp}</span>
+                      <span className="col-span-6 text-white truncate">
+                        {pkt.destIp}
+                      </span>
                     </div>
 
                     <div className="text-[11px] text-[#8b949e] truncate flex items-center justify-between">
@@ -265,11 +290,11 @@ export const PacketSnifferApp: React.FC = () => {
                         <span
                           className={`px-1 text-[9px] font-bold shrink-0 ml-1 ${
                             hasClue
-                              ? 'bg-[#122117] text-[#3fb950] border border-[#238636]'
-                              : 'bg-[#ff3b3b] text-white animate-pulse'
+                              ? "bg-[#122117] text-[#3fb950] border border-[#238636]"
+                              : "bg-[#ff3b3b] text-white animate-pulse"
                           }`}
                         >
-                          {hasClue ? 'LOGGED' : 'AUTH'}
+                          {hasClue ? "LOGGED" : "AUTH"}
                         </span>
                       )}
                     </div>
@@ -286,7 +311,9 @@ export const PacketSnifferApp: React.FC = () => {
                 {/* Header Information */}
                 <div className="p-3 bg-[#0a0d14] border border-[#1e232c] space-y-1.5 font-mono text-[11px]">
                   <div className="flex items-center justify-between border-b border-[#161c26] pb-1">
-                    <span className="text-[#8b949e]">FRAME #{activePacket.id}</span>
+                    <span className="text-[#8b949e]">
+                      FRAME #{activePacket.id}
+                    </span>
                     <span className="text-[#58a6ff] font-bold">
                       {activePacket.protocol} INTERCEPT
                     </span>
@@ -294,7 +321,9 @@ export const PacketSnifferApp: React.FC = () => {
                   <div className="grid grid-cols-2 gap-2 text-[10px]">
                     <div>
                       <span className="text-[#6e7681]">SRC_IP: </span>
-                      <span className="text-white">{activePacket.sourceIp}</span>
+                      <span className="text-white">
+                        {activePacket.sourceIp}
+                      </span>
                     </div>
                     <div>
                       <span className="text-[#6e7681]">DST_IP: </span>
@@ -304,41 +333,50 @@ export const PacketSnifferApp: React.FC = () => {
                 </div>
 
                 {/* Credential Action Banner */}
-                {activePacket.containsCredential && activePacket.extractedClueId && (
-                  <div className="p-3 bg-[#131d2a] border border-[#58a6ff] space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="text-xs font-bold text-[#79c0ff] flex items-center gap-1.5">
-                        <Fingerprint className="w-4 h-4 text-[#58a6ff]" />
-                        <span>UNENCRYPTED CREDENTIAL / IP LEAK IDENTIFIED</span>
+                {activePacket.containsCredential &&
+                  activePacket.extractedClueId && (
+                    <div className="p-3 bg-[#131d2a] border border-[#58a6ff] space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="text-xs font-bold text-[#79c0ff] flex items-center gap-1.5">
+                          <Fingerprint className="w-4 h-4 text-[#58a6ff]" />
+                          <span>
+                            UNENCRYPTED CREDENTIAL / IP LEAK IDENTIFIED
+                          </span>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="p-2 bg-[#06080d] border border-[#1f293a] font-mono text-xs text-white">
-                      {activePacket.credentialSnippet}
-                    </div>
-
-                    {discoveredClues.some((c) => c.id === activePacket.extractedClueId) ? (
-                      <div className="text-[11px] text-[#56d364] flex items-center gap-1 font-bold">
-                        <Check className="w-3.5 h-3.5" />
-                        <span>Intelligence pinned to OSINT Clue Board!</span>
+                      <div className="p-2 bg-[#06080d] border border-[#1f293a] font-mono text-xs text-white">
+                        {activePacket.credentialSnippet}
                       </div>
-                    ) : (
-                      <button
-                        onClick={() => handleExtractClue(activePacket.extractedClueId)}
-                        className="w-full py-1.5 bg-[#1f6feb] hover:bg-[#388bfd] text-white font-bold text-xs uppercase cursor-pointer flex items-center justify-center gap-1.5"
-                      >
-                        <Fingerprint className="w-3.5 h-3.5" />
-                        [ PIN EXTRACTED CLUE TO CLUE BOARD ]
-                      </button>
-                    )}
-                  </div>
-                )}
+
+                      {discoveredClues.some(
+                        (c) => c.id === activePacket.extractedClueId,
+                      ) ? (
+                        <div className="text-[11px] text-[#56d364] flex items-center gap-1 font-bold">
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Intelligence pinned to OSINT Clue Board!</span>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() =>
+                            handleExtractClue(activePacket.extractedClueId)
+                          }
+                          className="w-full py-1.5 bg-[#1f6feb] hover:bg-[#388bfd] text-white font-bold text-xs uppercase cursor-pointer flex items-center justify-center gap-1.5"
+                        >
+                          <Fingerprint className="w-3.5 h-3.5" />[ PIN EXTRACTED
+                          CLUE TO CLUE BOARD ]
+                        </button>
+                      )}
+                    </div>
+                  )}
 
                 {/* Cleartext Payload View */}
                 <div className="space-y-1.5">
                   <div className="text-[10px] uppercase font-bold text-[#6e7681] flex items-center justify-between">
                     <span>REASSEMBLED TCP PAYLOAD (ASCII):</span>
-                    <span className="font-mono text-[9px] text-[#8b949e]">STREAM 0</span>
+                    <span className="font-mono text-[9px] text-[#8b949e]">
+                      STREAM 0
+                    </span>
                   </div>
                   <pre className="p-3 bg-[#080a0f] border border-[#1b212c] font-mono text-[11px] text-[#d4d7dc] leading-relaxed whitespace-pre-wrap break-all select-text">
                     {activePacket.payloadPreview}

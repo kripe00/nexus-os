@@ -173,3 +173,26 @@ export interface BountyContract {
     description: string;
   }[];
 }
+
+export type DifficultyPreset = "analyst" | "operative" | "ghost";
+
+export interface SaveSlotProfile {
+  id: string; // "slot_1", "slot_2", "slot_3"
+  operatorHandle: string;
+  difficulty: DifficultyPreset;
+  updatedAt: string;
+  currentMissionIndex: number;
+  crypto: number;
+  completedMissionsCount: number;
+}
+
+export type UiScaleOption = "100%" | "125%" | "150%";
+
+export interface SystemSettings {
+  crtMode: boolean;
+  uiScale: UiScaleOption;
+  masterVolume: number;
+  musicVolume: number;
+  sfxVolume: number;
+  muted: boolean;
+}

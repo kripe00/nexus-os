@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   ArrowUpRight,
   CheckSquare,
@@ -11,10 +11,10 @@ import {
   Server,
   Square,
   Terminal,
-} from 'lucide-react';
-import { MISSIONS } from '../data/worldData';
-import { useGame } from '../context/GameContext';
-import { Clue } from '../types/game';
+} from "lucide-react";
+import { MISSIONS } from "../data/worldData";
+import { useGame } from "../context/GameContext";
+import { Clue } from "../types/game";
 
 export const ClueBoardSidebar: React.FC = () => {
   const {
@@ -33,7 +33,7 @@ export const ClueBoardSidebar: React.FC = () => {
   } = useGame();
 
   const handleClueContextMenu = (e: React.MouseEvent, clue: Clue) => {
-    if (clue.category === 'ip') {
+    if (clue.category === "ip") {
       showContextMenu(e, [
         {
           header: `// TARGET HOST: ${clue.value}`,
@@ -41,22 +41,26 @@ export const ClueBoardSidebar: React.FC = () => {
             {
               label: `Run "scan ${clue.value}" in Terminal`,
               icon: <Terminal className="w-3.5 h-3.5" />,
-              shortcut: 'SCAN',
+              shortcut: "SCAN",
               onClick: () => executeTerminalCommand(`scan ${clue.value}`),
             },
             {
               label: `Mount Root Shell (connect ${clue.value})`,
               icon: <Server className="w-3.5 h-3.5" />,
-              shortcut: 'SSH',
+              shortcut: "SSH",
               onClick: () => executeTerminalCommand(`connect ${clue.value}`),
             },
             {
-              label: 'Copy Host IP',
+              label: "Copy Host IP",
               icon: <Copy className="w-3.5 h-3.5" />,
-              shortcut: 'IP',
+              shortcut: "IP",
               onClick: () => {
                 navigator.clipboard.writeText(clue.value);
-                addNotification('Target Copied', `${clue.value} copied to clipboard`, 'clue');
+                addNotification(
+                  "Target Copied",
+                  `${clue.value} copied to clipboard`,
+                  "clue",
+                );
               },
             },
           ],
@@ -68,16 +72,20 @@ export const ClueBoardSidebar: React.FC = () => {
           header: `// INTEL: ${clue.label.toUpperCase()}`,
           items: [
             {
-              label: 'Load into PassWeaver',
+              label: "Load into PassWeaver",
               icon: <KeyRound className="w-3.5 h-3.5" />,
               onClick: () => sendClueToApp(clue),
             },
             {
-              label: 'Copy Value to Clipboard',
+              label: "Copy Value to Clipboard",
               icon: <Copy className="w-3.5 h-3.5" />,
               onClick: () => {
                 navigator.clipboard.writeText(clue.value);
-                addNotification('Clue Copied', `${clue.value} copied to clipboard`, 'clue');
+                addNotification(
+                  "Clue Copied",
+                  `${clue.value} copied to clipboard`,
+                  "clue",
+                );
               },
             },
           ],
@@ -86,7 +94,8 @@ export const ClueBoardSidebar: React.FC = () => {
     }
   };
 
-  const currentMission = MISSIONS[currentMissionIndex] || MISSIONS[MISSIONS.length - 1];
+  const currentMission =
+    MISSIONS[currentMissionIndex] || MISSIONS[MISSIONS.length - 1];
 
   return (
     <aside className="w-[320px] h-[calc(100vh-2.75rem)] border-l border-[#1e232c] bg-[#090b0f]/95 flex flex-col z-30 select-none text-xs">
@@ -96,19 +105,21 @@ export const ClueBoardSidebar: React.FC = () => {
           <span className="flex items-center gap-1.5 text-[#58a6ff] font-semibold">
             <Crosshair className="w-3.5 h-3.5" />
             {campaignFinished && currentMissionIndex >= MISSIONS.length - 1
-              ? 'CAMPAIGN COMPLETE'
+              ? "CAMPAIGN COMPLETE"
               : `OPERATION 0${currentMissionIndex + 1}`}
           </span>
-          <span className="text-[#3fb950] font-bold">+{currentMission.reward} ◈</span>
+          <span className="text-[#3fb950] font-bold">
+            +{currentMission.reward} ◈
+          </span>
         </div>
 
         <div className="text-sm font-bold text-white mb-2">
-          {currentMission.title.replace(/^Operation \d+:\s*/, '')}
+          {currentMission.title.replace(/^Operation \d+:\s*/, "")}
         </div>
 
-        {missionStage === 'briefing' || missionStage === 'accept_prompt' ? (
+        {missionStage === "briefing" || missionStage === "accept_prompt" ? (
           <div
-            onClick={() => openApp('whisper')}
+            onClick={() => openApp("whisper")}
             className="p-3 bg-[#10151f] border border-[#58a6ff] text-[#79c0ff] cursor-pointer space-y-1"
           >
             <div className="font-bold text-white flex items-center justify-between">
@@ -116,7 +127,8 @@ export const ClueBoardSidebar: React.FC = () => {
               <ArrowUpRight className="w-3.5 h-3.5 text-[#58a6ff]" />
             </div>
             <p className="text-[11px] text-[#8b949e]">
-              Read {currentMission.clientName}'s messages and reply in WhisperChat to unlock objectives.
+              Read {currentMission.clientName}'s messages and reply in
+              WhisperChat to unlock objectives.
             </p>
           </div>
         ) : (
@@ -128,8 +140,8 @@ export const ClueBoardSidebar: React.FC = () => {
                   key={obj.id}
                   className={`p-2 border text-[11px] leading-snug flex items-start gap-2 ${
                     done
-                      ? 'bg-[#0b140e] border-[#1f3d28] text-[#56d364] line-through'
-                      : 'bg-[#0d1016] border-[#21262d] text-[#c9d1d9]'
+                      ? "bg-[#0b140e] border-[#1f3d28] text-[#56d364] line-through"
+                      : "bg-[#0d1016] border-[#21262d] text-[#c9d1d9]"
                   }`}
                 >
                   {done ? (
@@ -142,9 +154,9 @@ export const ClueBoardSidebar: React.FC = () => {
               );
             })}
 
-            {missionStage === 'report_ready' && (
+            {missionStage === "report_ready" && (
               <button
-                onClick={() => openApp('whisper')}
+                onClick={() => openApp("whisper")}
                 className="w-full mt-2 p-2.5 bg-[#238636] hover:bg-[#2ea043] text-white font-bold text-xs flex items-center justify-between cursor-pointer transition-colors"
               >
                 <span>Report Findings in WhisperChat</span>
@@ -166,10 +178,12 @@ export const ClueBoardSidebar: React.FC = () => {
             {crackedEmails.map((email) => (
               <div
                 key={email}
-                onClick={() => navigateBrowser('webmail', '', email)}
+                onClick={() => navigateBrowser("webmail", "", email)}
                 className="p-2 bg-[#060708] border border-[#238636] hover:border-[#3fb950] cursor-pointer flex items-center justify-between transition-colors"
               >
-                <span className="text-[#56d364] font-bold text-[11px] truncate">{email}</span>
+                <span className="text-[#56d364] font-bold text-[11px] truncate">
+                  {email}
+                </span>
                 <span className="text-[10px] bg-[#238636] text-white px-2 py-0.5 font-bold shrink-0">
                   Log in →
                 </span>
@@ -192,10 +206,12 @@ export const ClueBoardSidebar: React.FC = () => {
           <div className="flex-1 border border-dashed border-[#21262d] bg-[#060708]/60 p-4 flex flex-col items-center justify-center text-center">
             <Globe className="w-6 h-6 text-[#58a6ff] mb-2 opacity-75" />
             <p className="text-[11px] text-[#8b949e] leading-relaxed mb-3">
-              Search for targets on <span className="text-white font-semibold">IntraWeb</span> and click underlined details to pin them here.
+              Search for targets on{" "}
+              <span className="text-white font-semibold">IntraWeb</span> and
+              click underlined details to pin them here.
             </p>
             <button
-              onClick={() => navigateBrowser('search', 'Marcus Cole')}
+              onClick={() => navigateBrowser("search", "Marcus Cole")}
               className="px-3 py-1.5 bg-[#151921] border border-[#303947] text-[#e6edf3] hover:border-[#58a6ff] text-[11px] font-semibold cursor-pointer"
             >
               Search on IntraWeb
@@ -204,13 +220,13 @@ export const ClueBoardSidebar: React.FC = () => {
         ) : (
           <div className="space-y-2">
             {discoveredClues.map((clue) => {
-              const isIp = clue.category === 'ip';
-              const isEmail = clue.id.includes('email');
+              const isIp = clue.category === "ip";
+              const isEmail = clue.id.includes("email");
               const actionLabel = isIp
-                ? 'Load IP in Terminal →'
+                ? "Load IP in Terminal →"
                 : isEmail
-                ? 'Set Target in PassWeaver →'
-                : 'Add to PassWeaver →';
+                  ? "Set Target in PassWeaver →"
+                  : "Add to PassWeaver →";
 
               return (
                 <div
@@ -227,7 +243,9 @@ export const ClueBoardSidebar: React.FC = () => {
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-white">{clue.value}</span>
+                    <span className="text-xs font-bold text-white">
+                      {clue.value}
+                    </span>
                     <span className="text-[10px] text-[#58a6ff] group-hover:underline flex items-center gap-1">
                       {isIp ? (
                         <Server className="w-3 h-3" />

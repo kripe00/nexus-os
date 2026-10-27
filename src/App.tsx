@@ -11,6 +11,7 @@ import {
   Globe,
   KeyRound,
   LogOut,
+  Maximize2,
   MessageSquare,
   Minimize2,
   Music,
@@ -54,6 +55,7 @@ const DesktopEnvironment: React.FC = () => {
     windows,
     activeApp,
     openApp,
+    minimizeApp,
     crypto,
     unreadMessages,
     traceActive,
@@ -83,16 +85,29 @@ const DesktopEnvironment: React.FC = () => {
     connectToServer,
     activeProxyChain,
     camStatus,
+    difficulty,
+    uiScale,
+    setUiScale,
+    crtMode,
+    toggleCrtMode,
+    droneBreachPanic,
+    emergencyRebootSeconds,
+    triggerEmergencyReboot,
+    egressLockoutSeconds,
   } = useGame();
 
   const [clock, setClock] = useState<string>("23:42");
-  const [crtMode, setCrtMode] = useState<boolean>(true);
   const [startMenuOpen, setStartMenuOpen] = useState<boolean>(false);
   const [audioMixerOpen, setAudioMixerOpen] = useState<boolean>(false);
   const [wipeModalOpen, setWipeModalOpen] = useState<boolean>(false);
-  const [isMusicPlaying, setIsMusicPlaying] = useState<boolean>(() => sound.isMusicPlaying());
+  const [isMusicPlaying, setIsMusicPlaying] = useState<boolean>(() =>
+    sound.isMusicPlaying(),
+  );
   const [onboardingOpen, setOnboardingOpen] = useState<boolean>(
     () => localStorage.getItem("nexus_tutorial_dismissed_v1") !== "true",
+  );
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(
+    () => typeof document !== "undefined" && !!document.fullscreenElement,
   );
 
   const handleDismissOnboarding = () => {
@@ -109,11 +124,101 @@ const DesktopEnvironment: React.FC = () => {
     });
   };
 
+  const toggleFullscreen = () => {
+    sound.playClick();
+    if (!document.fullscreenElement) {
+      document.documentElement
+        .requestFullscreen()
+        .then(() => setIsFullscreen(true))
+        .catch(() => {});
+    } else {
+      document
+        .exitFullscreen()
+        .then(() => setIsFullscreen(false))
+        .catch(() => {});
+    }
+  };
+
   useEffect(() => {
     return sound.subscribe((playing) => {
       setIsMusicPlaying(playing);
     });
   }, []);
+
+  // Global Keyboard Shortcuts (ESC, Ctrl+1..9, Ctrl+D, Ctrl+M)
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      const isInput =
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement;
+
+      if (e.key === "Escape") {
+        if (inspectedFile) {
+          setInspectedFile(null);
+          return;
+        }
+        if (audioMixerOpen) {
+          setAudioMixerOpen(false);
+          return;
+        }
+        if (wipeModalOpen) {
+          setWipeModalOpen(false);
+          return;
+        }
+        if (startMenuOpen) {
+          setStartMenuOpen(false);
+          return;
+        }
+        if (
+          activeApp &&
+          windows[activeApp]?.isOpen &&
+          !windows[activeApp]?.isMinimized
+        ) {
+          minimizeApp(activeApp);
+        }
+      }
+
+      if (!isInput && e.ctrlKey) {
+        if (e.key === "d" || e.key === "D") {
+          e.preventDefault();
+          minimizeAll();
+        } else if (e.key === "m" || e.key === "M") {
+          e.preventDefault();
+          toggleMute();
+        } else if (e.key >= "1" && e.key <= "9") {
+          e.preventDefault();
+          const appMap: Record<string, AppId> = {
+            "1": "whisper",
+            "2": "intraweb",
+            "3": "passweaver",
+            "4": "terminal",
+            "5": "blackmarket",
+            "6": "netshield",
+            "7": "spearphish",
+            "8": "packetsniffer",
+            "9": "files",
+          };
+          const target = appMap[e.key];
+          if (target) openApp(target);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, [
+    inspectedFile,
+    audioMixerOpen,
+    wipeModalOpen,
+    startMenuOpen,
+    activeApp,
+    windows,
+    minimizeApp,
+    minimizeAll,
+    toggleMute,
+    openApp,
+    setInspectedFile,
+  ]);
 
   const handleDesktopContextMenu = (e: React.MouseEvent) => {
     showContextMenu(e, [
@@ -123,7 +228,7 @@ const DesktopEnvironment: React.FC = () => {
           {
             label: "Launch Terminal",
             icon: <Terminal className="w-3.5 h-3.5" />,
-            shortcut: "CTRL+T",
+            shortcut: "CTRL+4",
             onClick: () => openApp("terminal"),
           },
           {
@@ -135,7 +240,7 @@ const DesktopEnvironment: React.FC = () => {
           {
             label: "Minimize All Windows",
             icon: <Minimize2 className="w-3.5 h-3.5" />,
-            shortcut: "WIN+D",
+            shortcut: "CTRL+D",
             onClick: minimizeAll,
           },
           {
@@ -143,6 +248,12 @@ const DesktopEnvironment: React.FC = () => {
             icon: <RotateCcw className="w-3.5 h-3.5" />,
             shortcut: "RESET",
             onClick: resetWindowPositions,
+          },
+          {
+            label: isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen",
+            icon: <Maximize2 className="w-3.5 h-3.5" />,
+            shortcut: "F11",
+            onClick: toggleFullscreen,
           },
         ],
       },
@@ -153,7 +264,21 @@ const DesktopEnvironment: React.FC = () => {
             label: crtMode ? "Disable CRT Scanlines" : "Enable CRT Scanlines",
             icon: <Tv className="w-3.5 h-3.5" />,
             shortcut: "CRT",
-            onClick: () => setCrtMode(!crtMode),
+            onClick: toggleCrtMode,
+          },
+          {
+            label: `UI Scaling: ${uiScale}`,
+            icon: <Sliders className="w-3.5 h-3.5" />,
+            shortcut: "SCALE",
+            onClick: () => {
+              const nextScale =
+                uiScale === "100%"
+                  ? "125%"
+                  : uiScale === "125%"
+                    ? "150%"
+                    : "100%";
+              setUiScale(nextScale);
+            },
           },
           {
             label: "Tactical Audio Mixer",
@@ -322,6 +447,9 @@ const DesktopEnvironment: React.FC = () => {
 
   return (
     <div
+      style={{
+        zoom: uiScale === "150%" ? 1.25 : uiScale === "125%" ? 1.1 : 1.0,
+      }}
       className={`relative w-screen h-screen overflow-hidden flex flex-col bg-[#060708] ${
         traceActive ? "trace-danger-frame border-2 border-[#ff3b3b]" : ""
       } ${underAttack && firewallHealth < 50 ? "screen-glitch-shake" : ""}`}
@@ -557,6 +685,39 @@ const DesktopEnvironment: React.FC = () => {
 
         {/* Right: System Tray (Wallet, Audio, Reset, Clock) */}
         <div className="flex items-center gap-2 shrink-0">
+          <div className="h-8 px-2 bg-[#111620] border border-[#21262d] text-[10px] font-mono text-[#d29922] flex items-center font-bold">
+            [{difficulty.toUpperCase()}]
+          </div>
+
+          <button
+            onClick={() => {
+              sound.playClick();
+              const nextScale =
+                uiScale === "100%"
+                  ? "125%"
+                  : uiScale === "125%"
+                    ? "150%"
+                    : "100%";
+              setUiScale(nextScale);
+            }}
+            title="Toggle UI Scaling (100% / 125% / 150%)"
+            className="h-8 px-2 bg-[#111620] border border-[#21262d] text-[#8b949e] hover:text-white cursor-pointer text-[10px] font-mono"
+          >
+            SCALE: {uiScale}
+          </button>
+
+          <button
+            onClick={toggleFullscreen}
+            title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen (F11)"}
+            className="h-8 px-2 bg-[#111620] border border-[#21262d] text-[#8b949e] hover:text-[#58a6ff] hover:border-[#58a6ff] cursor-pointer flex items-center justify-center transition-colors"
+          >
+            {isFullscreen ? (
+              <Minimize2 className="w-3.5 h-3.5" />
+            ) : (
+              <Maximize2 className="w-3.5 h-3.5" />
+            )}
+          </button>
+
           <button
             onClick={() => openApp("blackmarket")}
             title="Open BlackMarket"
@@ -567,7 +728,7 @@ const DesktopEnvironment: React.FC = () => {
           </button>
 
           <button
-            onClick={() => setCrtMode(!crtMode)}
+            onClick={toggleCrtMode}
             title={crtMode ? "Disable CRT Scanlines" : "Enable CRT Scanlines"}
             className={`h-8 px-2.5 bg-[#111620] border text-xs cursor-pointer flex items-center gap-1.5 transition-colors ${
               crtMode
@@ -585,7 +746,11 @@ const DesktopEnvironment: React.FC = () => {
               sound.toggleMusicPlayback();
               sound.playClick();
             }}
-            title={isMusicPlaying ? "Pause Ambient Soundtrack" : "Play Ambient Soundtrack"}
+            title={
+              isMusicPlaying
+                ? "Pause Ambient Soundtrack"
+                : "Play Ambient Soundtrack"
+            }
             className={`h-8 px-2.5 bg-[#111620] border text-[10px] font-mono flex items-center gap-1.5 cursor-pointer transition-colors ${
               isMusicPlaying
                 ? "border-[#3fb950] text-[#3fb950] bg-[#122217]"
@@ -720,29 +885,67 @@ const DesktopEnvironment: React.FC = () => {
         />
       )}
 
+      {/* Drone Breach Kernel Panic Overlay */}
+      {droneBreachPanic && (
+        <div className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-4 backdrop-blur-md font-mono select-none animate-pulse">
+          <div className="max-w-md w-full bg-[#1b0808] border-2 border-[#ff3b3b] p-6 shadow-[0_0_80px_rgba(255,59,59,0.8)] space-y-4 text-center">
+            <div className="flex items-center justify-center gap-2 text-[#ff5555] font-black text-base uppercase tracking-widest">
+              <AlertOctagon className="w-6 h-6 animate-ping text-[#ff3b3b]" />
+              <span>KERNEL PANIC // DRONE BREACH</span>
+            </div>
+            <p className="text-xs text-[#ffaaaa] leading-relaxed">
+              Hostile autonomous combat drone penetrated workstation perimeter!
+              Local firewall collapsed. Emergency circuit breaker destruction
+              in:
+            </p>
+            <div className="p-3 bg-[#0c0202] border border-[#ff3b3b] space-y-1">
+              <div className="text-[10px] text-[#ff7b72] uppercase font-bold">
+                SYSTEM PURGE COUNTDOWN:
+              </div>
+              <div className="text-3xl font-black text-[#ff3b3b] font-mono">
+                00:
+                {emergencyRebootSeconds < 10
+                  ? `0${emergencyRebootSeconds}`
+                  : emergencyRebootSeconds}
+              </div>
+            </div>
+            <button
+              onClick={triggerEmergencyReboot}
+              className="w-full py-3 bg-[#ff3b3b] hover:bg-[#ff5555] text-black font-black text-xs uppercase tracking-wider cursor-pointer transition-colors shadow-[0_0_20px_rgba(255,59,59,0.6)]"
+            >
+              [ PURGE INTERFACE BUFFER & RESTORE HARDWARE CIRCUIT ]
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Trace Reached 100% Modal */}
       {traceFailedAlert && (
         <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
-          <div className="max-w-md w-full p-5 bg-[#0b0d11] border-2 border-[#ff3b3b] space-y-4 text-xs">
-            <div className="px-2.5 py-1.5 bg-[#ff3b3b] text-white font-bold uppercase flex items-center gap-2">
-              <AlertOctagon className="w-4 h-4" />
+          <div className="max-w-md w-full p-5 bg-[#0b0d11] border-2 border-[#ff3b3b] space-y-4 text-xs font-mono shadow-[0_0_40px_rgba(255,59,59,0.5)]">
+            <div className="px-2.5 py-1.5 bg-[#ff3b3b] text-black font-black uppercase flex items-center gap-2 tracking-wider">
+              <AlertOctagon className="w-4 h-4 text-black" />
               <span>CRITICAL ALERT // TRACE REACHED 100%</span>
             </div>
-            <p className="text-[#d4d7dc] leading-relaxed">
-              Aethelgard's neural trace triangulated your proxy chain before{" "}
-              <span className="text-white font-bold">/var/connection.log</span>{" "}
-              was wiped. Emergency circuit breaker severed your session.
-            </p>
-            <p className="text-[#79c0ff]">
-              Re-run `crack 443`, `connect 203.0.113.88`, `download
-              PROJECT_MIRROR_TARGETS.dec`, and immediately execute `wipe_logs` +
-              `disconnect`.
-            </p>
+            <div className="text-[#d4d7dc] leading-relaxed space-y-2">
+              <p>
+                Aethelgard's neural counter-trace isolated your egress node
+                before forensic trails were purged!
+              </p>
+              <div className="p-2.5 bg-[#1b0a0a] border border-[#ff3b3b]/40 text-[#ff7b72] text-[11px] space-y-1">
+                <div>• Cracked ports revoked on target host.</div>
+                <div>• Offshore proxy circuit burned (-100 ◈).</div>
+                <div>
+                  • Quarantine active: {egressLockoutSeconds}s cooldown on
+                  remote links.
+                </div>
+              </div>
+            </div>
             <button
               onClick={dismissTraceAlert}
-              className="w-full py-2 bg-[#ff3b3b] hover:bg-[#ff5555] text-white font-bold uppercase tracking-wider cursor-pointer"
+              className="w-full py-2.5 bg-[#ff3b3b] hover:bg-[#ff5555] text-black font-black uppercase tracking-wider cursor-pointer transition-colors"
             >
-              [ RETRY BREACH ]
+              [ ACKNOWLEDGE & RECONSTRUCT PROXY MESH ]
             </button>
           </div>
         </div>

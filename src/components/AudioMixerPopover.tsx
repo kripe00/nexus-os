@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   Bell,
   Check,
@@ -13,16 +13,18 @@ import {
   Volume2,
   VolumeX,
   X,
-} from 'lucide-react';
-import { useGame } from '../context/GameContext';
-import { sound } from '../utils/sound';
-import { voice } from '../utils/voice';
+} from "lucide-react";
+import { useGame } from "../context/GameContext";
+import { sound } from "../utils/sound";
+import { voice } from "../utils/voice";
 
 interface AudioMixerPopoverProps {
   onClose: () => void;
 }
 
-export const AudioMixerPopover: React.FC<AudioMixerPopoverProps> = ({ onClose }) => {
+export const AudioMixerPopover: React.FC<AudioMixerPopoverProps> = ({
+  onClose,
+}) => {
   const {
     musicVolume,
     setMusicVolume,
@@ -34,7 +36,9 @@ export const AudioMixerPopover: React.FC<AudioMixerPopoverProps> = ({ onClose })
     underAttack,
   } = useGame();
 
-  const [isPlaying, setIsPlaying] = useState<boolean>(() => sound.isMusicPlaying());
+  const [isPlaying, setIsPlaying] = useState<boolean>(() =>
+    sound.isMusicPlaying(),
+  );
   const [voiceState, setVoiceState] = useState<{
     enabled: boolean;
     volume: number;
@@ -44,7 +48,9 @@ export const AudioMixerPopover: React.FC<AudioMixerPopoverProps> = ({ onClose })
     volume: voice.volume,
     voiceName: voice.selectedVoiceName,
   });
-  const [availableVoices, setAvailableVoices] = useState(() => voice.getAvailableVoices());
+  const [availableVoices, setAvailableVoices] = useState(() =>
+    voice.getAvailableVoices(),
+  );
 
   useEffect(() => {
     const unsubSound = sound.subscribe((playing) => {
@@ -88,7 +94,8 @@ export const AudioMixerPopover: React.FC<AudioMixerPopoverProps> = ({ onClose })
     sound.playClick();
   };
 
-  const activeTrackName = traceActive || underAttack ? 'BEFORE THE LOCK' : 'THE SILENT PERIMETER';
+  const activeTrackName =
+    traceActive || underAttack ? "BEFORE THE LOCK" : "THE SILENT PERIMETER";
 
   return (
     <div
@@ -113,25 +120,35 @@ export const AudioMixerPopover: React.FC<AudioMixerPopoverProps> = ({ onClose })
       <div className="p-2.5 bg-[#07090e] border border-[#18202c] space-y-1">
         <div className="text-[9px] uppercase tracking-wider text-[#6e7681] flex items-center justify-between">
           <span>NOW PLAYING:</span>
-          <span className={traceActive || underAttack ? 'text-[#ff5555]' : 'text-[#3fb950]'}>
-            {traceActive || underAttack ? 'THREAT OST' : 'AMBIENT OST'}
+          <span
+            className={
+              traceActive || underAttack ? "text-[#ff5555]" : "text-[#3fb950]"
+            }
+          >
+            {traceActive || underAttack ? "THREAT OST" : "AMBIENT OST"}
           </span>
         </div>
         <div className="flex items-center justify-between gap-1 pt-0.5">
           <div className="text-xs font-bold text-[#79c0ff] truncate flex items-center gap-1.5 flex-1">
-            <Disc3 className={`w-3.5 h-3.5 text-[#58a6ff] ${isPlaying ? 'animate-spin' : ''}`} />
+            <Disc3
+              className={`w-3.5 h-3.5 text-[#58a6ff] ${isPlaying ? "animate-spin" : ""}`}
+            />
             <span className="truncate">{activeTrackName}</span>
           </div>
           <button
             onClick={handlePlayPause}
             className={`px-2 py-0.5 border text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors ${
               isPlaying
-                ? 'bg-[#15231c] border-[#3fb950] text-[#3fb950]'
-                : 'bg-[#1f2838] border-[#58a6ff] text-[#79c0ff] hover:text-white'
+                ? "bg-[#15231c] border-[#3fb950] text-[#3fb950]"
+                : "bg-[#1f2838] border-[#58a6ff] text-[#79c0ff] hover:text-white"
             }`}
           >
-            {isPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
-            <span>{isPlaying ? 'PAUSE' : 'PLAY'}</span>
+            {isPlaying ? (
+              <Pause className="w-3 h-3" />
+            ) : (
+              <Play className="w-3 h-3" />
+            )}
+            <span>{isPlaying ? "PAUSE" : "PLAY"}</span>
           </button>
         </div>
       </div>
@@ -143,7 +160,9 @@ export const AudioMixerPopover: React.FC<AudioMixerPopoverProps> = ({ onClose })
             <Music className="w-3.5 h-3.5 text-[#58a6ff]" />
             <span>MUSIC CHANNEL</span>
           </span>
-          <span className="text-[#58a6ff] font-bold">{Math.round(musicVolume * 100)}%</span>
+          <span className="text-[#58a6ff] font-bold">
+            {Math.round(musicVolume * 100)}%
+          </span>
         </div>
 
         <div className="flex items-center gap-2">
@@ -161,11 +180,15 @@ export const AudioMixerPopover: React.FC<AudioMixerPopoverProps> = ({ onClose })
             title="Mute Music Channel"
             className={`p-1 border cursor-pointer ${
               sound.musicMuted
-                ? 'bg-[#260e0e] border-[#ff3b3b] text-[#ff5555]'
-                : 'bg-[#151921] border-[#2b3545] text-[#8b949e] hover:text-white'
+                ? "bg-[#260e0e] border-[#ff3b3b] text-[#ff5555]"
+                : "bg-[#151921] border-[#2b3545] text-[#8b949e] hover:text-white"
             }`}
           >
-            {sound.musicMuted ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
+            {sound.musicMuted ? (
+              <VolumeX className="w-3 h-3" />
+            ) : (
+              <Volume2 className="w-3 h-3" />
+            )}
           </button>
         </div>
       </div>
@@ -177,7 +200,9 @@ export const AudioMixerPopover: React.FC<AudioMixerPopoverProps> = ({ onClose })
             <Headphones className="w-3.5 h-3.5 text-[#3fb950]" />
             <span>SFX CHANNEL</span>
           </span>
-          <span className="text-[#3fb950] font-bold">{Math.round(sfxVolume * 100)}%</span>
+          <span className="text-[#3fb950] font-bold">
+            {Math.round(sfxVolume * 100)}%
+          </span>
         </div>
 
         <div className="flex items-center gap-2">
@@ -195,11 +220,15 @@ export const AudioMixerPopover: React.FC<AudioMixerPopoverProps> = ({ onClose })
             title="Mute SFX Channel"
             className={`p-1 border cursor-pointer ${
               sound.sfxMuted
-                ? 'bg-[#260e0e] border-[#ff3b3b] text-[#ff5555]'
-                : 'bg-[#151921] border-[#2b3545] text-[#8b949e] hover:text-white'
+                ? "bg-[#260e0e] border-[#ff3b3b] text-[#ff5555]"
+                : "bg-[#151921] border-[#2b3545] text-[#8b949e] hover:text-white"
             }`}
           >
-            {sound.sfxMuted ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
+            {sound.sfxMuted ? (
+              <VolumeX className="w-3 h-3" />
+            ) : (
+              <Volume2 className="w-3 h-3" />
+            )}
           </button>
         </div>
       </div>
@@ -284,11 +313,11 @@ export const AudioMixerPopover: React.FC<AudioMixerPopoverProps> = ({ onClose })
           onClick={toggleMute}
           className={`px-2 py-1 border font-bold cursor-pointer transition-colors ${
             isMuted
-              ? 'bg-[#ff3b3b] text-white border-[#ff5555]'
-              : 'bg-[#122117] text-[#3fb950] border-[#238636]'
+              ? "bg-[#ff3b3b] text-white border-[#ff5555]"
+              : "bg-[#122117] text-[#3fb950] border-[#238636]"
           }`}
         >
-          {isMuted ? 'MASTER MUTED' : 'MASTER UNMUTED'}
+          {isMuted ? "MASTER MUTED" : "MASTER UNMUTED"}
         </button>
       </div>
     </div>

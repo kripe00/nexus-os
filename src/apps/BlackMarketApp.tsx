@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   CheckCircle2,
   Coins,
@@ -9,20 +9,23 @@ import {
   Terminal,
   Wifi,
   Zap,
-} from 'lucide-react';
-import { SHOP_ITEMS } from '../data/worldData';
-import { useGame } from '../context/GameContext';
-import { WindowFrame } from '../components/WindowFrame';
+} from "lucide-react";
+import { SHOP_ITEMS } from "../data/worldData";
+import { useGame } from "../context/GameContext";
+import { WindowFrame } from "../components/WindowFrame";
 
 export const BlackMarketApp: React.FC = () => {
   const { crypto, ownedTools, buyTool, openApp } = useGame();
 
   const getItemIcon = (id: string, category: string) => {
-    if (category === 'STEALTH') return <Wifi className="w-4 h-4" />;
-    if (id === 'ssl_zero_day_v2') return <ShieldAlert className="w-4 h-4" />;
-    if (id === 'sat_uplink_hijack_v1' || id === 'zero_paradox_injector') return <Radio className="w-4 h-4" />;
-    if (id === 'quantum_bypass_v3' || id === 'optical_qkd_decryptor') return <Cpu className="w-4 h-4" />;
-    if (id === 'scada_plc_exploit') return <Zap className="w-4 h-4 text-[#e3b341]" />;
+    if (category === "STEALTH") return <Wifi className="w-4 h-4" />;
+    if (id === "ssl_zero_day_v2") return <ShieldAlert className="w-4 h-4" />;
+    if (id === "sat_uplink_hijack_v1" || id === "zero_paradox_injector")
+      return <Radio className="w-4 h-4" />;
+    if (id === "quantum_bypass_v3" || id === "optical_qkd_decryptor")
+      return <Cpu className="w-4 h-4" />;
+    if (id === "scada_plc_exploit")
+      return <Zap className="w-4 h-4 text-[#e3b341]" />;
     return <Terminal className="w-4 h-4" />;
   };
 
@@ -61,16 +64,16 @@ export const BlackMarketApp: React.FC = () => {
               key={item.id}
               className={`p-3.5 border flex items-center justify-between gap-4 transition-colors ${
                 owned
-                  ? 'bg-[#0b140e] border-[#238636]'
-                  : 'bg-[#0b0d11] border-[#1e232c] hover:border-[#3b4659]'
+                  ? "bg-[#0b140e] border-[#238636]"
+                  : "bg-[#0b0d11] border-[#1e232c] hover:border-[#3b4659]"
               }`}
             >
               <div className="flex items-start gap-3">
                 <div
                   className={`p-2 border shrink-0 mt-0.5 ${
                     owned
-                      ? 'bg-[#122117] border-[#238636] text-[#3fb950]'
-                      : 'bg-[#151921] border-[#303947] text-[#58a6ff]'
+                      ? "bg-[#122117] border-[#238636] text-[#3fb950]"
+                      : "bg-[#151921] border-[#303947] text-[#58a6ff]"
                   }`}
                 >
                   {getItemIcon(item.id, item.category)}
@@ -98,7 +101,7 @@ export const BlackMarketApp: React.FC = () => {
               <div className="shrink-0">
                 {owned ? (
                   <button
-                    onClick={() => openApp('terminal')}
+                    onClick={() => openApp("terminal")}
                     className="px-3 py-1.5 bg-[#238636] text-white font-bold text-[11px] uppercase cursor-pointer flex items-center gap-1.5"
                   >
                     <CheckCircle2 className="w-3.5 h-3.5" />
@@ -110,8 +113,8 @@ export const BlackMarketApp: React.FC = () => {
                     disabled={!canAfford}
                     className={`px-3.5 py-1.5 font-bold text-[11px] uppercase border cursor-pointer transition-colors ${
                       canAfford
-                        ? 'bg-[#1f6feb] hover:bg-[#388bfd] text-white border-[#58a6ff]'
-                        : 'bg-[#090b0e] text-[#454c59] border-[#1e232c] cursor-not-allowed'
+                        ? "bg-[#1f6feb] hover:bg-[#388bfd] text-white border-[#58a6ff]"
+                        : "bg-[#090b0e] text-[#454c59] border-[#1e232c] cursor-not-allowed"
                     }`}
                   >
                     ACQUIRE [{item.price} ◈]

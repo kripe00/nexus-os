@@ -117,7 +117,9 @@ export const SmartTerminalApp: React.FC = () => {
     if (!cmdLine) return;
 
     sound.playTerminalExec();
-    setHistory((prev) => (prev[prev.length - 1] === cmdLine ? prev : [...prev, cmdLine]));
+    setHistory((prev) =>
+      prev[prev.length - 1] === cmdLine ? prev : [...prev, cmdLine],
+    );
     setHistoryIndex(-1);
 
     const promptPrefix = connectedIp
