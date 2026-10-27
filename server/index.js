@@ -14,9 +14,24 @@ function hashPassword(password) {
   return crypto.createHash("sha256").update(password).digest("hex");
 }
 
+// Helper to ensure user exists in the database (handles slot profiles & guest accounts)
+function ensureUserExists(userId) {
+  if (!userId) return;
+  const existing = db.prepare("SELECT id FROM users WHERE id = ?").get(userId);
+  if (!existing) {
+    db.prepare(
+      `
+      INSERT OR IGNORE INTO users (id, username, password_hash)
+      VALUES (?, ?, 'slot_profile')
+    `,
+    ).run(userId, userId);
+  }
+}
+
 // Session helpers for active operator
 function setActiveSession(userId) {
   try {
+    ensureUserExists(userId);
     db.prepare(
       `
       INSERT INTO active_session (id, user_id, updated_at)
@@ -250,6 +265,8 @@ app.post("/api/save", (req, res) => {
       return res.status(400).json({ error: "userId required." });
     }
 
+    ensureUserExists(userId);
+
     if (state === null || state === undefined) {
       db.prepare("DELETE FROM game_saves WHERE user_id = ?").run(userId);
       return res.json({
@@ -319,6 +336,8 @@ app.post("/api/audio", (req, res) => {
     if (userId.startsWith("guest_")) {
       return res.json({ success: true, guest: true });
     }
+
+    ensureUserExists(userId);
 
     db.prepare(
       `
