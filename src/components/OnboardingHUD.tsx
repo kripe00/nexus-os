@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ArrowLeftRight,
   Award,
@@ -8,6 +8,7 @@ import {
   Circle,
   Compass,
   ExternalLink,
+  GripHorizontal,
   Sparkles,
   Terminal,
   X,
@@ -33,9 +34,48 @@ export const OnboardingHUD: React.FC<OnboardingHUDProps> = ({ onClose }) => {
     addCrypto,
   } = useGame();
 
-  const [minimized, setMinimized] = useState<boolean>(false);
+  const [minimized, setMinimized] = useState<boolean>(() =>
+    typeof window !== "undefined" ? window.innerWidth < 1280 : false,
+  );
   const [dockSide, setDockSide] = useState<"right" | "left">("right");
   const [rewardClaimed, setRewardClaimed] = useState<boolean>(false);
+  const [customPos, setCustomPos] = useState<{ x: number; y: number } | null>(
+    null,
+  );
+  const [dragging, setDragging] = useState(false);
+  const dragOffset = useRef({ x: 0, y: 0 });
+
+  const handleHeaderMouseDown = (e: React.MouseEvent) => {
+    setDragging(true);
+    const rect = e.currentTarget.getBoundingClientRect();
+    dragOffset.current = {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    };
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const maxX = Math.max(10, window.innerWidth - 340);
+      const maxY = Math.max(10, window.innerHeight - 80);
+      const newX = Math.max(
+        10,
+        Math.min(maxX, moveEvent.clientX - dragOffset.current.x),
+      );
+      const newY = Math.max(
+        10,
+        Math.min(maxY, moveEvent.clientY - dragOffset.current.y),
+      );
+      setCustomPos({ x: newX, y: newY });
+    };
+
+    const handleMouseUp = () => {
+      setDragging(false);
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+  };
 
   // Evaluate step conditions
   const step1Done = Boolean(windows.whisper?.isOpen || activeApp === "whisper");
@@ -118,8 +158,13 @@ export const OnboardingHUD: React.FC<OnboardingHUDProps> = ({ onClose }) => {
     return (
       <div
         onClick={(e) => e.stopPropagation()}
+        style={customPos ? { left: customPos.x, top: customPos.y } : undefined}
         className={`fixed z-40 font-mono select-none transition-all duration-200 animate-window-in ${
-          dockSide === "right" ? "top-3 right-[335px]" : "top-3 left-28"
+          customPos
+            ? ""
+            : dockSide === "right"
+              ? "top-3 right-4 xl:right-[340px]"
+              : "top-3 left-28"
         }`}
       >
         <div className="flex items-center gap-1 bg-[#0b0e14]/95 border border-[#1f6feb] shadow-[0_8px_30px_rgba(0,0,0,0.85)] p-1 text-xs">
@@ -128,7 +173,9 @@ export const OnboardingHUD: React.FC<OnboardingHUDProps> = ({ onClose }) => {
             className="flex items-center gap-2 px-2.5 py-1 text-[#79c0ff] hover:text-white cursor-pointer font-bold tracking-wider text-[11px]"
           >
             <Compass className="w-3.5 h-3.5 text-[#58a6ff] animate-spin-slow" />
-            <span>TUTORIAL HUD: {completedCount}/{steps.length}</span>
+            <span>
+              TUTORIAL HUD: {completedCount}/{steps.length}
+            </span>
             <ChevronDown className="w-3.5 h-3.5 text-[#8b949e]" />
           </button>
           <button
@@ -146,20 +193,36 @@ export const OnboardingHUD: React.FC<OnboardingHUDProps> = ({ onClose }) => {
   return (
     <div
       onClick={(e) => e.stopPropagation()}
-      className={`fixed top-3 z-40 font-mono select-none transition-all duration-200 animate-window-in w-80 ${
-        dockSide === "right" ? "right-[335px]" : "left-28"
+      style={customPos ? { left: customPos.x, top: customPos.y } : undefined}
+      className={`fixed z-40 font-mono select-none transition-all duration-200 animate-window-in w-80 max-w-[calc(100vw-24px)] ${
+        customPos
+          ? ""
+          : dockSide === "right"
+            ? "top-3 right-4 xl:right-[340px]"
+            : "top-3 left-28"
       }`}
     >
       <div className="bg-[#0b0e14]/95 backdrop-blur-md border border-[#2b3545] shadow-[0_12px_40px_rgba(0,0,0,0.85)] text-xs text-[#d4d7dc]">
-        {/* Header Strip */}
-        <div className="px-3 py-2 bg-[#121722] border-b border-[#1c232f] flex items-center justify-between text-[11px]">
+        {/* Header Strip with Drag Handle */}
+        <div
+          onMouseDown={handleHeaderMouseDown}
+          className={`px-3 py-2 bg-[#121722] border-b border-[#1c232f] flex items-center justify-between text-[11px] ${
+            dragging ? "cursor-grabbing" : "cursor-grab"
+          }`}
+        >
           <div className="flex items-center gap-2 text-white font-bold tracking-wider">
+            <GripHorizontal className="w-3.5 h-3.5 text-[#4a5870]" />
             <Compass className="w-3.5 h-3.5 text-[#58a6ff] animate-spin-slow" />
             <span className="truncate">ORIENTATION PROTOCOL</span>
           </div>
-          <div className="flex items-center gap-1">
+          <div
+            className="flex items-center gap-1"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
             <button
-              onClick={() => setDockSide(dockSide === "right" ? "left" : "right")}
+              onClick={() =>
+                setDockSide(dockSide === "right" ? "left" : "right")
+              }
               title={
                 dockSide === "right"
                   ? "Move HUD to Left Desktop Area"

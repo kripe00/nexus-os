@@ -450,7 +450,7 @@ const DesktopEnvironment: React.FC = () => {
       style={{
         zoom: uiScale === "150%" ? 1.25 : uiScale === "125%" ? 1.1 : 1.0,
       }}
-      className={`relative w-screen h-screen overflow-hidden flex flex-col bg-[#060708] ${
+      className={`relative w-full h-full min-h-screen overflow-hidden flex flex-col bg-[#060708] ${
         traceActive ? "trace-danger-frame border-2 border-[#ff3b3b]" : ""
       } ${underAttack && firewallHealth < 50 ? "screen-glitch-shake" : ""}`}
     >
@@ -684,8 +684,8 @@ const DesktopEnvironment: React.FC = () => {
         )}
 
         {/* Right: System Tray (Wallet, Audio, Reset, Clock) */}
-        <div className="flex items-center gap-2 shrink-0">
-          <div className="h-8 px-2 bg-[#111620] border border-[#21262d] text-[10px] font-mono text-[#d29922] flex items-center font-bold">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <div className="hidden xl:flex h-8 px-2 bg-[#111620] border border-[#21262d] text-[10px] font-mono text-[#d29922] items-center font-bold">
             [{difficulty.toUpperCase()}]
           </div>
 
@@ -701,7 +701,7 @@ const DesktopEnvironment: React.FC = () => {
               setUiScale(nextScale);
             }}
             title="Toggle UI Scaling (100% / 125% / 150%)"
-            className="h-8 px-2 bg-[#111620] border border-[#21262d] text-[#8b949e] hover:text-white cursor-pointer text-[10px] font-mono"
+            className="hidden lg:flex h-8 px-2 bg-[#111620] border border-[#21262d] text-[#8b949e] hover:text-white cursor-pointer text-[10px] font-mono items-center"
           >
             SCALE: {uiScale}
           </button>
@@ -709,7 +709,7 @@ const DesktopEnvironment: React.FC = () => {
           <button
             onClick={toggleFullscreen}
             title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen (F11)"}
-            className="h-8 px-2 bg-[#111620] border border-[#21262d] text-[#8b949e] hover:text-[#58a6ff] hover:border-[#58a6ff] cursor-pointer flex items-center justify-center transition-colors"
+            className="h-8 w-8 sm:w-auto sm:px-2 bg-[#111620] border border-[#21262d] text-[#8b949e] hover:text-[#58a6ff] hover:border-[#58a6ff] cursor-pointer flex items-center justify-center transition-colors"
           >
             {isFullscreen ? (
               <Minimize2 className="w-3.5 h-3.5" />
@@ -721,16 +721,16 @@ const DesktopEnvironment: React.FC = () => {
           <button
             onClick={() => openApp("blackmarket")}
             title="Open BlackMarket"
-            className="h-8 px-3 bg-[#111620] border border-[#282f3d] text-[#79c0ff] font-bold cursor-pointer hover:border-[#58a6ff] flex items-center gap-1.5"
+            className="h-8 px-2.5 bg-[#111620] border border-[#282f3d] text-[#79c0ff] font-bold cursor-pointer hover:border-[#58a6ff] flex items-center gap-1"
           >
             <Coins className="w-3.5 h-3.5 text-[#58a6ff]" />
-            <span>{crypto} ◈</span>
+            <span className="text-[11px]">{crypto} ◈</span>
           </button>
 
           <button
             onClick={toggleCrtMode}
             title={crtMode ? "Disable CRT Scanlines" : "Enable CRT Scanlines"}
-            className={`h-8 px-2.5 bg-[#111620] border text-xs cursor-pointer flex items-center gap-1.5 transition-colors ${
+            className={`hidden sm:flex h-8 px-2 bg-[#111620] border text-xs cursor-pointer items-center gap-1 transition-colors ${
               crtMode
                 ? "border-[#58a6ff] text-[#58a6ff] font-bold"
                 : "border-[#21262d] text-[#8b949e] hover:text-white"
@@ -751,25 +751,28 @@ const DesktopEnvironment: React.FC = () => {
                 ? "Pause Ambient Soundtrack"
                 : "Play Ambient Soundtrack"
             }
-            className={`h-8 px-2.5 bg-[#111620] border text-[10px] font-mono flex items-center gap-1.5 cursor-pointer transition-colors ${
+            className={`h-8 px-2 sm:px-2.5 bg-[#111620] border text-[10px] font-mono flex items-center gap-1.5 cursor-pointer transition-colors ${
               isMusicPlaying
                 ? "border-[#3fb950] text-[#3fb950] bg-[#122217]"
                 : "border-[#e3b341] text-[#e3b341] hover:border-[#f0883e] bg-[#1c180d]"
             }`}
           >
             <span
-              className={`w-2 h-2 rounded-full ${
+              className={`w-2 h-2 rounded-full shrink-0 ${
                 isMusicPlaying
                   ? "bg-[#3fb950] shadow-[0_0_8px_#3fb950] animate-pulse"
                   : "bg-[#e3b341]"
               }`}
             />
-            <span className="font-bold tracking-wider">
+            <span className="font-bold tracking-wider hidden md:inline">
               {isMusicPlaying
                 ? traceActive || underAttack
                   ? "OST: COMBAT [❚❚]"
                   : "OST: PLAYING [❚❚]"
-                : "OST: PAUSED [▶ PLAY]"}
+                : "OST: PAUSED [▶]"}
+            </span>
+            <span className="font-bold md:hidden">
+              {isMusicPlaying ? "[❚❚]" : "[▶]"}
             </span>
           </button>
 
@@ -780,14 +783,14 @@ const DesktopEnvironment: React.FC = () => {
               sound.ensureMusicPlaying();
             }}
             title="Tactical Audio Mixer (Music & SFX Volume)"
-            className={`h-8 px-2.5 bg-[#111620] border text-[10px] font-mono flex items-center gap-1.5 cursor-pointer transition-colors ${
+            className={`h-8 px-2 sm:px-2.5 bg-[#111620] border text-[10px] font-mono flex items-center gap-1.5 cursor-pointer transition-colors ${
               audioMixerOpen
                 ? "border-[#58a6ff] text-white bg-[#171c26]"
                 : "border-[#21262d] text-[#79c0ff] hover:border-[#58a6ff]"
             }`}
           >
             <Sliders className="w-3.5 h-3.5 text-[#58a6ff]" />
-            <span className="hidden md:inline truncate max-w-[145px]">
+            <span className="hidden xl:inline truncate max-w-[120px]">
               {isMuted
                 ? "OST: MUTED"
                 : traceActive || underAttack
@@ -799,7 +802,7 @@ const DesktopEnvironment: React.FC = () => {
           <button
             onClick={toggleMute}
             title={isMuted ? "Unmute Audio" : "Mute Audio"}
-            className="h-8 w-8 bg-[#111620] border border-[#21262d] text-[#8b949e] hover:text-white cursor-pointer flex items-center justify-center"
+            className="h-8 w-8 bg-[#111620] border border-[#21262d] text-[#8b949e] hover:text-white cursor-pointer flex items-center justify-center shrink-0"
           >
             {isMuted ? (
               <VolumeX className="w-4 h-4" />
@@ -810,21 +813,21 @@ const DesktopEnvironment: React.FC = () => {
 
           {/* Hardware Surveillance Indicator */}
           {camStatus === "active" ? (
-            <div className="h-8 px-2.5 bg-[#290808] border border-[#ff3b3b] text-[10px] font-mono text-[#ff5555] font-bold flex items-center gap-1.5 animate-pulse">
+            <div className="h-8 px-2 bg-[#290808] border border-[#ff3b3b] text-[10px] font-mono text-[#ff5555] font-bold flex items-center gap-1.5 animate-pulse">
               <span className="w-2 h-2 rounded-full bg-[#ff3b3b] animate-ping" />
-              <span>[CAM_01: ACTIVE // REC]</span>
+              <span className="hidden sm:inline">[CAM: ON]</span>
             </div>
           ) : (
-            <div className="h-8 px-2 bg-[#111620] border border-[#21262d] text-[10px] font-mono text-[#6e7681] flex items-center gap-1.5">
+            <div className="hidden lg:flex h-8 px-2 bg-[#111620] border border-[#21262d] text-[10px] font-mono text-[#6e7681] items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-[#30363d]" />
-              <span>[CAM_01: OFF]</span>
+              <span>[CAM: OFF]</span>
             </div>
           )}
 
           {/* Operator Badge & Logout */}
-          <div className="h-8 px-2.5 bg-[#111620] border border-[#21262d] text-[11px] font-mono text-[#c9d1d9] flex items-center gap-2">
-            <User className="w-3.5 h-3.5 text-[#3fb950]" />
-            <span className="text-[#3fb950] font-bold truncate max-w-[90px]">
+          <div className="h-8 px-2 sm:px-2.5 bg-[#111620] border border-[#21262d] text-[11px] font-mono text-[#c9d1d9] flex items-center gap-1.5">
+            <User className="w-3.5 h-3.5 text-[#3fb950] shrink-0" />
+            <span className="text-[#3fb950] font-bold truncate max-w-[70px] hidden sm:inline">
               {currentUser.username}
             </span>
             <button
@@ -838,7 +841,7 @@ const DesktopEnvironment: React.FC = () => {
                 }
               }}
               title="Log Out Operator Session"
-              className="text-[#8b949e] hover:text-[#ff5555] ml-1 cursor-pointer flex items-center gap-1 bg-[#1a1416] px-1.5 py-0.5 border border-[#3b2329] hover:border-[#ff5555] transition-colors"
+              className="text-[#8b949e] hover:text-[#ff5555] cursor-pointer flex items-center gap-1 bg-[#1a1416] px-1.5 py-0.5 border border-[#3b2329] hover:border-[#ff5555] transition-colors"
             >
               <LogOut className="w-3 h-3 text-[#ff7b72]" />
               <span className="text-[9px] uppercase font-bold text-[#ff7b72]">
@@ -850,15 +853,15 @@ const DesktopEnvironment: React.FC = () => {
           <button
             onClick={() => setWipeModalOpen(true)}
             title="Wipe Progress / Restart Campaign"
-            className="h-8 px-2 bg-[#111620] border border-[#21262d] text-[#8b949e] hover:text-[#ff5555] hover:border-[#ff5555] cursor-pointer flex items-center gap-1 transition-colors"
+            className="h-8 px-2 bg-[#111620] border border-[#21262d] text-[#8b949e] hover:text-[#ff5555] hover:border-[#ff5555] cursor-pointer flex items-center gap-1 transition-colors shrink-0"
           >
             <RotateCcw className="w-3.5 h-3.5 text-[#ff7b72]" />
-            <span className="hidden sm:inline text-[10px] font-mono text-[#ff7b72] font-bold">
+            <span className="hidden md:inline text-[10px] font-mono text-[#ff7b72] font-bold">
               WIPE
             </span>
           </button>
 
-          <div className="h-8 px-3 bg-[#111620] border border-[#21262d] text-[#c9d1d9] font-semibold flex items-center">
+          <div className="h-8 px-2 sm:px-3 bg-[#111620] border border-[#21262d] text-[#c9d1d9] font-semibold flex items-center text-[11px] font-mono shrink-0">
             {clock}
           </div>
         </div>

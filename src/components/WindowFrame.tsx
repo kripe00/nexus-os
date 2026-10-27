@@ -105,8 +105,8 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
     };
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
-      const maxX = Math.max(8, window.innerWidth - 300);
-      const maxY = Math.max(8, window.innerHeight - 80);
+      const maxX = Math.max(8, window.innerWidth - 80);
+      const maxY = Math.max(8, window.innerHeight - 60);
       const targetX = Math.max(
         8,
         Math.min(maxX, moveEvent.clientX - dragOffset.current.x),
@@ -136,7 +136,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
         top: win.position.y,
         zIndex: win.zIndex,
       }}
-      className={`fixed ${width} ${height} max-w-[calc(100vw-340px)] max-h-[calc(100vh-64px)] bg-[#0b0d12] border animate-window-in ${
+      className={`fixed ${width} ${height} max-w-[calc(100vw-24px)] max-h-[calc(100vh-56px)] bg-[#0b0d12] border animate-window-in ${
         isActive
           ? "border-[#4a5870] shadow-[0_24px_70px_rgba(0,0,0,0.95)]"
           : "border-[#1e232c] opacity-95"

@@ -1716,8 +1716,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const clampPos = (x: number, y: number) => {
-    const maxX = Math.max(8, window.innerWidth - 340);
-    const maxY = Math.max(8, window.innerHeight - 80);
+    const maxX = Math.max(8, window.innerWidth - 80);
+    const maxY = Math.max(8, window.innerHeight - 60);
     return {
       x: Math.max(8, Math.min(maxX, x)),
       y: Math.max(8, Math.min(maxY, y)),

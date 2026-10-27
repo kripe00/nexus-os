@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   ArrowUpRight,
   CheckSquare,
@@ -7,6 +7,8 @@ import {
   Fingerprint,
   Globe,
   KeyRound,
+  PanelRightClose,
+  PanelRightOpen,
   Send,
   Server,
   Square,
@@ -15,8 +17,10 @@ import {
 import { MISSIONS } from "../data/worldData";
 import { useGame } from "../context/GameContext";
 import { Clue } from "../types/game";
+import { sound } from "../utils/sound";
 
 export const ClueBoardSidebar: React.FC = () => {
+  const [collapsed, setCollapsed] = useState(false);
   const {
     currentMissionIndex,
     missionStage,
@@ -97,8 +101,37 @@ export const ClueBoardSidebar: React.FC = () => {
   const currentMission =
     MISSIONS[currentMissionIndex] || MISSIONS[MISSIONS.length - 1];
 
+  if (collapsed) {
+    return (
+      <aside className="w-10 h-[calc(100vh-2.75rem)] border-l border-[#1e232c] bg-[#090b0f]/95 flex flex-col items-center py-3 z-30 select-none text-xs transition-all">
+        <button
+          onClick={() => {
+            sound.playClick();
+            setCollapsed(false);
+          }}
+          title="Expand Objectives & Intel Sidebar"
+          className="p-1.5 text-[#79c0ff] hover:text-white bg-[#10151f] hover:bg-[#161c28] border border-[#2b3545] cursor-pointer mb-6"
+        >
+          <PanelRightOpen className="w-4 h-4 text-[#58a6ff]" />
+        </button>
+        <div
+          onClick={() => {
+            sound.playClick();
+            setCollapsed(false);
+          }}
+          className="flex-1 flex flex-col items-center justify-center cursor-pointer hover:text-white text-[#8b949e]"
+        >
+          <div className="[writing-mode:vertical-rl] rotate-180 whitespace-nowrap text-[10px] font-mono font-bold tracking-widest text-[#58a6ff] flex items-center gap-2">
+            <span>OPERATIONAL INTEL</span>
+            <Crosshair className="w-3.5 h-3.5" />
+          </div>
+        </div>
+      </aside>
+    );
+  }
+
   return (
-    <aside className="w-[320px] h-[calc(100vh-2.75rem)] border-l border-[#1e232c] bg-[#090b0f]/95 flex flex-col z-30 select-none text-xs">
+    <aside className="w-[320px] max-w-[85vw] h-[calc(100vh-2.75rem)] border-l border-[#1e232c] bg-[#090b0f]/95 flex flex-col z-30 select-none text-xs transition-all">
       {/* Active Operation */}
       <div className="p-4 border-b border-[#1e232c]">
         <div className="flex items-center justify-between text-[11px] text-[#7c8594] mb-1.5">
@@ -108,9 +141,21 @@ export const ClueBoardSidebar: React.FC = () => {
               ? "CAMPAIGN COMPLETE"
               : `OPERATION 0${currentMissionIndex + 1}`}
           </span>
-          <span className="text-[#3fb950] font-bold">
-            +{currentMission.reward} ◈
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-[#3fb950] font-bold">
+              +{currentMission.reward} ◈
+            </span>
+            <button
+              onClick={() => {
+                sound.playClick();
+                setCollapsed(true);
+              }}
+              title="Collapse Sidebar"
+              className="p-1 text-[#8b949e] hover:text-white cursor-pointer hover:bg-[#1a202c]"
+            >
+              <PanelRightClose className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
 
         <div className="text-sm font-bold text-white mb-2">
