@@ -361,6 +361,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
   const setDifficulty = (diff: DifficultyPreset) => {
     setDifficultyState(diff);
     localStorage.setItem("nexus_difficulty", diff);
+    if (diff === "ghost") {
+      setOsintHighlightState(false);
+      localStorage.setItem("nexus_osint_highlight", "false");
+    }
   };
 
   const [uiScale, setUiScaleState] = useState<UiScaleOption>(() => {
@@ -385,11 +389,19 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
   const toggleCrtMode = () => setCrtMode(!crtMode);
 
   // OSINT Highlight / Scanner overlay (default: false for authentic unassisted detective recon)
-  const [osintHighlight, setOsintHighlightState] = useState<boolean>(() => {
-    const saved = localStorage.getItem("nexus_osint_highlight");
-    return saved !== null ? saved === "true" : false;
-  });
+  const [osintHighlightState, setOsintHighlightState] = useState<boolean>(
+    () => {
+      const saved = localStorage.getItem("nexus_osint_highlight");
+      return saved !== null ? saved === "true" : false;
+    },
+  );
+  const osintHighlight = difficulty === "ghost" ? false : osintHighlightState;
   const setOsintHighlight = (enabled: boolean) => {
+    if (difficulty === "ghost") {
+      setOsintHighlightState(false);
+      localStorage.setItem("nexus_osint_highlight", "false");
+      return;
+    }
     setOsintHighlightState(enabled);
     localStorage.setItem("nexus_osint_highlight", String(enabled));
   };

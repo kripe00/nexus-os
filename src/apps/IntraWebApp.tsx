@@ -194,8 +194,9 @@ const ClueSpan: React.FC<{ clueId: string; text: string }> = ({
   clueId,
   text,
 }) => {
-  const { hasClue, discoverClue, osintHighlight } = useGame();
+  const { hasClue, discoverClue, osintHighlight, difficulty } = useGame();
   const collected = hasClue(clueId);
+  const showHighlight = osintHighlight && difficulty !== "ghost";
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -203,12 +204,12 @@ const ClueSpan: React.FC<{ clueId: string; text: string }> = ({
     discoverClue(clueId);
   };
 
-  // When OSINT Highlight is OFF: Completely unstyled natural text (no pointer hand, no hover, no green/underline)
-  if (!osintHighlight) {
+  // When OSINT Highlight is OFF or on Hardcore (Zero-Ghost): Completely unstyled natural text (no pointer hand, no I-beam cursor change, no hover, no green/underline)
+  if (!showHighlight) {
     return (
       <span
         onClick={handleClick}
-        className="inline text-inherit font-inherit no-underline cursor-text select-text"
+        className="inline text-inherit font-inherit no-underline cursor-default select-none"
       >
         {text}
       </span>
@@ -276,6 +277,7 @@ export const IntraWebApp: React.FC = () => {
     currentMissionIndex,
     osintHighlight,
     toggleOsintHighlight,
+    difficulty,
   } = useGame();
 
   const [searchInput, setSearchInput] = useState(browserSearchQuery);
@@ -429,19 +431,30 @@ export const IntraWebApp: React.FC = () => {
 
         {/* OSINT Scanner Toggle */}
         <button
+          disabled={difficulty === "ghost"}
           onClick={() => {
+            if (difficulty === "ghost") return;
             sound.playClick();
             toggleOsintHighlight();
           }}
-          title="Toggle OSINT visual highlights for clues and forensic assistance"
-          className={`px-2.5 py-1.5 border flex items-center gap-1.5 cursor-pointer transition-colors ${
-            osintHighlight
-              ? "bg-[#1f6feb] text-white border-[#58a6ff] font-semibold shadow-[0_0_8px_rgba(88,166,255,0.3)]"
-              : "bg-[#08090c] text-[#8b949e] border-[#21262d] hover:text-white"
+          title={
+            difficulty === "ghost"
+              ? "OSINT Scanner disabled on Zero-Ghost (Hardcore) difficulty"
+              : "Toggle OSINT visual highlights for clues and forensic assistance"
+          }
+          className={`px-2.5 py-1.5 border flex items-center gap-1.5 transition-colors ${
+            difficulty === "ghost"
+              ? "bg-[#08090c] text-[#484f58] border-[#161b22] cursor-default opacity-60"
+              : osintHighlight
+                ? "bg-[#1f6feb] text-white border-[#58a6ff] font-semibold shadow-[0_0_8px_rgba(88,166,255,0.3)] cursor-pointer"
+                : "bg-[#08090c] text-[#8b949e] border-[#21262d] hover:text-white cursor-pointer"
           }`}
         >
           <ScanSearch className="w-3.5 h-3.5" />
-          <span>OSINT Highlight: {osintHighlight ? "ON" : "OFF"}</span>
+          <span>
+            OSINT Highlight:{" "}
+            {difficulty === "ghost" ? "OFF" : osintHighlight ? "ON" : "OFF"}
+          </span>
         </button>
       </div>
 
@@ -1019,11 +1032,13 @@ export const IntraWebApp: React.FC = () => {
                           </div>
                           <div className="text-xs font-bold text-white flex items-center justify-between gap-1">
                             <span className="truncate">{msg.subject}</span>
-                            {hasClues && (
-                              <span className="px-1.5 py-0.2 bg-[#1f6feb] text-white text-[9px] font-bold shrink-0">
-                                CLUE
-                              </span>
-                            )}
+                            {hasClues &&
+                              osintHighlight &&
+                              difficulty !== "ghost" && (
+                                <span className="px-1.5 py-0.2 bg-[#1f6feb] text-white text-[9px] font-bold shrink-0">
+                                  CLUE
+                                </span>
+                              )}
                           </div>
                         </div>
                       );

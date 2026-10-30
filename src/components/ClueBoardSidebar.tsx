@@ -37,6 +37,7 @@ export const ClueBoardSidebar: React.FC = () => {
     addNotification,
     osintHighlight,
     toggleOsintHighlight,
+    difficulty,
   } = useGame();
 
   const handleClueContextMenu = (e: React.MouseEvent, clue: Clue) => {
@@ -249,19 +250,30 @@ export const ClueBoardSidebar: React.FC = () => {
             Clue Board ({discoveredClues.length})
           </span>
           <button
+            disabled={difficulty === "ghost"}
             onClick={() => {
+              if (difficulty === "ghost") return;
               sound.playClick();
               toggleOsintHighlight();
             }}
-            title="Toggle OSINT visual highlights for clues in IntraWeb"
-            className={`px-2 py-0.5 text-[10px] border flex items-center gap-1 cursor-pointer transition-colors ${
-              osintHighlight
-                ? "bg-[#1f6feb]/20 text-[#58a6ff] border-[#388bfd] font-bold"
-                : "bg-[#0d1117] text-[#6e7681] border-[#21262d] hover:text-[#8b949e]"
+            title={
+              difficulty === "ghost"
+                ? "OSINT Scanner disabled on Zero-Ghost (Hardcore) difficulty"
+                : "Toggle OSINT visual highlights for clues in IntraWeb"
+            }
+            className={`px-2 py-0.5 text-[10px] border flex items-center gap-1 transition-colors ${
+              difficulty === "ghost"
+                ? "bg-[#0d1117] text-[#484f58] border-[#161b22] cursor-default opacity-60"
+                : osintHighlight
+                  ? "bg-[#1f6feb]/20 text-[#58a6ff] border-[#388bfd] font-bold cursor-pointer"
+                  : "bg-[#0d1117] text-[#6e7681] border-[#21262d] hover:text-[#8b949e] cursor-pointer"
             }`}
           >
             <ScanSearch className="w-3 h-3" />
-            <span>Scanner: {osintHighlight ? "ON" : "OFF"}</span>
+            <span>
+              Scanner:{" "}
+              {difficulty === "ghost" ? "OFF" : osintHighlight ? "ON" : "OFF"}
+            </span>
           </button>
         </div>
 

@@ -572,10 +572,10 @@ export const WhisperChatApp: React.FC = () => {
               <button
                 onClick={() => requestClientHint()}
                 disabled={difficulty === "ghost"}
-                className={`px-3 py-1.5 border text-[11px] font-bold cursor-pointer flex items-center gap-1.5 transition-colors ${
+                className={`px-3 py-1.5 border text-[11px] font-bold flex items-center gap-1.5 transition-colors ${
                   difficulty === "ghost"
-                    ? "bg-[#140a0a] border-[#381616] text-[#6e4444] cursor-not-allowed"
-                    : "bg-[#171b26] hover:bg-[#202738] border-[#2b3548] hover:border-[#58a6ff] text-white"
+                    ? "bg-[#140a0a] border-[#381616] text-[#6e4444] cursor-default"
+                    : "bg-[#171b26] hover:bg-[#202738] border-[#2b3548] hover:border-[#58a6ff] text-white cursor-pointer"
                 }`}
                 title={
                   difficulty === "ghost"
