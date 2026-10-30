@@ -4,19 +4,19 @@ Dette dokumentet samler de viktigste forbedringsområdene for **NexusOS**, struk
 
 ---
 
-## Fase 1: Dynamisk IntraWeb, Tidslinje og «OSINT-støy»
+## Fase 1: Dynamisk IntraWeb, Tidslinje og «OSINT-støy» ✅ (Fullført)
 
 **Mål:** Gjøre IntraWeb og Chirper til en levende verden som utvikler seg i takt med historien, og hvor spilleren faktisk må lete blant realistisk støy.
 
 ### Konkrete oppgaver
 
-- [ ] **Kapittelstyrt tidslinje i Chirper og Nyhetsfeed (`src/apps/IntraWebApp.tsx`):**
+- [x] **Kapittelstyrt tidslinje i Chirper og Nyhetsfeed (`src/apps/IntraWebApp.tsx`):**
   - Filtrer innlegg og nyhetssaker basert på `currentMissionIndex` / `completedMissionIds`.
   - Legg til reaktive innlegg etter fullførte oppdrag (f.eks. pressemeldinger om datainnbrudd hos Velox AI etter Op 02, eller strømnett-ustabilitet etter Op 08).
-- [ ] **Realistisk «hverdagsstøy» (Red Herrings):**
-  - Legg til irrelevante Chirper-poster, ansattprofiler på Velox/Aethelgard og vanlige e-poster i innboksene som _ikke_ er ledetråder.
-- [ ] **Manuell tekst-utheving / søk på Hardcore:**
-  - Tillat at spilleren også kan kopiere/notere informasjon direkte eller bruke søkefeltet mer aktivt fremfor kun å klikke på nøkkelord.
+- [x] **Realistisk «hverdagsstøy» (Red Herrings):**
+  - Legg til irrelevante Chirper-poster, ansattprofiler på Velox/Aethelgard/NordGrid/OceanicLink og vanlige e-poster i innboksene som _ikke_ er ledetråder.
+- [x] **Manuell tekst-utheving / søk på Hardcore:**
+  - Tillat at spilleren også kan kopiere/notere informasjon direkte via høyreklikk-kontekstmeny eller taste inn ledetråder manuelt i Clue Board fremfor kun å klikke på nøkkelord.
 
 ---
 

@@ -4,5 +4,6 @@ dist-ssr
 *.local
 *.tsbuildinfo
 .DS_Store
-data/
+/data/
 *.db
+.agents/teamwork/

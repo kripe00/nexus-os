@@ -196,3 +196,49 @@ export interface SystemSettings {
   sfxVolume: number;
   muted: boolean;
 }
+
+export interface ChirperPost {
+  id: string;
+  authorName: string;
+  authorHandle: string;
+  authorRole?: string;
+  avatarSubject?: "marcus" | "sterling" | "reyes" | "elena" | "default";
+  avatarInitials?: string;
+  avatarBg?: string;
+  borderColor?: string;
+  headerColor?: string;
+  timestamp: string;
+  content: string;
+  clues?: { id: string; text: string }[];
+  minMissionIndex?: number;
+  minChapter?: number;
+  triggerMissionId?: string;
+  isReactive?: boolean;
+}
+
+export interface NewsArticle {
+  id: string;
+  headline: string;
+  source: string;
+  category: "TECH" | "DEFENSE" | "INFRASTRUCTURE" | "CRIME" | "GLOBAL";
+  timestamp: string;
+  summary: string;
+  body: string[];
+  minMissionIndex?: number;
+  minChapter?: number;
+  triggerMissionId?: string;
+  isBreaking?: boolean;
+}
+
+export interface CorporateEmployee {
+  id: string;
+  name: string;
+  role: string;
+  department: string;
+  email: string;
+  bio: string;
+  avatarSubject?: "elena" | "marcus" | "sterling" | "reyes" | "operator";
+  initials?: string;
+  isTarget?: boolean;
+  emailClueId?: string;
+}

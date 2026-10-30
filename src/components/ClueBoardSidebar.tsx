@@ -9,19 +9,21 @@ import {
   KeyRound,
   PanelRightClose,
   PanelRightOpen,
+  Plus,
   ScanSearch,
   Send,
   Server,
   Square,
   Terminal,
 } from "lucide-react";
-import { MISSIONS } from "../data/worldData";
+import { ALL_CLUES, MISSIONS } from "../data/worldData";
 import { useGame } from "../context/GameContext";
 import { Clue } from "../types/game";
 import { sound } from "../utils/sound";
 
 export const ClueBoardSidebar: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
+  const [manualInput, setManualInput] = useState("");
   const {
     currentMissionIndex,
     missionStage,
@@ -38,7 +40,30 @@ export const ClueBoardSidebar: React.FC = () => {
     osintHighlight,
     toggleOsintHighlight,
     difficulty,
+    discoverClue,
   } = useGame();
+
+  const handleManualIntelSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = manualInput.trim();
+    if (!trimmed) return;
+
+    const matches = Object.values(ALL_CLUES).filter(
+      (c) => c.value.toLowerCase() === trimmed.toLowerCase(),
+    );
+
+    if (matches.length > 0) {
+      matches.forEach((matched) => discoverClue(matched.id));
+      setManualInput("");
+    } else {
+      sound.playError();
+      addNotification(
+        "Intel Unverified",
+        `No known target profile matched "${trimmed}"`,
+        "warning",
+      );
+    }
+  };
 
   const handleClueContextMenu = (e: React.MouseEvent, clue: Clue) => {
     if (clue.category === "ip") {
@@ -276,6 +301,34 @@ export const ClueBoardSidebar: React.FC = () => {
             </span>
           </button>
         </div>
+
+        {/* Manual Intel Submission Form */}
+        <form
+          onSubmit={handleManualIntelSubmit}
+          data-testid="manual-intel-form"
+          className="mb-3"
+        >
+          <div className="flex items-center gap-1.5">
+            <input
+              type="text"
+              value={manualInput}
+              onChange={(e) => setManualInput(e.target.value)}
+              placeholder="Manual intel entry (e.g. Koda, 0451)..."
+              data-testid="manual-intel-input"
+              aria-label="Manual intel entry"
+              className="flex-1 bg-[#060708] border border-[#21262d] focus:border-[#58a6ff] px-2.5 py-1.5 text-[11px] text-white placeholder-[#484f58] outline-none"
+            />
+            <button
+              type="submit"
+              data-testid="manual-intel-submit"
+              title="Verify and pin intel to Clue Board"
+              className="px-2.5 py-1.5 bg-[#1f6feb] hover:bg-[#388bfd] text-white font-semibold text-[11px] cursor-pointer transition-colors shrink-0 flex items-center gap-1"
+            >
+              <Plus className="w-3 h-3" />
+              <span>Pin</span>
+            </button>
+          </div>
+        </form>
 
         {discoveredClues.length === 0 ? (
           <div className="flex-1 border border-dashed border-[#21262d] bg-[#060708]/60 p-4 flex flex-col items-center justify-center text-center">

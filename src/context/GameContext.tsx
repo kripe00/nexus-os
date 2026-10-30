@@ -32,6 +32,7 @@ import { voice } from "../utils/voice";
 
 export type IntraWebPage =
   | "search"
+  | "news"
   | "velox"
   | "chirper"
   | "aethelgard"

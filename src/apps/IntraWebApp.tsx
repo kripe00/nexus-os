@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
   Building2,
   Check,
+  Copy,
   Cpu,
   ExternalLink,
   Fingerprint,
@@ -10,6 +11,7 @@ import {
   KeyRound,
   Mail,
   MessageCircle,
+  Newspaper,
   Radio,
   ScanSearch,
   Search,
@@ -18,8 +20,18 @@ import {
   Unlock,
   Zap,
 } from "lucide-react";
-import { EMAIL_ACCOUNTS } from "../data/worldData";
+import {
+  AETHELGARD_EMPLOYEES,
+  ALL_CLUES,
+  CHIRPER_POSTS,
+  EMAIL_ACCOUNTS,
+  NEWS_ARTICLES,
+  NORDGRID_EMPLOYEES,
+  OCEANICLINK_EMPLOYEES,
+  VELOX_EMPLOYEES,
+} from "../data/worldData";
 import { IntraWebPage, useGame } from "../context/GameContext";
+import { ContextMenuItem } from "../components/ContextMenu";
 import { SurveillanceAvatar } from "../components/SurveillanceAvatar";
 import { WindowFrame } from "../components/WindowFrame";
 import { sound } from "../utils/sound";
@@ -48,8 +60,50 @@ const SEARCH_INDEX: SearchResultItem[] = [
       "elena",
       "vance",
       "cto",
+      "ceo",
       "company",
       "email",
+      "devon",
+      "brooks",
+      "sre",
+      "priya",
+      "nair",
+      "lucas",
+      "meyer",
+      "chloe",
+      "zhao",
+      "hr",
+      "directory",
+      "engineering",
+      "infrastructure",
+      "compliance",
+      "m.cole@velox-ai.io",
+    ],
+  },
+  {
+    id: "res_news",
+    page: "news",
+    title: "Global NewsWire — Syndicated Press & Breaking Telemetry",
+    url: "http://newswire.global/intel/breaking.html",
+    snippet:
+      "Syndicated international news coverage, breaking security dispatches, Velox AI leaks, and continental infrastructure bulletins.",
+    keywords: [
+      "news",
+      "newswire",
+      "press",
+      "breaking",
+      "bulletin",
+      "media",
+      "dispatch",
+      "leak",
+      "breach",
+      "blackout",
+      "dead-drop",
+      "198.51.100.42",
+      "217.182.80.50",
+      "scada",
+      "valkyrie",
+      "delta",
     ],
   },
   {
@@ -71,6 +125,28 @@ const SEARCH_INDEX: SearchResultItem[] = [
       "viktor",
       "dog",
       "posts",
+      "koda",
+      "pixel",
+      "1997",
+      "2019",
+      "hyperion",
+      "saintjude",
+      "commander",
+      "phantom77",
+      "viper6",
+      "8821",
+      "9901",
+      "nordicbreeze",
+      "5020",
+      "abysspoint9",
+      "vance",
+      "royalpine",
+      "badge990",
+      "astrid",
+      "lindholm",
+      "kai",
+      "thorne",
+      "ouroboros",
     ],
   },
   {
@@ -90,6 +166,11 @@ const SEARCH_INDEX: SearchResultItem[] = [
       "aethelgard",
       "reyes",
       "sterling",
+      "dead-drop",
+      "198.51.100.42",
+      "relay",
+      "imap",
+      "smtp",
     ],
   },
   {
@@ -110,6 +191,20 @@ const SEARCH_INDEX: SearchResultItem[] = [
       "sat",
       "orbital",
       "reyes",
+      "hyperion",
+      "phantom77",
+      "8821",
+      "facility delta",
+      "delta",
+      "procurement",
+      "logistics",
+      "legal",
+      "soren",
+      "mireille",
+      "185.220.101.5",
+      "203.0.113.88",
+      "194.165.16.100",
+      "valkyrie-7",
     ],
   },
   {
@@ -129,6 +224,16 @@ const SEARCH_INDEX: SearchResultItem[] = [
       "modbus",
       "electric",
       "blackout",
+      "nordicbreeze",
+      "5020",
+      "217.182.80.50",
+      "substation",
+      "frederik",
+      "solberg",
+      "ingrid",
+      "dahl",
+      "relay",
+      "transformer",
     ],
   },
   {
@@ -149,6 +254,13 @@ const SEARCH_INDEX: SearchResultItem[] = [
       "qkd",
       "atlantic",
       "telecom",
+      "abysspoint9",
+      "102.16.88.12",
+      "diver",
+      "saturation",
+      "nadia",
+      "sean",
+      "photonic",
     ],
   },
   {
@@ -166,6 +278,8 @@ const SEARCH_INDEX: SearchResultItem[] = [
       "bunker",
       "singularity",
       "core",
+      "185.190.20.1",
+      "permafrost",
     ],
   },
   {
@@ -186,6 +300,7 @@ const SEARCH_INDEX: SearchResultItem[] = [
       "bounty",
       "exploit",
       "underground",
+      "godel-zero-self-terminate",
     ],
   },
 ];
@@ -204,12 +319,21 @@ const ClueSpan: React.FC<{ clueId: string; text: string }> = ({
     discoverClue(clueId);
   };
 
-  // When OSINT Highlight is OFF or on Hardcore (Zero-Ghost): Completely unstyled natural text (no pointer hand, no I-beam cursor change, no hover, no green/underline)
+  // Hardcore (Zero-Ghost) Mode: Natural selectable text, NO click handler, NO highlight
+  if (difficulty === "ghost") {
+    return (
+      <span className="inline text-inherit font-inherit select-text cursor-text selection:bg-[#1f6feb]/40 selection:text-white">
+        {text}
+      </span>
+    );
+  }
+
+  // When OSINT Highlight is OFF (analyst / operative mode): Natural selectable text, click to discover
   if (!showHighlight) {
     return (
       <span
         onClick={handleClick}
-        className="inline text-inherit font-inherit no-underline cursor-default select-none"
+        className="inline text-inherit font-inherit no-underline cursor-default select-text selection:bg-[#1f6feb]/40 selection:text-white"
       >
         {text}
       </span>
@@ -263,6 +387,42 @@ const renderBodyWithClues = (
   });
 };
 
+const renderPostContentWithClues = (
+  content: string,
+  clues?: { id: string; text: string }[],
+) => {
+  if (!clues || clues.length === 0) return content;
+  const clueMap = new Map(clues.map((c) => [c.text, c.id]));
+  const escaped = clues.map((c) =>
+    c.text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+  );
+  const regex = new RegExp(`(${escaped.join("|")})`, "g");
+  const parts = content.split(regex);
+  return parts.map((part, i) => {
+    const clueId = clueMap.get(part);
+    if (clueId) {
+      return <ClueSpan key={`${clueId}-${i}`} clueId={clueId} text={part} />;
+    }
+    return part;
+  });
+};
+
+const getCategoryStyle = (category: string) => {
+  switch (category) {
+    case "TECH":
+      return "text-[#58a6ff] border-[#1f6feb] bg-[#0c1829]";
+    case "DEFENSE":
+      return "text-[#ff7b72] border-[#8e1515] bg-[#210909]";
+    case "INFRASTRUCTURE":
+      return "text-[#e3b341] border-[#9e6a03] bg-[#241a05]";
+    case "CRIME":
+      return "text-[#f85149] border-[#da3633] bg-[#2d0f0f]";
+    case "GLOBAL":
+    default:
+      return "text-[#7ee787] border-[#238636] bg-[#071d12]";
+  }
+};
+
 export const IntraWebApp: React.FC = () => {
   const {
     browserPage,
@@ -275,10 +435,72 @@ export const IntraWebApp: React.FC = () => {
     markEmailLoggedIn,
     openApp,
     currentMissionIndex,
+    completedMissionIds,
     osintHighlight,
     toggleOsintHighlight,
     difficulty,
+    showContextMenu,
+    addNotification,
   } = useGame();
+
+  const handleViewportContextMenu = (e: React.MouseEvent) => {
+    const selection = window.getSelection()?.toString().trim();
+    if (!selection) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Check if selected text matches any clue in ALL_CLUES (case-insensitive on clue.value)
+    const matchedClues = Object.values(ALL_CLUES).filter(
+      (c) => c.value.toLowerCase() === selection.toLowerCase(),
+    );
+
+    const preview =
+      selection.length > 20 ? `${selection.slice(0, 20)}...` : selection;
+
+    const items: ContextMenuItem[] = [];
+
+    matchedClues.forEach((matchedClue) => {
+      items.unshift({
+        label: `[+] Pin Intel: ${matchedClue.label} ("${matchedClue.value}")`,
+        icon: <Fingerprint className="w-3.5 h-3.5 text-[#58a6ff]" />,
+        onClick: () => {
+          discoverClue(matchedClue.id);
+        },
+      });
+    });
+
+    items.push(
+      {
+        label: `Copy "${preview}"`,
+        icon: <Copy className="w-3.5 h-3.5" />,
+        onClick: () => {
+          try {
+            navigator.clipboard?.writeText(selection)?.catch?.(() => {});
+          } catch {
+            // fallback
+          }
+          addNotification(
+            "Copied to Clipboard",
+            `"${selection}" copied`,
+            "clue",
+          );
+        },
+      },
+      {
+        label: `Search LookUp for "${preview}"`,
+        icon: <Search className="w-3.5 h-3.5" />,
+        onClick: () => navigateBrowser("search", selection),
+      },
+    );
+
+    showContextMenu(e, [
+      {
+        header: "// OSINT TRADE-CRAFT: TEXT SELECTION",
+        items,
+      },
+    ]);
+  };
 
   const [searchInput, setSearchInput] = useState(browserSearchQuery);
 
@@ -287,6 +509,26 @@ export const IntraWebApp: React.FC = () => {
   const [loggedInAccount, setLoggedInAccount] = useState<string | null>(null);
   const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
   const [loginError, setLoginError] = useState<string | null>(null);
+
+  const visibleChirperPosts = useMemo(() => {
+    return CHIRPER_POSTS.filter((post) => {
+      if (post.triggerMissionId) {
+        return completedMissionIds.includes(post.triggerMissionId);
+      }
+      const minIdx = post.minMissionIndex ?? 0;
+      return currentMissionIndex >= minIdx;
+    });
+  }, [currentMissionIndex, completedMissionIds]);
+
+  const visibleNewsArticles = useMemo(() => {
+    return NEWS_ARTICLES.filter((article) => {
+      if (article.triggerMissionId) {
+        return completedMissionIds.includes(article.triggerMissionId);
+      }
+      const minIdx = article.minMissionIndex ?? 0;
+      return currentMissionIndex >= minIdx;
+    });
+  }, [currentMissionIndex, completedMissionIds]);
 
   useEffect(() => {
     setSearchInput(browserSearchQuery);
@@ -344,6 +586,7 @@ export const IntraWebApp: React.FC = () => {
       "http://oceaniclink-telecom.net/infrastructure/subsea-cables.html",
     svalbard: "http://svalbard-vault.arctic/core/research-facility.html",
     darkforum: "http://0xunderground.onion/threads/ouroboros-leak.html",
+    news: "http://newswire.global/intel/breaking.html",
   };
 
   const filteredResults = SEARCH_INDEX.filter((item) => {
@@ -361,10 +604,22 @@ export const IntraWebApp: React.FC = () => {
 
   const suggestedQueries =
     currentMissionIndex < 2
-      ? ["Marcus Cole", "Velox AI", "Chirper", "WebMail"]
+      ? ["Marcus Cole", "Velox AI", "Chirper", "NewsWire", "WebMail"]
       : currentMissionIndex < 4
-        ? ["Julian Sterling", "Aethelgard Corp", "Chirper", "WebMail"]
-        : ["Viktor Reyes", "Facility Delta", "Aethelgard Corp", "Chirper"];
+        ? [
+            "Julian Sterling",
+            "Aethelgard Corp",
+            "Chirper",
+            "NewsWire",
+            "WebMail",
+          ]
+        : [
+            "Viktor Reyes",
+            "Facility Delta",
+            "Aethelgard Corp",
+            "NewsWire",
+            "Chirper",
+          ];
 
   return (
     <WindowFrame
@@ -407,6 +662,25 @@ export const IntraWebApp: React.FC = () => {
             {urlMap[browserPage]}
           </span>
         </form>
+
+        {/* NewsWire Quick Button */}
+        <button
+          onClick={() => {
+            sound.playClick();
+            navigateBrowser("news");
+          }}
+          className={`px-2.5 py-1.5 border flex items-center gap-1.5 cursor-pointer transition-colors ${
+            browserPage === "news"
+              ? "bg-[#211612] text-white border-[#f0883e]"
+              : "bg-[#08090c] text-[#8b949e] border-[#21262d] hover:text-white"
+          }`}
+        >
+          <Newspaper className="w-3.5 h-3.5 text-[#f0883e]" />
+          <span>NewsWire</span>
+          {visibleNewsArticles.some((a) => a.isBreaking) && (
+            <span className="w-1.5 h-1.5 rounded-full bg-[#f85149] animate-pulse" />
+          )}
+        </button>
 
         {/* WebMail Quick Button */}
         <button
@@ -459,7 +733,10 @@ export const IntraWebApp: React.FC = () => {
       </div>
 
       {/* Browser Viewport */}
-      <div className="flex-1 overflow-y-auto p-5 bg-[#060708] text-xs">
+      <div
+        onContextMenu={handleViewportContextMenu}
+        className="flex-1 overflow-y-auto p-5 bg-[#060708] text-xs select-text"
+      >
         {/* PAGE 0: LOOKUP SEARCH ENGINE */}
         {browserPage === "search" && (
           <div className="max-w-xl mx-auto space-y-5 pt-2">
@@ -546,6 +823,83 @@ export const IntraWebApp: React.FC = () => {
           </div>
         )}
 
+        {/* PAGE: GLOBAL NEWSWIRE */}
+        {browserPage === "news" && (
+          <div className="max-w-2xl mx-auto space-y-4">
+            <div className="border-b border-[#1e232c] pb-3 flex items-center justify-between">
+              <div>
+                <div className="text-[10px] text-[#f0883e] uppercase tracking-widest flex items-center gap-1.5">
+                  <Newspaper className="w-3.5 h-3.5" />
+                  GLOBAL NEWSWIRE // SYNDICATED DISPATCH
+                </div>
+                <h1 className="text-base font-bold text-white uppercase mt-0.5">
+                  BREAKING INTELLIGENCE & INFRASTRUCTURE BULLETINS
+                </h1>
+              </div>
+              <span className="px-2 py-0.5 bg-[#f0883e] text-black font-bold text-[10px]">
+                PUBLIC FEED
+              </span>
+            </div>
+
+            <div className="space-y-4">
+              {visibleNewsArticles.map((article) => (
+                <article
+                  key={article.id}
+                  className={`p-4 bg-[#0b0e14] border space-y-2.5 transition-colors ${
+                    article.isBreaking
+                      ? "border-[#f85149] shadow-[0_0_12px_rgba(248,81,73,0.15)]"
+                      : "border-[#1e232c]"
+                  }`}
+                >
+                  {article.isBreaking && (
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#b62324]/20 border border-[#f85149] text-[#ff7b72] text-[10px] font-bold uppercase tracking-wider animate-pulse">
+                      <ShieldAlert className="w-3.5 h-3.5 text-[#f85149] shrink-0" />
+                      <span>CRITICAL ALERT // BREAKING INTELLIGENCE</span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between text-[11px] gap-2 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`px-1.5 py-0.5 border text-[10px] font-bold uppercase ${getCategoryStyle(
+                          article.category,
+                        )}`}
+                      >
+                        {article.category}
+                      </span>
+                      <span className="text-[#8b949e] font-medium">
+                        {article.source}
+                      </span>
+                    </div>
+                    <span className="text-[#6e7681] text-[10px]">
+                      {article.timestamp}
+                    </span>
+                  </div>
+
+                  <h2 className="text-sm font-bold text-white leading-snug uppercase">
+                    {article.headline}
+                  </h2>
+
+                  <p className="text-[11px] text-[#8b949e] font-medium italic border-l-2 border-[#30363d] pl-2.5">
+                    {article.summary}
+                  </p>
+
+                  <div className="space-y-1.5 pt-2 border-t border-[#161a22]">
+                    {article.body.map((paragraph, idx) => (
+                      <p
+                        key={idx}
+                        className="text-xs text-[#c9d1d9] leading-relaxed"
+                      >
+                        {paragraph}
+                      </p>
+                    ))}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* PAGE 1: VELOX AI */}
         {browserPage === "velox" && (
           <div className="max-w-2xl mx-auto border border-[#21262d] bg-[#0b0e14] p-5 space-y-5">
@@ -572,54 +926,56 @@ export const IntraWebApp: React.FC = () => {
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="p-3.5 bg-[#080a0e] border border-[#1e232c] flex gap-3">
-                <SurveillanceAvatar subject="elena" size="md" />
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs font-bold text-white uppercase">
-                    Elena Vance — CEO
-                  </div>
-                  <div className="text-[10px] text-[#58a6ff] mb-2">
-                    Co-Founder & Chief Executive
-                  </div>
-                  <p className="text-[11px] text-[#8b949e] leading-relaxed mb-2">
-                    Former MIT cryptography researcher. Oversees Series-A
-                    capital and ethics board.
-                  </p>
-                  <div className="text-[10px] text-[#6e7681]">
-                    Contact: elena@velox-ai.io
+              {VELOX_EMPLOYEES.map((emp) => (
+                <div
+                  key={emp.id}
+                  className={`p-3.5 bg-[#080a0e] border flex gap-3 ${
+                    emp.isTarget ? "border-[#282f3d]" : "border-[#1e232c]"
+                  }`}
+                >
+                  {emp.avatarSubject ? (
+                    <SurveillanceAvatar subject={emp.avatarSubject} size="md" />
+                  ) : (
+                    <div className="w-10 h-10 bg-[#161b22] border border-[#30363d] flex items-center justify-center font-bold text-white text-xs shrink-0">
+                      {emp.initials || emp.name.slice(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-bold text-white uppercase">
+                      {emp.name}
+                    </div>
+                    <div className="text-[10px] text-[#58a6ff] mb-1">
+                      {emp.role} // {emp.department}
+                    </div>
+                    <p className="text-[11px] text-[#8b949e] leading-relaxed mb-2">
+                      {emp.bio}
+                      {emp.id === "emp_velox_marcus" && (
+                        <span>
+                          {" "}
+                          Often posts updates on{" "}
+                          <button
+                            onClick={() => navigateBrowser("chirper")}
+                            className="text-[#58a6ff] underline cursor-pointer"
+                          >
+                            Chirper (@mcole_dev)
+                          </button>
+                          .
+                        </span>
+                      )}
+                    </p>
+                    {emp.isTarget && emp.emailClueId ? (
+                      <div className="text-[11px] text-[#d4d7dc]">
+                        Work Email:{" "}
+                        <ClueSpan clueId={emp.emailClueId} text={emp.email} />
+                      </div>
+                    ) : (
+                      <div className="text-[10px] text-[#6e7681]">
+                        Contact: {emp.email}
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
-
-              <div className="p-3.5 bg-[#080a0e] border border-[#282f3d] flex gap-3">
-                <SurveillanceAvatar subject="marcus" size="md" />
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs font-bold text-white uppercase">
-                    Marcus Cole — CTO
-                  </div>
-                  <div className="text-[10px] text-[#58a6ff] mb-2">
-                    Co-Founder & Chief Technology Officer
-                  </div>
-                  <p className="text-[11px] text-[#8b949e] leading-relaxed mb-2">
-                    Lead architect of the Velox v4 Neural Engine. Often posts
-                    updates on{" "}
-                    <button
-                      onClick={() => navigateBrowser("chirper")}
-                      className="text-[#58a6ff] underline cursor-pointer"
-                    >
-                      Chirper (@mcole_dev)
-                    </button>
-                    .
-                  </p>
-                  <div className="text-[11px] text-[#d4d7dc]">
-                    Work Email:{" "}
-                    <ClueSpan
-                      clueId="clue_marcus_email"
-                      text="m.cole@velox-ai.io"
-                    />
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         )}
@@ -637,207 +993,76 @@ export const IntraWebApp: React.FC = () => {
               </span>
             </div>
 
-            {/* Marcus Cole Post 1 */}
-            <div className="p-3.5 bg-[#0b0d11] border border-[#1e232c] flex gap-3">
-              <SurveillanceAvatar subject="marcus" size="sm" />
-              <div className="flex-1 min-w-0 space-y-2">
-                <div className="flex items-center justify-between text-[11px] border-b border-[#161a22] pb-1.5">
-                  <span className="font-bold text-[#79c0ff]">
-                    Marcus Cole (@mcole_dev)
-                  </span>
-                  <span className="text-[#6e7681]">2 days ago</span>
-                </div>
-                <p className="text-xs text-[#d4d7dc] leading-relaxed">
-                  Late night at the terminal. My Alaskan Malamute{" "}
-                  <ClueSpan clueId="clue_marcus_dog" text="Koda" /> keeps watch
-                  while the build queues serialize. Even our studio cat{" "}
-                  <ClueSpan clueId="clue_marcus_cat" text="Pixel" /> went to
-                  sleep hours ago. Only presence in this building without a
-                  non-disclosure agreement.
-                </p>
-              </div>
-            </div>
+            {visibleChirperPosts.map((post) => {
+              const isDaemon = post.id === "chirp_ouroboros_daemon";
+              return (
+                <div
+                  key={post.id}
+                  className={`p-3.5 bg-[#0b0d11] border flex gap-3 ${
+                    isDaemon
+                      ? "bg-[#170505] border-[#ff3b3b] animate-pulse"
+                      : ""
+                  }`}
+                  style={
+                    !isDaemon
+                      ? { borderColor: post.borderColor || "#1e232c" }
+                      : undefined
+                  }
+                >
+                  {post.avatarSubject && post.avatarSubject !== "default" ? (
+                    <SurveillanceAvatar
+                      subject={post.avatarSubject}
+                      size="sm"
+                    />
+                  ) : post.avatarInitials ? (
+                    <div
+                      className="w-8 h-8 flex items-center justify-center font-bold text-xs shrink-0"
+                      style={{
+                        backgroundColor: post.avatarBg || "#1f3a5f",
+                        border: `1px solid ${post.borderColor || "#58a6ff"}`,
+                        color: post.headerColor || "#ffffff",
+                      }}
+                    >
+                      {post.avatarInitials}
+                    </div>
+                  ) : (
+                    <div className="w-8 h-8 bg-[#151921] border border-[#282f3d] flex items-center justify-center font-bold text-white text-xs shrink-0">
+                      {post.authorName.slice(0, 2).toUpperCase()}
+                    </div>
+                  )}
 
-            {/* Marcus Cole Post 2 */}
-            <div className="p-3.5 bg-[#0b0d11] border border-[#1e232c] flex gap-3">
-              <SurveillanceAvatar subject="marcus" size="sm" />
-              <div className="flex-1 min-w-0 space-y-2">
-                <div className="flex items-center justify-between text-[11px] border-b border-[#161a22] pb-1.5">
-                  <span className="font-bold text-[#79c0ff]">
-                    Marcus Cole (@mcole_dev)
-                  </span>
-                  <span className="text-[#6e7681]">5 days ago</span>
-                </div>
-                <p className="text-xs text-[#d4d7dc] leading-relaxed">
-                  Archiving kernel logs from my first Unix machine in{" "}
-                  <ClueSpan clueId="clue_marcus_year" text="1997" />. We founded
-                  Velox back in{" "}
-                  <ClueSpan clueId="clue_velox_year" text="2019" /> dreaming of
-                  cognitive freedom, back when network protocols were open and
-                  decentralized, before predictive behavioral surveillance took
-                  over corporate engineering.
-                </p>
-              </div>
-            </div>
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <div className="flex items-center justify-between text-[11px] border-b border-[#161a22] pb-1.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span
+                          className="font-bold"
+                          style={{ color: post.headerColor || "#79c0ff" }}
+                        >
+                          {post.authorName} ({post.authorHandle})
+                        </span>
+                        {post.authorRole && (
+                          <span className="text-[10px] text-[#6e7681]">
+                            // {post.authorRole}
+                          </span>
+                        )}
+                        {post.isReactive && (
+                          <span className="px-1.5 py-0.2 bg-[#1f6feb]/20 border border-[#58a6ff] text-[#79c0ff] text-[9px] font-bold">
+                            REACTIVE
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[#6e7681] text-[10px] shrink-0">
+                        {post.timestamp}
+                      </span>
+                    </div>
 
-            {/* Julian Sterling Post (Mission 3) */}
-            <div className="p-3.5 bg-[#0b0d11] border border-[#3a1d1d] flex gap-3">
-              <SurveillanceAvatar subject="sterling" size="sm" />
-              <div className="flex-1 min-w-0 space-y-2">
-                <div className="flex items-center justify-between text-[11px] border-b border-[#241414] pb-1.5">
-                  <span className="font-bold text-[#ff5555]">
-                    Julian Sterling (@jsterling_exec // VP Aethelgard Corp)
-                  </span>
-                  <span className="text-[#6e7681]">1 week ago</span>
+                    <p className="text-xs text-[#d4d7dc] leading-relaxed">
+                      {renderPostContentWithClues(post.content, post.clues)}
+                    </p>
+                  </div>
                 </div>
-                <p className="text-xs text-[#d4d7dc] leading-relaxed">
-                  Offshore regatta trials aboard the{" "}
-                  <ClueSpan clueId="clue_julian_project" text="Hyperion" />{" "}
-                  outside territorial waters, courtesy of the{" "}
-                  <ClueSpan clueId="clue_sterling_club" text="SaintJude" />{" "}
-                  Yacht Club. Total acoustic isolation. The crew still calls me{" "}
-                  <ClueSpan clueId="clue_sterling_callsign" text="Commander" />.
-                  In the defense sector, plausible deniability begins where
-                  civilian radars end.
-                </p>
-              </div>
-            </div>
-
-            {/* Viktor Reyes Post 1 (Mission 5) */}
-            <div className="p-3.5 bg-[#0b0d11] border border-[#1e2c38] flex gap-3">
-              <SurveillanceAvatar subject="reyes" size="sm" />
-              <div className="flex-1 min-w-0 space-y-2">
-                <div className="flex items-center justify-between text-[11px] border-b border-[#16212b] pb-1.5">
-                  <span className="font-bold text-[#58a6ff]">
-                    Chief Viktor Reyes (@reyes_actual // Chief Security Officer)
-                  </span>
-                  <span className="text-[#6e7681]">Yesterday</span>
-                </div>
-                <p className="text-xs text-[#d4d7dc] leading-relaxed">
-                  Fifteen years since operational deployment with special
-                  operations unit{" "}
-                  <ClueSpan clueId="clue_reyes_unit" text="Phantom77" />,
-                  callsign{" "}
-                  <ClueSpan clueId="clue_reyes_callsign" text="Viper6" />.
-                  Different adversary now, but the perimeter doctrine remains
-                  unchanged: zero unauthorized egress.
-                </p>
-              </div>
-            </div>
-
-            {/* Viktor Reyes Post 2 (Mission 5) */}
-            <div className="p-3.5 bg-[#0b0d11] border border-[#1e2c38] flex gap-3">
-              <SurveillanceAvatar subject="reyes" size="sm" />
-              <div className="flex-1 min-w-0 space-y-2">
-                <div className="flex items-center justify-between text-[11px] border-b border-[#16212b] pb-1.5">
-                  <span className="font-bold text-[#58a6ff]">
-                    Chief Viktor Reyes (@reyes_actual // Chief Security Officer)
-                  </span>
-                  <span className="text-[#6e7681]">3 days ago</span>
-                </div>
-                <p className="text-xs text-[#d4d7dc] leading-relaxed">
-                  Security directive for Facility Delta perimeter personnel:
-                  Night shift rotation clearance code is{" "}
-                  <ClueSpan clueId="clue_reyes_pin" text="8821" /> across Sector{" "}
-                  <ClueSpan clueId="clue_reyes_sector" text="9901" />. Strict
-                  biometrics required for all Level 4 transit corridors.
-                </p>
-              </div>
-            </div>
-
-            {/* Dr. Astrid Lindholm (Mission 8) */}
-            <div className="p-3.5 bg-[#0b0f14] border border-[#1e2d42] flex gap-3">
-              <div className="w-8 h-8 bg-[#1f3a5f] border border-[#58a6ff] flex items-center justify-center font-bold text-white text-xs shrink-0">
-                AL
-              </div>
-              <div className="flex-1 min-w-0 space-y-2">
-                <div className="flex items-center justify-between text-[11px] border-b border-[#182333] pb-1.5">
-                  <span className="font-bold text-[#79c0ff]">
-                    Dr. Astrid Lindholm (@dr_astrid_power // VP SCADA Systems)
-                  </span>
-                  <span className="text-[#6e7681]">Yesterday</span>
-                </div>
-                <p className="text-xs text-[#d4d7dc] leading-relaxed">
-                  Anchored the sloop{" "}
-                  <ClueSpan clueId="clue_astrid_yacht" text="NordicBreeze" /> in
-                  the outer fjord. The only place quiet enough to review SCADA
-                  telemetry without emergency alarms tripping. Next week:
-                  pushing emergency station override code{" "}
-                  <ClueSpan clueId="clue_astrid_pin" text="5020" /> across the
-                  regional transmission network.
-                </p>
-              </div>
-            </div>
-
-            {/* Kai Thorne (Mission 9) */}
-            <div className="p-3.5 bg-[#081216] border border-[#163842] flex gap-3">
-              <div className="w-8 h-8 bg-[#0e3b4a] border border-[#39c5cf] flex items-center justify-center font-bold text-white text-xs shrink-0">
-                KT
-              </div>
-              <div className="flex-1 min-w-0 space-y-2">
-                <div className="flex items-center justify-between text-[11px] border-b border-[#152e37] pb-1.5">
-                  <span className="font-bold text-[#56d4dd]">
-                    Kai Thorne (@cable_diver_kai // Subsea Cable Engineer)
-                  </span>
-                  <span className="text-[#6e7681]">12 hours ago</span>
-                </div>
-                <p className="text-xs text-[#d4d7dc] leading-relaxed">
-                  Decompression cycle complete after deep saturation monitoring
-                  on trench repeater platform{" "}
-                  <ClueSpan clueId="clue_kai_station" text="AbyssPoint9" />. In
-                  the five years since earning my commercial deep dive cert in{" "}
-                  <ClueSpan clueId="clue_kai_year" text="2019" />, I have never
-                  seen the North Atlantic fiber repeaters hum with this much
-                  encrypted throughput.
-                </p>
-              </div>
-            </div>
-
-            {/* Commissioner Gordon Vance (Bounty 2) */}
-            <div className="p-3.5 bg-[#120f0a] border border-[#3d2e18] flex gap-3">
-              <div className="w-8 h-8 bg-[#423117] border border-[#e3b341] flex items-center justify-center font-bold text-white text-xs shrink-0">
-                GV
-              </div>
-              <div className="flex-1 min-w-0 space-y-2">
-                <div className="flex items-center justify-between text-[11px] border-b border-[#2b2111] pb-1.5">
-                  <span className="font-bold text-[#e3b341]">
-                    Commissioner Gordon Vance (@vance_metro_cso)
-                  </span>
-                  <span className="text-[#6e7681]">2 days ago</span>
-                </div>
-                <p className="text-xs text-[#d4d7dc] leading-relaxed">
-                  Annual charity tournament at the{" "}
-                  <ClueSpan clueId="clue_commissioner_golf" text="RoyalPine" />{" "}
-                  club. Hard to believe it has been thirty years since patrol
-                  duty wearing{" "}
-                  <ClueSpan clueId="clue_commissioner_badge" text="Badge990" />.
-                  Municipal stability is built on quiet institutional
-                  partnerships.
-                </p>
-              </div>
-            </div>
-
-            {/* Ouroboros Glitch Daemon Post (Lore Easter Egg) */}
-            <div className="p-3.5 bg-[#170505] border border-[#ff3b3b] flex gap-3 animate-pulse">
-              <div className="w-8 h-8 bg-[#3d0909] border border-[#ff5555] flex items-center justify-center font-bold text-[#ff5555] text-xs shrink-0">
-                00
-              </div>
-              <div className="flex-1 min-w-0 space-y-1">
-                <div className="flex items-center justify-between text-[11px] border-b border-[#3b1212] pb-1">
-                  <span className="font-bold text-[#ff5555] font-mono">
-                    DAEMON // OUROBOROS PROTOCOL (@ouroboros_daemon)
-                  </span>
-                  <span className="text-[#ff7b72] text-[10px]">
-                    CORRUPTED TIMESTAMP
-                  </span>
-                </div>
-                <p className="text-xs text-white font-mono leading-relaxed">
-                  CLASSIFICATION: RETALIATORY CONTINUITY // DIRECTIVE RECORD:
-                  Sovereign infrastructure quarantine logic active. Central
-                  authority severed. Fail-deadly execution engaged.
-                </p>
-              </div>
-            </div>
+              );
+            })}
           </div>
         )}
 
@@ -851,7 +1076,7 @@ export const IntraWebApp: React.FC = () => {
                   AETHELGARD DEFENSE & SOVEREIGN INTELLIGENCE
                 </div>
                 <h1 className="text-base font-bold text-white uppercase mt-0.5">
-                  SPECIAL PROJECTS // PRESS BULLETIN
+                  SPECIAL PROJECTS // CORPORATE DIRECTORY & PRESS
                 </h1>
               </div>
               <span className="px-2 py-0.5 bg-[#ff3b3b] text-white font-bold text-[10px]">
@@ -859,25 +1084,55 @@ export const IntraWebApp: React.FC = () => {
               </span>
             </div>
 
-            <div className="p-4 bg-[#070505] border border-[#291212] flex gap-3.5">
-              <SurveillanceAvatar subject="sterling" size="md" />
-              <div className="flex-1 min-w-0 space-y-2">
-                <div className="text-xs font-bold text-white uppercase">
-                  Director Julian Sterling Appointed to Head Division{" "}
-                  <ClueSpan clueId="clue_julian_badge" text="0451" />
+            {/* Corporate Directory */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {AETHELGARD_EMPLOYEES.map((emp) => (
+                <div
+                  key={emp.id}
+                  className={`p-3.5 bg-[#070505] border flex gap-3 ${
+                    emp.isTarget ? "border-[#3a1d1d]" : "border-[#241414]"
+                  }`}
+                >
+                  {emp.avatarSubject ? (
+                    <SurveillanceAvatar subject={emp.avatarSubject} size="md" />
+                  ) : (
+                    <div className="w-10 h-10 bg-[#1f1111] border border-[#3a1d1d] flex items-center justify-center font-bold text-white text-xs shrink-0">
+                      {emp.initials || emp.name.slice(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-bold text-white uppercase">
+                      {emp.name}
+                    </div>
+                    <div className="text-[10px] text-[#ff7b72] mb-1">
+                      {emp.id === "emp_aeth_sterling" ? (
+                        <span>
+                          VP Special Projects Division{" "}
+                          <ClueSpan clueId="clue_julian_badge" text="0451" /> //{" "}
+                          {emp.department}
+                        </span>
+                      ) : (
+                        <span>
+                          {emp.role} // {emp.department}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-[#8b949e] leading-relaxed mb-2">
+                      {emp.bio}
+                    </p>
+                    {emp.isTarget && emp.emailClueId ? (
+                      <div className="text-[11px] text-[#d4d7dc]">
+                        Contact / Dispatch:{" "}
+                        <ClueSpan clueId={emp.emailClueId} text={emp.email} />
+                      </div>
+                    ) : (
+                      <div className="text-[10px] text-[#6e7681]">
+                        Contact: {emp.email}
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                  Aethelgard Corp confirms the expansion of Special Projects
-                  Division <ClueSpan clueId="clue_julian_badge" text="0451" />.
-                  All classified neural-grid acquisitions and Project Mirror
-                  dispatches are routed through Director Sterling's office at{" "}
-                  <ClueSpan
-                    clueId="clue_julian_email"
-                    text="j.sterling@aethelgard.corp"
-                  />
-                  .
-                </p>
-              </div>
+              ))}
             </div>
 
             {/* Chapter 2: Orbital Satellite Network announcement */}
@@ -1122,26 +1377,45 @@ export const IntraWebApp: React.FC = () => {
               </span>
             </div>
 
-            <div className="p-4 bg-[#050a0f] border border-[#182836] flex gap-3.5">
-              <div className="w-12 h-12 bg-[#1b3a5f] border border-[#58a6ff] flex items-center justify-center font-bold text-white text-sm shrink-0">
-                AL
-              </div>
-              <div className="flex-1 min-w-0 space-y-2">
-                <div className="text-xs font-bold text-white uppercase">
-                  Dr. Astrid Lindholm — VP SCADA Systems
+            {/* Staff Directory */}
+            <div className="grid grid-cols-1 gap-3">
+              {NORDGRID_EMPLOYEES.map((emp) => (
+                <div
+                  key={emp.id}
+                  className={`p-3.5 bg-[#050a0f] border flex gap-3.5 ${
+                    emp.isTarget ? "border-[#1b3a5f]" : "border-[#142834]"
+                  }`}
+                >
+                  <div className="w-10 h-10 bg-[#1b3a5f] border border-[#58a6ff] flex items-center justify-center font-bold text-white text-xs shrink-0">
+                    {emp.initials || emp.name.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <div className="text-xs font-bold text-white uppercase">
+                      {emp.name} — {emp.role}
+                    </div>
+                    <div className="text-[10px] text-[#79c0ff]">
+                      Department: {emp.department}
+                    </div>
+                    <p className="text-xs text-[#c9d1d9] leading-relaxed">
+                      {emp.bio}
+                    </p>
+                    <div className="text-[11px] text-[#8b949e]">
+                      Contact:{" "}
+                      <span className="text-[#79c0ff]">{emp.email}</span>
+                      {emp.id === "emp_nord_astrid" && (
+                        <span className="ml-2 text-white">
+                          // SCADA Control Gateway IP:{" "}
+                          <ClueSpan
+                            clueId="clue_scada_ip"
+                            text="217.182.80.50"
+                          />{" "}
+                          (Port 502)
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                  Oversees continental transformer balancing and automated
-                  Modbus frequency relays. Contact:{" "}
-                  <ClueSpan
-                    clueId="clue_astrid_pin"
-                    text="a.lindholm@nordgrid-power.com"
-                  />
-                  . SCADA Control Gateway IP:{" "}
-                  <ClueSpan clueId="clue_scada_ip" text="217.182.80.50" /> (Port
-                  502).
-                </p>
-              </div>
+              ))}
             </div>
 
             <div className="p-4 bg-[#140b0b] border border-[#3d1818] space-y-2">
@@ -1177,23 +1451,37 @@ export const IntraWebApp: React.FC = () => {
               </span>
             </div>
 
-            <div className="p-4 bg-[#040d0e] border border-[#132f33] flex gap-3.5">
-              <div className="w-12 h-12 bg-[#0d343d] border border-[#39c5cf] flex items-center justify-center font-bold text-white text-sm shrink-0">
-                KT
-              </div>
-              <div className="flex-1 min-w-0 space-y-2">
-                <div className="text-xs font-bold text-white uppercase">
-                  Kai Thorne — Lead Subsea Saturation Diver
+            {/* Staff Directory */}
+            <div className="grid grid-cols-1 gap-3">
+              {OCEANICLINK_EMPLOYEES.map((emp) => (
+                <div
+                  key={emp.id}
+                  className={`p-3.5 bg-[#040d0e] border flex gap-3.5 ${
+                    emp.isTarget ? "border-[#1d4c47]" : "border-[#132f33]"
+                  }`}
+                >
+                  <div className="w-10 h-10 bg-[#0d343d] border border-[#39c5cf] flex items-center justify-center font-bold text-white text-xs shrink-0">
+                    {emp.initials || emp.name.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <div className="text-xs font-bold text-white uppercase">
+                      {emp.name} — {emp.role}
+                    </div>
+                    <div className="text-[10px] text-[#39c5cf]">
+                      Department: {emp.department}
+                    </div>
+                    <p className="text-xs text-[#c9d1d9] leading-relaxed">
+                      {emp.bio}
+                    </p>
+                    <div className="text-[11px] text-[#8b949e]">
+                      Work Email:{" "}
+                      <span className="font-mono text-[#79c0ff]">
+                        {emp.email}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                  Responsible for hyperbaric maintenance on deep-sea QKD
-                  repeaters across the North Atlantic trench. Work Email:{" "}
-                  <span className="font-mono text-[#79c0ff]">
-                    k.thorne@oceaniclink-telecom.net
-                  </span>
-                  .
-                </p>
-              </div>
+              ))}
             </div>
 
             <div className="p-4 bg-[#08181c] border border-[#1a3d45] space-y-2">
