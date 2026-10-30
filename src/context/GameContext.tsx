@@ -240,7 +240,11 @@ interface GameContextType {
   saveSlots: SaveSlotProfile[];
   activeSlotId: string | null;
   loadProfileSlot: (slotId: string) => void;
-  createProfileSlot: (name: string, diff: DifficultyPreset) => void;
+  createProfileSlot: (
+    name: string,
+    diff: DifficultyPreset,
+    slotOverride?: string,
+  ) => void;
   deleteProfileSlot: (slotId: string) => void;
 }
 
@@ -562,6 +566,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
   const [unreadMessages, setUnreadMessages] = useState<number>(0);
   const [campaignFinished, setCampaignFinished] = useState<boolean>(false);
   const [loadedFromSave, setLoadedFromSave] = useState<boolean>(false);
+  const missionTransitionRef = useRef<boolean>(false);
 
   const [notifications, setNotifications] = useState<
     {
@@ -645,32 +650,73 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
       ? saved.completedMissionIds
       : [];
 
-    // If mission_3 was completed, advance to 3 (Chapter 2: Orbital Eye)
-    if (completedIds.includes("mission_3") && effectiveIndex <= 2) {
-      effectiveIndex = 3;
-    }
+    // Enforce strict sequential mission progression: never skip an uncompleted mission
+    const firstUncompletedIndex = MISSIONS.findIndex(
+      (m) => !completedIds.includes(m.id),
+    );
+    const expectedIndex =
+      firstUncompletedIndex === -1
+        ? MISSIONS.length - 1
+        : firstUncompletedIndex;
+    const wasOutOfSync = effectiveIndex !== expectedIndex;
+    effectiveIndex = expectedIndex;
 
     setCurrentMissionIndex(effectiveIndex);
     setCompletedMissionIds(completedIds);
 
-    // Only allow campaignFinished if at the final operation (Operation 10)
+    // Only allow campaignFinished if at the final operation (Operation 10) and all completed
     const isReallyCampaignFinished =
-      Boolean(saved.campaignFinished) && effectiveIndex >= MISSIONS.length - 1;
+      Boolean(saved.campaignFinished) &&
+      firstUncompletedIndex === -1 &&
+      effectiveIndex >= MISSIONS.length - 1;
     setCampaignFinished(isReallyCampaignFinished);
 
-    if (saved.missionStage) {
+    // Collect valid message prefixes for missions up to effectiveIndex
+    const futureMissionIds = new Set(
+      MISSIONS.slice(effectiveIndex + 1).map((m) => m.id),
+    );
+    const futureInitialMsgIds = new Set(
+      MISSIONS.slice(effectiveIndex + 1).flatMap((m) => [
+        ...m.initialMessages.map((im) => im.id),
+        ...m.completionMessages.map((cm) => cm.id),
+      ]),
+    );
+
+    let cleanedHistory: ChatMessage[] = [];
+    if (Array.isArray(saved.chatHistory) && saved.chatHistory.length > 0) {
+      cleanedHistory = saved.chatHistory.filter((msg: ChatMessage) => {
+        if (futureInitialMsgIds.has(msg.id)) return false;
+        for (const fId of futureMissionIds) {
+          if (
+            msg.id.startsWith(`accept_${fId}`) ||
+            msg.id.startsWith(`report_${fId}`) ||
+            msg.id === `sys_div_${fId}`
+          ) {
+            return false;
+          }
+        }
+        return true;
+      });
+      setChatHistory(cleanedHistory);
+    }
+
+    const activeMission = MISSIONS[effectiveIndex];
+    const hasAcceptedActive =
+      activeMission &&
+      cleanedHistory.some((m) => m.id.startsWith(`accept_${activeMission.id}`));
+
+    if (wasOutOfSync) {
+      setMissionStage(hasAcceptedActive ? "investigating" : "briefing");
+    } else if (saved.missionStage) {
       if (
-        saved.missionStage === "completed" &&
+        (saved.missionStage === "completed" ||
+          saved.missionStage === "reporting") &&
         effectiveIndex < MISSIONS.length - 1
       ) {
-        setMissionStage("briefing");
+        setMissionStage(hasAcceptedActive ? "investigating" : "briefing");
       } else {
         setMissionStage(saved.missionStage);
       }
-    }
-
-    if (Array.isArray(saved.chatHistory) && saved.chatHistory.length > 0) {
-      setChatHistory(saved.chatHistory);
     }
     if (typeof saved.firewallHealth === "number")
       setFirewallHealth(saved.firewallHealth);
@@ -789,6 +835,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
     setCompletedMissionIds([]);
     setChatHistory([]);
     setCampaignFinished(false);
+    missionTransitionRef.current = false;
     setWindows(INITIAL_WINDOWS);
     setActiveApp("whisper");
     setBrowserPage("search");
@@ -859,8 +906,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
     resetLocalGameState();
   };
 
-  const createProfileSlot = (name: string, diff: DifficultyPreset) => {
-    const slotId = activeSlotId || "slot_1";
+  const createProfileSlot = (
+    name: string,
+    diff: DifficultyPreset,
+    slotOverride?: string,
+  ) => {
+    const slotId = slotOverride || activeSlotId || "slot_1";
     const cleanHandle =
       name.trim() || `OPERATOR_${Math.floor(1000 + Math.random() * 9000)}`;
     const newProfile: SaveSlotProfile = {
@@ -872,6 +923,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
       crypto: 50,
       completedMissionsCount: 0,
     };
+
+    try {
+      localStorage.removeItem("nexus_save_data_" + slotId);
+    } catch {}
+    fetch(`/api/save/${slotId}`, { method: "DELETE" }).catch(() => {});
 
     setDifficulty(diff);
     setCurrentUser({ id: slotId, username: cleanHandle });
@@ -1590,9 +1646,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
   ]);
 
   const acceptCurrentMission = (replyText: string) => {
-    sound.playClick();
+    if (missionStage !== "accept_prompt" || missionTransitionRef.current)
+      return;
     const currentMission = MISSIONS[currentMissionIndex];
     if (!currentMission) return;
+
+    sound.playClick();
 
     const playerMsg: ChatMessage = {
       id: `accept_${currentMission.id}_${Date.now()}`,
@@ -1602,7 +1661,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
       text: replyText,
     };
 
-    setChatHistory((prev) => [...prev, playerMsg]);
+    setChatHistory((prev) => {
+      if (prev.some((m) => m.id.startsWith(`accept_${currentMission.id}_`))) {
+        return prev;
+      }
+      return [...prev, playerMsg];
+    });
     setMissionStage(
       areAllObjectivesComplete() ? "report_ready" : "investigating",
     );
@@ -1615,8 +1679,15 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const submitMissionReport = (reportText: string) => {
     const currentMission = MISSIONS[currentMissionIndex];
-    if (!currentMission || missionStage === "reporting") return;
+    if (
+      !currentMission ||
+      missionStage !== "report_ready" ||
+      missionTransitionRef.current
+    ) {
+      return;
+    }
 
+    missionTransitionRef.current = true;
     sound.playClick();
     setMissionStage("reporting");
 
@@ -1638,7 +1709,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
     setTimeout(() => {
       setClientIsTyping(false);
       sound.playSuccess();
-      setCompletedMissionIds((prev) => [...prev, currentMission.id]);
       setCrypto((c) => c + currentMission.reward);
 
       addNotification(
@@ -1663,11 +1733,22 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
           },
         ]);
         setTimeout(() => {
+          setCompletedMissionIds((prev) =>
+            prev.includes(currentMission.id)
+              ? prev
+              : [...prev, currentMission.id],
+          );
           setCurrentMissionIndex(nextIndex);
           setMissionStage("briefing");
           setCampaignFinished(false);
+          missionTransitionRef.current = false;
         }, 900);
       } else {
+        setCompletedMissionIds((prev) =>
+          prev.includes(currentMission.id)
+            ? prev
+            : [...prev, currentMission.id],
+        );
         setChatHistory((prev) => [
           ...prev,
           clientReply,
@@ -1681,14 +1762,24 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
         ]);
         setMissionStage("completed");
         setCampaignFinished(true);
+        missionTransitionRef.current = false;
       }
     }, 1300);
   };
 
   const advanceToNextMission = () => {
-    sound.playSuccess();
-    const nextIndex = currentMissionIndex + 1;
-    if (nextIndex < MISSIONS.length) {
+    if (missionTransitionRef.current || missionStage === "reporting") return;
+    const currentMission = MISSIONS[currentMissionIndex];
+    if (!currentMission || !completedMissionIds.includes(currentMission.id)) {
+      return;
+    }
+    const firstUncompleted = MISSIONS.findIndex(
+      (m) => !completedMissionIds.includes(m.id),
+    );
+    const nextIndex =
+      firstUncompleted !== -1 ? firstUncompleted : currentMissionIndex + 1;
+    if (nextIndex > currentMissionIndex && nextIndex < MISSIONS.length) {
+      sound.playSuccess();
       setCurrentMissionIndex(nextIndex);
       setMissionStage("briefing");
       setCampaignFinished(false);

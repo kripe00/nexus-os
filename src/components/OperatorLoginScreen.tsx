@@ -127,7 +127,7 @@ export const OperatorLoginScreen: React.FC<OperatorLoginScreenProps> = ({
     sound.ensureMusicPlaying();
     const handle =
       newCodename.trim() || `GHOST_${Math.floor(100 + Math.random() * 900)}`;
-    createProfileSlot(handle, selectedDifficulty);
+    createProfileSlot(handle, selectedDifficulty, targetSlotId);
   };
 
   const handleDbSubmit = async (e: React.FormEvent) => {

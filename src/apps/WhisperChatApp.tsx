@@ -493,6 +493,10 @@ export const WhisperChatApp: React.FC = () => {
               network sniffing, and exploration.
             </p>
           </div>
+        ) : missionStage === "reporting" ? (
+          <div className="text-[11px] text-[#56d364] py-1">
+            Transmitting cryptographic proof & verifying escrow payout...
+          </div>
         ) : (campaignFinished ||
             missionStage === "completed" ||
             completedMissionIds.includes(currentMission.id)) &&
@@ -560,10 +564,6 @@ export const WhisperChatApp: React.FC = () => {
               <span>{reportOptions[currentMissionIndex].label}</span>
               <Send className="w-4 h-4 shrink-0 ml-2" />
             </button>
-          </div>
-        ) : missionStage === "reporting" ? (
-          <div className="text-[11px] text-[#56d364] py-1">
-            Transmitting cryptographic proof & verifying escrow payout...
           </div>
         ) : (
           /* Investigating State: Show helpful contextual next-step launcher */
