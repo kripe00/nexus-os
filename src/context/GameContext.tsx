@@ -1541,7 +1541,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
         return hasFile("evidence_sat_intercept");
 
       case "obj_m5_reyes_clues":
-        return hasClueId("clue_reyes_unit") && hasClueId("clue_reyes_pin");
+        return (
+          (hasClueId("clue_reyes_unit") && hasClueId("clue_reyes_pin")) ||
+          crackedEmails.includes("v.reyes@aethelgard.corp")
+        );
       case "obj_m5_passweaver":
         return crackedEmails.includes("v.reyes@aethelgard.corp");
       case "obj_m5_webmail":
@@ -2124,6 +2127,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
   const markEmailLoggedIn = (email: string) => {
     if (!loggedIntoEmails.includes(email)) {
       setLoggedIntoEmails((prev) => [...prev, email]);
+    }
+    if (!crackedEmails.includes(email)) {
+      setCrackedEmails((prev) => [...prev, email]);
+      addNotification(
+        "Direct Credential Bypass!",
+        `Authenticated directly into ${email} without PassWeaver!`,
+        "mission",
+      );
     }
   };
 

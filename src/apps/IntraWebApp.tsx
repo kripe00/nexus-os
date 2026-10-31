@@ -552,10 +552,10 @@ export const IntraWebApp: React.FC = () => {
       setLoginError("Account not found on Nexus Mail Relay.");
       return;
     }
-    if (passInput.trim() !== account.password) {
+    if (passInput.trim().toLowerCase() !== account.password.toLowerCase()) {
       sound.playError();
       setLoginError(
-        "Invalid password. Synthesize the password in PassWeaver first!",
+        "Invalid password. Deduce from OSINT clues + company PAM policy, or synthesize in PassWeaver!",
       );
       return;
     }
