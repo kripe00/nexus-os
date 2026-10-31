@@ -977,6 +977,21 @@ export const IntraWebApp: React.FC = () => {
                 </div>
               ))}
             </div>
+
+            {/* Velox IT / PAM Compliance Footer Notice */}
+            <div className="p-3 bg-[#080a0e] border border-[#1e232c] text-[10px] text-[#8b949e] font-mono leading-relaxed">
+              <span className="text-[#58a6ff] font-bold uppercase mr-1.5">
+                [IT SYSADMIN NOTICE // PAM-STD-01]:
+              </span>
+              All @velox-ai.io employee webmail accounts still run on the legacy
+              compound authentication policy: a capitalized{" "}
+              <span className="text-[#c9d1d9]">
+                personal noun or pet name
+              </span>{" "}
+              directly followed by a{" "}
+              <span className="text-[#c9d1d9]">4-digit year</span> (no
+              underscores or trailing symbols).
+            </div>
           </div>
         )}
 
@@ -1151,6 +1166,23 @@ export const IntraWebApp: React.FC = () => {
                 Automated signals sync directly with Facility Delta's perimeter
                 supercomputing core.
               </p>
+            </div>
+
+            {/* Aethelgard Defense PAM Policy Notice */}
+            <div className="p-3 bg-[#070505] border border-[#361515] text-[10px] text-[#8b949e] font-mono leading-relaxed">
+              <span className="text-[#ff7b72] font-bold uppercase mr-1.5">
+                [DIV-0451 SECURITY DIRECTIVE // PAM-EXEC]:
+              </span>
+              Executive @aethelgard.corp mail relays require a{" "}
+              <span className="text-[#c9d1d9]">
+                Project / Vessel Codename
+              </span>{" "}
+              directly concatenated with a{" "}
+              <span className="text-[#c9d1d9]">
+                4-Digit Registry or Berth PIN
+              </span>
+              . Field Security Chiefs utilize 64-character salted hardware
+              tokens immune to heuristic dictionary synthesis.
             </div>
           </div>
         )}
@@ -1430,6 +1462,21 @@ export const IntraWebApp: React.FC = () => {
                 confidential Modbus Trip-Key.
               </p>
             </div>
+
+            {/* NordGrid Industrial PAM Policy Notice */}
+            <div className="p-3 bg-[#050a0f] border border-[#142834] text-[10px] text-[#8b949e] font-mono leading-relaxed">
+              <span className="text-[#e3b341] font-bold uppercase mr-1.5">
+                [SCADA IAM COMPLIANCE // PAM-GRID-08]:
+              </span>
+              All @nordgrid-power.com operator credentials enforce the
+              Industrial Substation format: assigned{" "}
+              <span className="text-[#c9d1d9]">
+                Unit / Substation Handle
+              </span>{" "}
+              followed by{" "}
+              <span className="text-[#c9d1d9]">4-Digit Shift or Sync Code</span>
+              .
+            </div>
           </div>
         )}
 
@@ -1497,6 +1544,21 @@ export const IntraWebApp: React.FC = () => {
                 unauthenticated carrier streams observed synchronizing with
                 northern polar coordinates.
               </p>
+            </div>
+
+            {/* OceanicLink Subsea PAM Policy Notice */}
+            <div className="p-3 bg-[#040d0e] border border-[#122c2a] text-[10px] text-[#8b949e] font-mono leading-relaxed">
+              <span className="text-[#39c5cf] font-bold uppercase mr-1.5">
+                [SUBSEA TELECOM IT // PAM-STD-09]:
+              </span>
+              Field diver and optical engineer @oceaniclink-telecom.net accounts
+              use standard compound credentials:{" "}
+              <span className="text-[#c9d1d9]">
+                Personal Noun / Station Callsign
+              </span>{" "}
+              followed by{" "}
+              <span className="text-[#c9d1d9]">4-Digit Certification Year</span>
+              .
             </div>
           </div>
         )}

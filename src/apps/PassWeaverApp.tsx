@@ -465,22 +465,20 @@ export const PassWeaverApp: React.FC = () => {
             )}
           </div>
 
-          {/* Domain PAM Policy Intel Banner so player can deduce the schema fairly */}
+          {/* Domain PAM Guidance + Live Candidate Format Preview (without spoiling the rule on Operative/Ghost) */}
           {targetAccount && (
             <div className="p-2 bg-[#07090d] border border-[#1f2937] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[10px]">
               <div className="text-[#8b949e]">
                 <span className="text-[#58a6ff] font-bold uppercase mr-1.5">
-                  [DOMAIN PAM POLICY INTEL]:
+                  [PAM FORMAT RECON]:
                 </span>
-                {targetAccount.patternSchemaId === "project_pin"
-                  ? "Aethelgard Executive Policy requires [Program Codename] concatenated with [4-Digit Berth/Registry PIN]."
-                  : targetAccount.patternSchemaId === "unit_shift"
-                    ? "NordGrid Industrial Policy requires [Substation / Unit ID] concatenated with [Shift or Sync Code]."
-                    : "Standard Corporate PAM Policy requires [Personal Noun / Pet / Brand] concatenated with [4-Digit Year]."}
+                {difficulty === "analyst"
+                  ? `Auto-matched to ${targetAccount.ownerName.split("(")[0].trim()}'s domain policy.`
+                  : "Check the target organization's IntraWeb portal (IT Security / PAM Compliance notice at bottom of page) to identify their password format rule."}
               </div>
               {passWeaverSelectedClues.length > 0 && (
                 <div className="shrink-0 font-mono bg-[#11161f] px-2 py-0.5 border border-[#263040] text-[#79c0ff]">
-                  Preview:{" "}
+                  Format Preview:{" "}
                   <span className="text-white font-bold">
                     {(() => {
                       const vals = discoveredClues
