@@ -47,6 +47,7 @@ export const SmartTerminalApp: React.FC = () => {
     crypto,
     currentUser,
     difficulty,
+    currentMissionIndex,
   } = useGame();
 
   const [input, setInput] = useState("");
@@ -86,18 +87,27 @@ export const SmartTerminalApp: React.FC = () => {
     setCwd("/root");
   }, [connectedIp]);
 
+  const missionBriefedIps = [
+    ...(currentMissionIndex >= 1 ? ["198.51.100.42"] : []),
+    ...(currentMissionIndex >= 2 ? ["203.0.113.88"] : []),
+    ...(currentMissionIndex >= 3 ? ["185.220.101.5"] : []),
+    ...(currentMissionIndex >= 5 ? ["194.165.16.100"] : []),
+    ...(currentMissionIndex >= 9 ? ["185.190.20.1"] : []),
+  ];
+
   const knownIps = Array.from(
     new Set([
       ...discoveredClues.filter((c) => c.category === "ip").map((c) => c.value),
+      ...missionBriefedIps,
       ...(scannedIps.length > 0 ? scannedIps : []),
     ]),
   );
 
   useEffect(() => {
-    if (knownIps.length > 0 && !knownIps.includes(terminalSelectedIp)) {
+    if (!connectedIp && knownIps.length > 0) {
       setTerminalSelectedIp(knownIps[knownIps.length - 1]);
     }
-  }, [knownIps.length]);
+  }, [knownIps.length, currentMissionIndex]);
 
   const appendLog = (type: LogLine["type"], text: string) => {
     setLogs((prev) => [
