@@ -35,17 +35,17 @@ Dette dokumentet samler de viktigste forbedringsområdene for **NexusOS**, struk
 
 ---
 
-## Fase 3: Dypere Terminal- og Server-infiltrasjon
+## Fase 3: Dypere Terminal- og Server-infiltrasjon ✅ (Fullført)
 
 **Mål:** Gjøre hver server-breach i `src/apps/SmartTerminalApp.tsx` unik og spennende under aktiv trace.
 
 ### Konkrete oppgaver
 
-- [ ] **Hierarkisk filsystem på servere (`src/data/worldData.ts`):**
+- [x] **Hierarkisk filsystem på servere (`src/data/worldData.ts`):**
   - Støtte for mapper (`cd`, `ls -la`, `pwd`, `find`) slik at bevisfiler ikke alltid ligger rett på rot-nivå.
-- [ ] **Aktive prosesser og mottiltak under Trace:**
+- [x] **Aktive prosesser og mottiltak under Trace:**
   - Kommandoer som `ps` og `kill <pid>` på målserveren for å stanse fiendtlige vakt-prosesser (som ellers øker trace-hastigheten).
-- [ ] **Låste arkiver og to-trinns gåter på serveren:**
+- [x] **Låste arkiver og to-trinns gåter på serveren:**
   - Enkelte filer på en server kan kreve en dekrypteringsnøkkel eller passordfrase som finnes i en `.conf`- eller `.log`-fil i en annen mappe på samme server.
 
 ---

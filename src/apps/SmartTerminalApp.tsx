@@ -6,10 +6,12 @@ import {
   ShieldAlert,
   Terminal as TerminalIcon,
   Zap,
+  Lock,
 } from "lucide-react";
 import { SERVER_NODES, SHOP_ITEMS } from "../data/worldData";
 import { useGame } from "../context/GameContext";
 import { WindowFrame } from "../components/WindowFrame";
+import { ServerFile, ServerNode } from "../types/game";
 import { sound } from "../utils/sound";
 
 interface LogLine {
@@ -36,6 +38,7 @@ export const SmartTerminalApp: React.FC = () => {
     connectToServer,
     downloadServerFile,
     wipeServerLogs,
+    mitigateTrace,
     openApp,
     terminalCommandToRun,
     setTerminalCommandToRun,
@@ -43,11 +46,19 @@ export const SmartTerminalApp: React.FC = () => {
     underAttack,
     crypto,
     currentUser,
+    difficulty,
   } = useGame();
 
   const [input, setInput] = useState("");
   const [history, setHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
+  const [cwd, setCwd] = useState<string>("/root");
+  const [killedPidsByServer, setKilledPidsByServer] = useState<
+    Record<string, number[]>
+  >({});
+  const [unlockedKeysByServer, setUnlockedKeysByServer] = useState<
+    Record<string, string[]>
+  >({});
   const [busyTask, setBusyTask] = useState<{
     label: string;
     progress: number;
@@ -70,6 +81,11 @@ export const SmartTerminalApp: React.FC = () => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [logs, busyTask]);
 
+  // Reset cwd to /root whenever connectedIp changes
+  useEffect(() => {
+    setCwd("/root");
+  }, [connectedIp]);
+
   const knownIps = Array.from(
     new Set([
       ...discoveredClues.filter((c) => c.category === "ip").map((c) => c.value),
@@ -88,6 +104,28 @@ export const SmartTerminalApp: React.FC = () => {
       ...prev,
       { id: `${Date.now()}-${Math.random()}`, type, text },
     ]);
+  };
+
+  // Helper: get all unique folders on a server node
+  const getNodeFolders = (node: ServerNode): string[] => {
+    const set = new Set<string>(["/root", "/etc", "/var/log"]);
+    for (const f of node.files) {
+      set.add(f.folder || "/root");
+    }
+    return Array.from(set).sort();
+  };
+
+  // Helper: resolve a file by filename or path (e.g. "vault_cipher.conf" or "/etc/vault_cipher.conf")
+  const resolveServerFile = (
+    node: ServerNode,
+    query: string,
+  ): ServerFile | undefined => {
+    if (!query) return undefined;
+    const clean = query.trim().toLowerCase();
+    return node.files.find((f) => {
+      const fullPath = `${f.folder || "/root"}/${f.name}`.toLowerCase();
+      return f.name.toLowerCase() === clean || fullPath === clean;
+    });
   };
 
   const runWithProgress = (
@@ -123,13 +161,14 @@ export const SmartTerminalApp: React.FC = () => {
     setHistoryIndex(-1);
 
     const promptPrefix = connectedIp
-      ? `root@${connectedIp}:~#`
+      ? `root@${connectedIp}:${cwd}#`
       : `operator@nexus:~#`;
     appendLog("cmd", `${promptPrefix} ${cmdLine}`);
 
     const parts = cmdLine.split(/\s+/);
     const cmd = parts[0].toLowerCase();
     const arg = parts[1];
+    const arg2 = parts[2];
 
     switch (cmd) {
       case "help": {
@@ -138,26 +177,30 @@ export const SmartTerminalApp: React.FC = () => {
           [
             "======================= NEXUS TACTICAL SHELL =======================",
             "CORE INTRUSION COMMANDS:",
-            "  scan <ip>          - SYN port scan & security fingerprint",
-            "  crack <port>       - Execute binary exploit against port (22 / 443 / 80 / 502)",
-            "  connect <ip>       - Mount remote root shell on compromised host",
-            "  ls                 - List directory contents on remote filesystem",
-            "  cat <filename>     - Dump plaintext file to stdout",
-            "  download <file>    - Exfiltrate remote file to local DataVault",
-            "  wipe_logs          - Zero out /var/connection.log & halt Active Trace",
-            "  disconnect         - Terminate remote SSH tunnel",
+            "  scan <ip>              - SYN port scan & security fingerprint",
+            "  crack <port>           - Execute binary exploit against port (22 / 443 / 80 / 502)",
+            "  connect <ip>           - Mount remote root shell on compromised host",
+            "  ls / ls -la            - List directory contents (ls -la shows full filesystem)",
+            "  cd <dir> / pwd         - Navigate hierarchical directories (/root, /etc, /var/log, /opt)",
+            "  find                   - Locate all files and encrypted archives across server",
+            "  cat <file>             - Dump file to stdout (auto-harvests keys from .conf/.log)",
+            "  decrypt <file> <key>   - Unlock AES-encrypted server archive using key",
+            "  download <file>        - Exfiltrate remote file to local DataVault",
+            "  ps / kill <pid>        - Inspect remote processes & terminate hostile trace sentinels",
+            "  wipe_logs              - Zero out /var/connection.log & halt Active Trace",
+            "  disconnect             - Terminate remote SSH tunnel",
             "",
             "TACTICAL RECON & NETWORKING:",
-            "  ping <ip>          - Send ICMP echo requests to verify node responsiveness",
-            "  traceroute <ip>    - Trace packet hops through active proxy relays",
-            "  netstat            - Display active network sockets, ports & hostile probes",
+            "  ping <ip>              - Send ICMP echo requests to verify node responsiveness",
+            "  traceroute <ip>        - Trace packet hops through active proxy relays",
+            "  netstat                - Display active network sockets, ports & hostile probes",
             "",
             "SYSTEM & TELEMETRY:",
-            "  top / htop         - Live CPU, memory, and rogue process monitor",
-            "  whoami             - Display current identity, UID, privileges & wallet",
-            "  uname -a           - Print kernel release, architecture & OS version",
-            "  matrix             - Spurt cascading digital phosphorescent rain",
-            "  clear              - Flush terminal output buffer",
+            "  top / htop             - Live CPU, memory, and rogue process monitor",
+            "  whoami                 - Display current identity, UID, privileges & wallet",
+            "  uname -a               - Print kernel release, architecture & OS version",
+            "  matrix                 - Spurt cascading digital phosphorescent rain",
+            "  clear                  - Flush terminal output buffer",
             "====================================================================",
             "PRO TIP: Press [TAB] for smart autocompletion. Use [↑] and [↓] for command history.",
           ].join("\n"),
@@ -167,6 +210,245 @@ export const SmartTerminalApp: React.FC = () => {
 
       case "clear": {
         setLogs([]);
+        break;
+      }
+
+      case "pwd": {
+        appendLog("info", connectedIp ? cwd : "/home/operator");
+        break;
+      }
+
+      case "cd": {
+        if (!connectedIp) {
+          appendLog("info", "Local directory locked to /home/operator.");
+          break;
+        }
+        const node = SERVER_NODES[connectedIp];
+        const folders = getNodeFolders(node);
+        if (!arg || arg === "~" || arg === "/root") {
+          setCwd("/root");
+          break;
+        }
+        if (arg === "/") {
+          setCwd("/");
+          break;
+        }
+        if (arg === "..") {
+          const parent = cwd.split("/").slice(0, -1).join("/") || "/";
+          setCwd(parent);
+          break;
+        }
+        const normalizedTarget = arg.startsWith("/")
+          ? arg.replace(/\/+$/, "") || "/"
+          : `${cwd === "/" ? "" : cwd}/${arg}`.replace(/\/+$/, "");
+
+        const matchedFolder = folders.find(
+          (f) =>
+            f.toLowerCase() === normalizedTarget.toLowerCase() ||
+            f.toLowerCase().endsWith(`/${arg.toLowerCase()}`),
+        );
+
+        if (matchedFolder) {
+          setCwd(matchedFolder);
+        } else if (normalizedTarget === "/var" || normalizedTarget === "/opt" || normalizedTarget === "/boot") {
+          setCwd(normalizedTarget);
+        } else {
+          sound.playError();
+          appendLog(
+            "error",
+            `cd: no such directory: "${arg}". Available: ${folders.join(", ")}`,
+          );
+        }
+        break;
+      }
+
+      case "find": {
+        if (!connectedIp) {
+          sound.playError();
+          appendLog("error", `ERR_NOT_CONNECTED: Run "connect <ip>" first.`);
+          break;
+        }
+        const node = SERVER_NODES[connectedIp];
+        const unlocked = unlockedKeysByServer[connectedIp] || [];
+        const lines = node.files.map((f) => {
+          const dir = f.folder || "/root";
+          const isLocked = f.encryptionKey && !unlocked.includes(f.encryptionKey);
+          const lockTag = isLocked ? ` [ENCRYPTED // KEY IN ${f.keyHint || "/etc"}]` : "";
+          const evTag = f.isMissionEvidence ? " <-- [PRIMARY_EVIDENCE]" : "";
+          const keyTag = f.providesKey ? " [CONTAINS_CIPHER_KEY]" : "";
+          return `  ${dir}/${f.name} (${f.size})${lockTag}${keyTag}${evTag}`;
+        });
+        appendLog(
+          "info",
+          `FILESYSTEM TREE ON ${connectedIp} (${node.hostname}):\n${lines.join("\n")}`,
+        );
+        break;
+      }
+
+      case "ps": {
+        if (!connectedIp) {
+          appendLog(
+            "info",
+            [
+              "  PID TTY          TIME CMD",
+              " 1001 pts/0    00:00:14 nexus-tactical-shell",
+              " 1002 pts/0    00:00:02 whisper-encrypted-daemon",
+              " 1004 pts/0    00:00:05 passweaver-heuristic-engine",
+            ].join("\n"),
+          );
+          break;
+        }
+        const node = SERVER_NODES[connectedIp];
+        const killed = killedPidsByServer[connectedIp] || [];
+        const procs = node.processes || [
+          {
+            pid: 1010,
+            user: "root",
+            name: "sshd-listener",
+            cpu: "0.5%",
+            mem: "0.4%",
+            description: "Remote SSH socket",
+          },
+        ];
+        const rows = [
+          `REMOTE PROCESS TABLE ON ${node.ip} (${node.hostname}):`,
+          "  PID USER       %CPU  %MEM  COMMAND                  STATUS / ROLE",
+          ...procs.map((p) => {
+            const isDead = killed.includes(p.pid);
+            const sentinelTag = p.isHostileSentinel
+              ? isDead
+                ? "[TERMINATED // TRACE DAMPENED]"
+                : `[!!! ACTIVE TRACE SENTINEL — RUN "kill ${p.pid}" !!!]`
+              : p.description;
+            return `${String(p.pid).padStart(5)} ${p.user.padEnd(9)} ${p.cpu.padStart(5)} ${p.mem.padStart(5)}  ${p.name.padEnd(24)} ${sentinelTag}`;
+          }),
+        ];
+        const hasActiveSentinel = procs.some(
+          (p) => p.isHostileSentinel && !killed.includes(p.pid),
+        );
+        appendLog(hasActiveSentinel ? "warn" : "info", rows.join("\n"));
+        break;
+      }
+
+      case "kill": {
+        if (!connectedIp) {
+          sound.playError();
+          appendLog(
+            "error",
+            `ERR_NOT_CONNECTED: Connect to a remote target host to terminate remote processes.`,
+          );
+          break;
+        }
+        const rawPid = arg === "-9" ? arg2 : arg;
+        const pidNum = parseInt(rawPid || "", 10);
+        if (isNaN(pidNum)) {
+          sound.playError();
+          appendLog(
+            "error",
+            `usage: kill <pid> (Run "ps" to inspect running processes on ${connectedIp})`,
+          );
+          break;
+        }
+        const node = SERVER_NODES[connectedIp];
+        const procs = node.processes || [];
+        const targetProc = procs.find((p) => p.pid === pidNum);
+        if (!targetProc) {
+          sound.playError();
+          appendLog(
+            "error",
+            `kill: (${pidNum}) - No such process on ${connectedIp}. Run "ps" to list active PIDs.`,
+          );
+          break;
+        }
+        const killed = killedPidsByServer[connectedIp] || [];
+        if (killed.includes(pidNum)) {
+          appendLog(
+            "info",
+            `kill: PID ${pidNum} (${targetProc.name}) is already terminated.`,
+          );
+          break;
+        }
+        setKilledPidsByServer((prev) => ({
+          ...prev,
+          [connectedIp]: [...(prev[connectedIp] || []), pidNum],
+        }));
+
+        if (targetProc.isHostileSentinel) {
+          const reduction = targetProc.traceReduction || 30;
+          mitigateTrace?.(reduction);
+          sound.playSuccess();
+          appendLog(
+            "success",
+            [
+              `[+] SIGKILL (9) DELIVERED TO PID ${pidNum} (${targetProc.name})`,
+              `[+] HOSTILE SENTINEL TERMINATED: Active trace knocked back by -${reduction}% & trace speed dampened!`,
+            ].join("\n"),
+          );
+        } else {
+          sound.playClick();
+          appendLog(
+            "info",
+            `[+] SIGTERM sent to PID ${pidNum} (${targetProc.name}). Process halted.`,
+          );
+        }
+        break;
+      }
+
+      case "decrypt":
+      case "unlock": {
+        if (!connectedIp) {
+          sound.playError();
+          appendLog("error", `ERR_NOT_CONNECTED: Run "connect <ip>" first.`);
+          break;
+        }
+        const node = SERVER_NODES[connectedIp];
+        const file = resolveServerFile(node, arg || "");
+        if (!file) {
+          sound.playError();
+          appendLog(
+            "error",
+            `ERR_FILE_NOT_FOUND: "${arg || ""}". Run "find" or "ls -la" to inspect files.`,
+          );
+          break;
+        }
+        if (!file.encryptionKey) {
+          appendLog(
+            "info",
+            `[i] "${file.name}" is plaintext / unencrypted. You can run "cat ${file.name}" or "download ${file.name}" directly.`,
+          );
+          break;
+        }
+        const unlocked = unlockedKeysByServer[connectedIp] || [];
+        if (unlocked.includes(file.encryptionKey)) {
+          appendLog(
+            "success",
+            `[i] "${file.name}" is already decrypted in this session.`,
+          );
+          break;
+        }
+        const providedKey = (arg2 || "").trim();
+        if (
+          providedKey.toLowerCase() === file.encryptionKey.toLowerCase()
+        ) {
+          setUnlockedKeysByServer((prev) => ({
+            ...prev,
+            [connectedIp]: [...(prev[connectedIp] || []), file.encryptionKey!],
+          }));
+          sound.playSuccess();
+          appendLog(
+            "success",
+            `[+] CIPHER VERIFIED: "${file.name}" unlocked with key "${file.encryptionKey}"! Execute "download ${file.name}" to exfiltrate.`,
+          );
+        } else {
+          sound.playError();
+          appendLog(
+            "error",
+            [
+              `ERR_INVALID_KEY: "${file.name}" requires AES passphrase.`,
+              `  -> HINT: Inspect "${file.keyHint || "/etc"}" using "cat ${file.keyHint || ""}" to extract the key, then run "decrypt ${file.name} <KEY>".`,
+            ].join("\n"),
+          );
+        }
         break;
       }
 
@@ -309,7 +591,7 @@ export const SmartTerminalApp: React.FC = () => {
             if (node.triggersTrace) {
               appendLog(
                 "warn",
-                `[!!!] ALERT: AETHELGARD IC-GRID TRACE INITIATED! Download target file, run "wipe_logs", and "disconnect" before 100%!`,
+                `[!!!] ALERT: AETHELGARD IC-GRID TRACE INITIATED! Run "ps" & "kill <pid>" to slow sentinel, download target file, run "wipe_logs", and "disconnect" before 100%!`,
               );
             }
           },
@@ -337,10 +619,16 @@ export const SmartTerminalApp: React.FC = () => {
           break;
         }
         connectToServer(targetIp);
+        setCwd("/root");
         sound.playSuccess();
+        const folders = getNodeFolders(node);
         appendLog(
           "success",
-          `[+] ROOT SHELL SPAWNED ON ${node.ip} (${node.hostname}). Execute "ls" to inspect filesystem.`,
+          [
+            `[+] ROOT SHELL SPAWNED ON ${node.ip} (${node.hostname}).`,
+            `    MOUNTED VOLUMES : ${folders.join("  ")}`,
+            `    TACTICAL HINT   : Use "ls -la" or "find" to inspect all directories, and "ps" to check active daemons.`,
+          ].join("\n"),
         );
         break;
       }
@@ -352,15 +640,47 @@ export const SmartTerminalApp: React.FC = () => {
           break;
         }
         const node = SERVER_NODES[connectedIp];
-        const fileList = node.files
-          .map(
-            (f) =>
-              `  -r--------  root  ${f.size.padEnd(10)}  ${f.name}${
-                f.isMissionEvidence ? "   <-- [PRIMARY_EVIDENCE]" : ""
-              }`,
-          )
-          .join("\n");
-        appendLog("info", `INDEX OF /root@${connectedIp}:\n${fileList}`);
+        const unlocked = unlockedKeysByServer[connectedIp] || [];
+        const folders = getNodeFolders(node);
+        const showAllRecursive =
+          arg === "-la" || arg === "-al" || arg === "-a" || arg === "-l" || arg === "-R";
+
+        // Subdirectories listing
+        const dirLines = folders.map(
+          (dir) => `  drwxr-xr-x  root  4.0 KB      ${dir}/`,
+        );
+
+        // Files in current directory (or all files if -la or if operator is inspecting)
+        const filesInCwd = node.files.filter(
+          (f) => (f.folder || "/root") === cwd,
+        );
+        const filesToList =
+          showAllRecursive || filesInCwd.length === 0 ? node.files : filesInCwd;
+
+        const fileLines = filesToList.map((f) => {
+          const dirPrefix =
+            showAllRecursive || (f.folder || "/root") !== cwd
+              ? `${f.folder || "/root"}/`
+              : "";
+          const isLocked =
+            f.encryptionKey && !unlocked.includes(f.encryptionKey);
+          const lockTag = isLocked
+            ? `   [LOCKED // KEY IN ${f.keyHint || "/etc"}]`
+            : "";
+          const keyTag = f.providesKey ? "   [CIPHER_CONFIG]" : "";
+          const evTag = f.isMissionEvidence ? "   <-- [PRIMARY_EVIDENCE]" : "";
+          return `  -r--------  root  ${f.size.padEnd(10)}  ${dirPrefix}${f.name}${lockTag}${keyTag}${evTag}`;
+        });
+
+        appendLog(
+          "info",
+          [
+            `INDEX OF ${cwd} ON ${connectedIp} (${node.hostname}):`,
+            ...dirLines,
+            "  -----------------------------------------------------------------",
+            ...fileLines,
+          ].join("\n"),
+        );
         break;
       }
 
@@ -371,17 +691,55 @@ export const SmartTerminalApp: React.FC = () => {
           break;
         }
         const node = SERVER_NODES[connectedIp];
-        const file = node.files.find(
-          (f) => f.name.toLowerCase() === (arg || "").toLowerCase(),
-        );
+        const file = resolveServerFile(node, arg || "");
         if (!file) {
           sound.playError();
-          appendLog("error", `ERR_FILE_NOT_FOUND: "${arg || ""}"`);
+          appendLog(
+            "error",
+            `ERR_FILE_NOT_FOUND: "${arg || ""}". Try "ls -la" or "find".`,
+          );
           break;
         }
+
+        // Check if file is encrypted on Operative/Ghost
+        const unlocked = unlockedKeysByServer[connectedIp] || [];
+        if (
+          file.encryptionKey &&
+          !unlocked.includes(file.encryptionKey) &&
+          difficulty !== "analyst"
+        ) {
+          sound.playError();
+          appendLog(
+            "error",
+            [
+              `ERR_ARCHIVE_ENCRYPTED: "${file.name}" is encrypted with AES-256-GCM.`,
+              `  -> Inspect "${file.keyHint || "/etc"}" first ("cat ${file.keyHint?.split("/").pop() || ""}") to extract the decryption key!`,
+            ].join("\n"),
+          );
+          break;
+        }
+
+        // If reading a config/log file that provides a key, harvest it into the session keyring!
+        if (file.providesKey && !unlocked.includes(file.providesKey)) {
+          setUnlockedKeysByServer((prev) => ({
+            ...prev,
+            [connectedIp]: [...(prev[connectedIp] || []), file.providesKey!],
+          }));
+          sound.playSuccess();
+          appendLog(
+            "info",
+            `===SOF: ${file.folder || "/root"}/${file.name}===\n${file.content}\n===EOF===`,
+          );
+          appendLog(
+            "success",
+            `[+] SESSION KEYRING UPDATED: Extracted cipher key "${file.providesKey}"! Locked archives on ${connectedIp} are now accessible.`,
+          );
+          break;
+        }
+
         appendLog(
           "info",
-          `===SOF: ${file.name}===\n${file.content}\n===EOF===`,
+          `===SOF: ${file.folder || "/root"}/${file.name}===\n${file.content}\n===EOF===`,
         );
         break;
       }
@@ -393,14 +751,47 @@ export const SmartTerminalApp: React.FC = () => {
           break;
         }
         const node = SERVER_NODES[connectedIp];
-        const file = node.files.find(
-          (f) => f.name.toLowerCase() === (arg || "").toLowerCase(),
-        );
+        const file = resolveServerFile(node, arg || "");
         if (!file) {
           sound.playError();
-          appendLog("error", `ERR_FILE_NOT_FOUND: "${arg || ""}"`);
+          appendLog(
+            "error",
+            `ERR_FILE_NOT_FOUND: "${arg || ""}". Run "ls -la" or "find".`,
+          );
           break;
         }
+
+        const unlocked = unlockedKeysByServer[connectedIp] || [];
+        if (file.encryptionKey && !unlocked.includes(file.encryptionKey)) {
+          if (difficulty === "analyst") {
+            // Auto-decrypt on Analyst difficulty with helpful telemetry
+            setUnlockedKeysByServer((prev) => ({
+              ...prev,
+              [connectedIp]: [
+                ...(prev[connectedIp] || []),
+                file.encryptionKey!,
+              ],
+            }));
+            appendLog(
+              "info",
+              `[*] ANALYST AUTO-DECRYPT: Extracted key "${file.encryptionKey}" from ${file.keyHint || "/etc"} to unlock ${file.name}.`,
+            );
+          } else {
+            sound.playError();
+            const hintFile =
+              file.keyHint?.split("/").pop() || file.keyHint || "/etc";
+            appendLog(
+              "error",
+              [
+                `ERR_ARCHIVE_ENCRYPTED: "${file.name}" (${file.folder || "/root"}/${file.name}) is locked with AES-256.`,
+                `  -> STEP 1: Read "${file.keyHint}" ("cat ${hintFile}") to extract the decryption passphrase.`,
+                `  -> STEP 2: Run "decrypt ${file.name} <KEY>" or re-run "download ${file.name}".`,
+              ].join("\n"),
+            );
+            break;
+          }
+        }
+
         runWithProgress(
           `EXFILTRATING ${file.name} (${file.size})...`,
           1200,
@@ -488,7 +879,9 @@ export const SmartTerminalApp: React.FC = () => {
             );
           } else {
             sound.playSuccess();
-            const latency = isLocal ? "0.08" : (14.2 + Math.random() * 8).toFixed(2);
+            const latency = isLocal
+              ? "0.08"
+              : (14.2 + Math.random() * 8).toFixed(2);
             appendLog(
               "success",
               [
@@ -574,7 +967,17 @@ export const SmartTerminalApp: React.FC = () => {
           " 1002 operator  20   0  210400  32100  14500 S   0.4   0.4   0:02.10 whisper-daemon",
           " 1003 operator  20   0  180200  28400  12000 S   0.2   0.3   0:01.88 audio-synthesizer",
         ];
-        if (traceActive) {
+        if (connectedIp) {
+          const node = SERVER_NODES[connectedIp];
+          const killed = killedPidsByServer[connectedIp] || [];
+          for (const p of node.processes || []) {
+            if (!killed.includes(p.pid)) {
+              lines.push(
+                `${String(p.pid).padStart(5)} ${p.user.padEnd(9)} 20   0  640200 112000  10200 R  ${p.cpu.replace("%", "").padStart(4)}  ${p.mem.replace("%", "").padStart(4)}   0:09.44 ${p.name}`,
+              );
+            }
+          }
+        } else if (traceActive) {
           lines.push(
             " 9999 daemon    20   0  892400 148200  12400 R  84.2   1.8   0:04.12 ouroboros_trace_daemon",
           );
@@ -591,7 +994,8 @@ export const SmartTerminalApp: React.FC = () => {
       case "matrix":
       case "cmatrix": {
         sound.playSuccess();
-        const chars = "ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ1234567890ABCDEF$#%&*+-/=";
+        const chars =
+          "ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ1234567890ABCDEF$#%&*+-/=";
         const makeLine = () =>
           Array.from(
             { length: 42 },
@@ -622,6 +1026,7 @@ export const SmartTerminalApp: React.FC = () => {
             [
               `root@${connectedIp} (REMOTE ROOT ACCESS)`,
               `uid=0(root) gid=0(root) groups=0(root),1(bin),2(daemon)`,
+              `CURRENT_WORKING_DIR: ${cwd}`,
               `SECURITY_CLEARANCE: LEVEL_5_RESTRICTED`,
               `SESSION_ID: tty_pts_${connectedIp.replace(/\./g, "_")}`,
             ].join("\n"),
@@ -666,7 +1071,9 @@ export const SmartTerminalApp: React.FC = () => {
       e.preventDefault();
       if (history.length === 0) return;
       const nextIdx =
-        historyIndex === -1 ? history.length - 1 : Math.max(0, historyIndex - 1);
+        historyIndex === -1
+          ? history.length - 1
+          : Math.max(0, historyIndex - 1);
       setHistoryIndex(nextIdx);
       setInput(history[nextIdx]);
       sound.playKey();
@@ -703,8 +1110,14 @@ export const SmartTerminalApp: React.FC = () => {
         "crack",
         "connect",
         "ls",
+        "cd",
+        "pwd",
+        "find",
         "cat",
+        "decrypt",
         "download",
+        "ps",
+        "kill",
         "wipe_logs",
         "disconnect",
         "ping",
@@ -719,11 +1132,10 @@ export const SmartTerminalApp: React.FC = () => {
         "clear",
       ];
 
-      // If empty:
       if (!trimmed) {
         appendLog(
           "info",
-          `AVAILABLE COMMANDS: ${AVAILABLE_COMMANDS.slice(0, 10).join("  ")}`,
+          `AVAILABLE COMMANDS: ${AVAILABLE_COMMANDS.slice(0, 14).join("  ")}`,
         );
         sound.playKey();
         return;
@@ -774,7 +1186,35 @@ export const SmartTerminalApp: React.FC = () => {
         return;
       }
 
-      if (["cat", "download"].includes(cmd)) {
+      if (cmd === "cd" && connectedIp) {
+        const node = SERVER_NODES[connectedIp];
+        if (node) {
+          const folders = getNodeFolders(node);
+          const dirMatches = folders.filter((d) =>
+            d.toLowerCase().startsWith(argPrefix.toLowerCase()),
+          );
+          if (dirMatches.length === 1) {
+            setInput(`cd ${dirMatches[0]}`);
+            sound.playKey();
+          } else if (dirMatches.length > 1) {
+            appendLog("info", `DIRECTORIES: ${dirMatches.join("  ")}`);
+            sound.playKey();
+          }
+        }
+        return;
+      }
+
+      if (cmd === "kill" && connectedIp) {
+        const node = SERVER_NODES[connectedIp];
+        const sentinel = node?.processes?.find((p) => p.isHostileSentinel);
+        if (sentinel) {
+          setInput(`kill ${sentinel.pid}`);
+          sound.playKey();
+        }
+        return;
+      }
+
+      if (["cat", "download", "decrypt"].includes(cmd)) {
         const node = connectedIp ? SERVER_NODES[connectedIp] : null;
         if (node && node.files) {
           const fileMatches = node.files
@@ -819,20 +1259,31 @@ export const SmartTerminalApp: React.FC = () => {
     activeNode &&
     (crackedPorts[activeNode.ip] || []).includes(activeNode.requiredPort);
 
+  const activeSentinel =
+    connectedIp && activeNode?.processes
+      ? activeNode.processes.find(
+          (p) =>
+            p.isHostileSentinel &&
+            !(killedPidsByServer[connectedIp] || []).includes(p.pid),
+        )
+      : undefined;
+
   return (
     <WindowFrame
       id="terminal"
       icon={<TerminalIcon className="w-3.5 h-3.5" />}
-      width="w-[710px]"
-      height="h-[520px]"
+      width="w-[730px]"
+      height="h-[540px]"
     >
       {/* Active Trace Danger Strip */}
       {traceActive && (
         <div className="px-3.5 py-1.5 bg-[#290808] border-b border-[#ff3b3b] flex items-center justify-between">
           <span className="text-xs font-bold text-[#ff5555] flex items-center gap-1.5">
             <AlertTriangle className="w-4 h-4 text-[#ff3b3b]" />
-            IC_TRACE_ACTIVE: {tracePercent.toFixed(0)}% // RUN wipe_logs BEFORE
-            100%
+            IC_TRACE_ACTIVE: {tracePercent.toFixed(0)}% //{" "}
+            {activeSentinel
+              ? `SENTINEL PID ${activeSentinel.pid} ACTIVE (RUN "kill ${activeSentinel.pid}")`
+              : "RUN wipe_logs BEFORE 100%"}
           </span>
           <div className="w-48 h-2 bg-black border border-[#ff3b3b]">
             <div
@@ -885,8 +1336,8 @@ export const SmartTerminalApp: React.FC = () => {
         >
           {connectedIp
             ? connectedIp === "102.16.88.12" || connectedIp === "185.190.20.1"
-              ? `[AMBER CRT // MIL-SPEC 50-BAUD] root@${connectedIp}`
-              : `SESSION: root@${connectedIp}`
+              ? `[AMBER CRT // MIL-SPEC 50-BAUD] root@${connectedIp}:${cwd}`
+              : `SESSION: root@${connectedIp}:${cwd}`
             : "SESSION: LOCAL_TTY"}
         </span>
       </div>
@@ -1013,26 +1464,64 @@ export const SmartTerminalApp: React.FC = () => {
             <>
               <button
                 disabled={!!busyTask}
-                onClick={() => executeCommand("ls")}
+                onClick={() => executeCommand("ls -la")}
                 className="px-2.5 py-1 bg-[#151921] hover:border-[#58a6ff] border border-[#282f3d] text-[11px] text-white cursor-pointer disabled:opacity-40"
               >
-                $ ls
+                $ ls -la
               </button>
 
-              {activeNode.files.map((f) => (
+              <button
+                disabled={!!busyTask}
+                onClick={() => executeCommand("ps")}
+                className="px-2.5 py-1 bg-[#151921] hover:border-[#58a6ff] border border-[#282f3d] text-[11px] text-[#79c0ff] cursor-pointer disabled:opacity-40"
+              >
+                $ ps
+              </button>
+
+              {activeSentinel && (
                 <button
-                  key={f.name}
                   disabled={!!busyTask}
-                  onClick={() => executeCommand(`download ${f.name}`)}
-                  className={`px-2.5 py-1 border text-[11px] cursor-pointer disabled:opacity-40 ${
-                    f.isMissionEvidence
-                      ? "bg-[#1f6feb] text-white border-[#58a6ff] font-bold"
-                      : "bg-[#151921] border-[#282f3d] text-[#d4d7dc] hover:border-white"
-                  }`}
+                  onClick={() => executeCommand(`kill ${activeSentinel.pid}`)}
+                  className="px-2.5 py-1 bg-[#3d1515] hover:bg-[#581c1c] border border-[#ff5555] text-[11px] text-[#ff7b72] font-bold cursor-pointer disabled:opacity-40 animate-pulse"
                 >
-                  $ download {f.name}
+                  $ kill {activeSentinel.pid} (Stop Sentinel)
                 </button>
-              ))}
+              )}
+
+              {activeNode.files.map((f) => {
+                const unlocked = unlockedKeysByServer[connectedIp] || [];
+                const isLocked =
+                  f.encryptionKey &&
+                  !unlocked.includes(f.encryptionKey) &&
+                  difficulty !== "analyst";
+                if (f.providesKey) {
+                  return (
+                    <button
+                      key={f.name}
+                      disabled={!!busyTask}
+                      onClick={() => executeCommand(`cat ${f.name}`)}
+                      className="px-2.5 py-1 bg-[#1a2230] border border-[#d29922] text-[#f2cc60] text-[11px] cursor-pointer disabled:opacity-40"
+                    >
+                      $ cat {f.name}
+                    </button>
+                  );
+                }
+                return (
+                  <button
+                    key={f.name}
+                    disabled={!!busyTask}
+                    onClick={() => executeCommand(`download ${f.name}`)}
+                    className={`px-2.5 py-1 border text-[11px] cursor-pointer disabled:opacity-40 flex items-center gap-1 ${
+                      f.isMissionEvidence
+                        ? "bg-[#1f6feb] text-white border-[#58a6ff] font-bold"
+                        : "bg-[#151921] border-[#282f3d] text-[#d4d7dc] hover:border-white"
+                    }`}
+                  >
+                    {isLocked && <Lock className="w-3 h-3 text-[#f2cc60]" />}
+                    <span>$ download {f.name}</span>
+                  </button>
+                );
+              })}
 
               <button
                 disabled={!!busyTask}
@@ -1067,7 +1556,9 @@ export const SmartTerminalApp: React.FC = () => {
         className="px-3.5 py-2 bg-[#040506] border-t border-[#1e232c] flex items-center gap-2 text-xs"
       >
         <span className="text-[#56d364] font-bold shrink-0">
-          {connectedIp ? `root@${connectedIp}:~#` : `operator@nexus:~#`}
+          {connectedIp
+            ? `root@${connectedIp}:${cwd}#`
+            : `operator@nexus:~#`}
         </span>
         <input
           type="text"

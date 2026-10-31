@@ -96,7 +96,7 @@ export const PassWeaverApp: React.FC = () => {
       setFailedAttempts(newAttempts);
       if (newAttempts >= maxAttempts) {
         setLockoutRemaining(baseLockoutSeconds);
-        if (difficulty === "ghost") sound.playAlarm();
+        if (difficulty === "ghost") sound.playTraceTick(85);
         setStatusMessage({
           type: "error",
           text: `SECURITY LOCKOUT (${baseLockoutSeconds}s): ${maxAttempts} failed attempts. ERR_SALTED_HARDWARE_KEY: Chief Reyes utilizes a 64-char military hardware token. Heuristic synthesis impossible. Deploy SpearPhish campaign.`,
@@ -203,7 +203,7 @@ export const PassWeaverApp: React.FC = () => {
           if (newAttempts >= maxAttempts) {
             setLockoutRemaining(baseLockoutSeconds);
             if (difficulty === "ghost") {
-              sound.playAlarm();
+              sound.playTraceTick(85);
               addNotification(
                 "GATEWAY IDS ALERT",
                 "Repeated policy violation detected on target identity provider!",
@@ -228,7 +228,7 @@ export const PassWeaverApp: React.FC = () => {
           if (newAttempts >= maxAttempts) {
             setLockoutRemaining(baseLockoutSeconds);
             if (difficulty === "ghost") {
-              sound.playAlarm();
+              sound.playTraceTick(85);
               addNotification(
                 "GATEWAY IDS ALERT",
                 "Heuristic brute-force threshold exceeded! Target IP throttled.",

@@ -100,13 +100,28 @@ export interface EmailAccount {
   inbox: EmailMessage[];
 }
 
+export interface ServerProcess {
+  pid: number;
+  user: string;
+  name: string;
+  cpu: string;
+  mem: string;
+  description: string;
+  isHostileSentinel?: boolean;
+  traceReduction?: number; // % trace reduction when killed
+}
+
 export interface ServerFile {
   name: string;
+  folder?: string; // e.g. "/root", "/etc", "/var/log", "/opt/vault" (default "/root")
   size: string;
   content: string;
   isMissionEvidence?: boolean;
   evidenceId?: string;
   clues?: Clue[];
+  encryptionKey?: string; // Key required to decrypt on Operative/Ghost
+  keyHint?: string; // Path to config/log file containing the key
+  providesKey?: string; // Key harvested when operator runs `cat` on this file
 }
 
 export interface ServerNode {
@@ -120,6 +135,7 @@ export interface ServerNode {
   triggersTrace: boolean;
   traceSpeed: number; // % per second
   files: ServerFile[];
+  processes?: ServerProcess[];
 }
 
 export interface ShopItem {

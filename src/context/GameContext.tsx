@@ -133,6 +133,7 @@ interface GameContextType {
   connectToServer: (ip: string | null) => void;
   downloadServerFile: (file: ServerFile) => void;
   wipeServerLogs: (ip: string) => void;
+  mitigateTrace?: (reductionPct: number) => void;
 
   // Counter-Hack & Defense System
   underAttack: boolean;
@@ -2248,6 +2249,19 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const mitigateTrace = (reductionPct: number) => {
+    setTracePercent((prev) => Math.max(2, +(prev - reductionPct).toFixed(1)));
+    setTraceSensitivityMultiplier((prev) =>
+      Math.max(0.4, +(prev * 0.65).toFixed(2)),
+    );
+    sound.playSuccess();
+    addNotification(
+      "Trace Sentinel Neutralized",
+      `Hostile watchdog daemon terminated (-${reductionPct}% trace & speed dampened).`,
+      "mission",
+    );
+  };
+
   const dismissTraceAlert = () => setTraceFailedAlert(false);
 
   useEffect(() => {
@@ -2341,6 +2355,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
         connectToServer,
         downloadServerFile,
         wipeServerLogs,
+        mitigateTrace,
         underAttack,
         firewallHealth,
         honeypotActive,
