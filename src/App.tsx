@@ -555,13 +555,13 @@ const DesktopEnvironment: React.FC = () => {
       </div>
 
       {/* Single Unified Bottom OS Taskbar (Full Width) */}
-      <footer className="h-11 px-3 bg-[#0b0e14] border-t border-[#1e232c] flex items-center justify-between z-40 select-none text-xs">
-        {/* Left: OS Brand Button + Open Windows */}
-        <div className="flex items-center gap-2 overflow-x-auto relative">
+      <footer className="h-11 px-2.5 bg-[#0b0e14] border-t border-[#1e232c] flex items-center justify-between gap-2 z-40 select-none text-xs">
+        {/* Left: OS Brand Button + Open Windows (Takes all available horizontal space) */}
+        <div className="flex-1 min-w-0 flex items-center gap-1.5">
           <button
             onClick={() => setStartMenuOpen((prev) => !prev)}
             title="Start / System Applications (Ctrl+Esc)"
-            className={`h-8 px-3 border font-bold flex items-center gap-2 mr-1 cursor-pointer transition-colors shadow-sm ${
+            className={`h-8 px-2.5 border font-bold flex items-center gap-1.5 shrink-0 cursor-pointer transition-colors shadow-sm ${
               startMenuOpen
                 ? "bg-[#1f6feb] border-[#58a6ff] text-white shadow-[0_0_12px_rgba(31,111,235,0.6)]"
                 : "bg-[#161d28] border-[#303947] text-[#e6edf3] hover:border-[#58a6ff] hover:bg-[#1c2533]"
@@ -573,41 +573,56 @@ const DesktopEnvironment: React.FC = () => {
             <span className="font-mono tracking-wider text-[11px]">NEXUS</span>
           </button>
 
-          {openAppsList.map((app) => {
-            const win = windows[app.id];
-            const isFocused = activeApp === app.id && !win.isMinimized;
-            return (
-              <button
-                key={app.id}
-                onClick={() => openApp(app.id)}
-                className={`h-8 px-3 border text-xs flex items-center gap-2 cursor-pointer transition-colors ${
-                  isFocused
-                    ? "bg-[#171c26] text-white border-[#58a6ff] font-semibold"
-                    : "bg-[#0e1117] text-[#8b949e] border-[#21262d] hover:text-white"
-                }`}
-              >
-                <span className="text-[#58a6ff] [&>svg]:w-4 [&>svg]:h-4">
-                  {app.icon}
-                </span>
-                <span>{app.label}</span>
-              </button>
-            );
-          })}
+          <div className="flex-1 min-w-0 flex items-center gap-1.5 overflow-x-auto py-0.5">
+            {openAppsList.map((app) => {
+              const win = windows[app.id];
+              const isFocused = activeApp === app.id && !win.isMinimized;
+              return (
+                <button
+                  key={app.id}
+                  onClick={() => openApp(app.id)}
+                  title={`${app.label}${win.isMinimized ? " (Minimized)" : ""}`}
+                  className={`h-8 px-2.5 border text-[11px] flex items-center gap-1.5 shrink-0 cursor-pointer transition-colors ${
+                    isFocused
+                      ? "bg-[#171c26] text-white border-[#58a6ff] font-semibold shadow-[inset_0_-2px_0_#58a6ff]"
+                      : win.isMinimized
+                        ? "bg-[#090b0f] text-[#6e7681] border-[#181c24] hover:text-[#c9d1d9] hover:border-[#303947]"
+                        : "bg-[#0e1117] text-[#c9d1d9] border-[#21262d] hover:text-white hover:border-[#303947]"
+                  }`}
+                >
+                  <span className="text-[#58a6ff] shrink-0 [&>svg]:w-3.5 [&>svg]:h-3.5">
+                    {app.icon}
+                  </span>
+                  <span className="truncate max-w-[115px]">{app.label}</span>
+                  {app.badge !== undefined && (
+                    <span className="px-1 py-0.2 bg-[#1f6feb] text-white text-[9px] font-mono font-bold leading-none">
+                      {app.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Center: Active Trace Alert (Only when active) */}
         {traceActive && (
-          <div className="px-3 py-1 bg-[#ff3b3b] text-white font-bold uppercase flex items-center gap-2">
-            <ShieldAlert className="w-4 h-4" />
-            <span>ACTIVE TRACE: {tracePercent.toFixed(0)}%</span>
+          <div className="px-2.5 py-1 bg-[#ff3b3b] text-white font-bold uppercase flex items-center gap-1.5 shrink-0 animate-pulse text-[11px]">
+            <ShieldAlert className="w-3.5 h-3.5" />
+            <span>TRACE: {tracePercent.toFixed(0)}%</span>
           </div>
         )}
 
-        {/* Right: System Tray (Wallet, Audio, Reset, Clock) */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          <div className="hidden xl:flex h-8 px-2 bg-[#111620] border border-[#21262d] text-[10px] font-mono text-[#d29922] items-center font-bold">
-            [{difficulty.toUpperCase()}]
-          </div>
+        {/* Right: Compact System Tray */}
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            onClick={() => openApp("blackmarket")}
+            title="Open BlackMarket (Wallet Balance)"
+            className="h-8 px-2 bg-[#111620] border border-[#282f3d] text-[#79c0ff] font-bold cursor-pointer hover:border-[#58a6ff] flex items-center gap-1 shrink-0"
+          >
+            <Coins className="w-3.5 h-3.5 text-[#58a6ff]" />
+            <span className="text-[11px] font-mono">{crypto} ◈</span>
+          </button>
 
           <button
             onClick={() => {
@@ -621,15 +636,15 @@ const DesktopEnvironment: React.FC = () => {
               setUiScale(nextScale);
             }}
             title="Toggle UI Scaling (100% / 125% / 150%) - Press Ctrl+0 to reset"
-            className="flex h-8 px-2 bg-[#111620] border border-[#21262d] text-[#8b949e] hover:text-white cursor-pointer text-[10px] font-mono items-center shrink-0"
+            className="h-8 px-1.5 bg-[#111620] border border-[#21262d] text-[#8b949e] hover:text-white cursor-pointer text-[10px] font-mono flex items-center shrink-0"
           >
-            SCALE: {uiScale}
+            {uiScale}
           </button>
 
           <button
             onClick={toggleFullscreen}
             title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen (F11)"}
-            className="h-8 w-8 sm:w-auto sm:px-2 bg-[#111620] border border-[#21262d] text-[#8b949e] hover:text-[#58a6ff] hover:border-[#58a6ff] cursor-pointer flex items-center justify-center transition-colors"
+            className="h-8 w-7 bg-[#111620] border border-[#21262d] text-[#8b949e] hover:text-[#58a6ff] hover:border-[#58a6ff] cursor-pointer flex items-center justify-center transition-colors shrink-0"
           >
             {isFullscreen ? (
               <Minimize2 className="w-3.5 h-3.5" />
@@ -639,28 +654,18 @@ const DesktopEnvironment: React.FC = () => {
           </button>
 
           <button
-            onClick={() => openApp("blackmarket")}
-            title="Open BlackMarket"
-            className="h-8 px-2.5 bg-[#111620] border border-[#282f3d] text-[#79c0ff] font-bold cursor-pointer hover:border-[#58a6ff] flex items-center gap-1"
-          >
-            <Coins className="w-3.5 h-3.5 text-[#58a6ff]" />
-            <span className="text-[11px]">{crypto} ◈</span>
-          </button>
-
-          <button
             onClick={toggleCrtMode}
             title={crtMode ? "Disable CRT Scanlines" : "Enable CRT Scanlines"}
-            className={`hidden sm:flex h-8 px-2 bg-[#111620] border text-xs cursor-pointer items-center gap-1 transition-colors ${
+            className={`hidden sm:flex h-8 w-7 bg-[#111620] border cursor-pointer items-center justify-center transition-colors shrink-0 ${
               crtMode
-                ? "border-[#58a6ff] text-[#58a6ff] font-bold"
+                ? "border-[#58a6ff] text-[#58a6ff]"
                 : "border-[#21262d] text-[#8b949e] hover:text-white"
             }`}
           >
             <Tv className="w-3.5 h-3.5" />
-            <span className="text-[10px]">CRT</span>
           </button>
 
-          {/* One-Click OST Play/Pause Button */}
+          {/* Compact One-Click OST Play/Pause Button */}
           <button
             onClick={() => {
               sound.toggleMusicPlayback();
@@ -671,28 +676,21 @@ const DesktopEnvironment: React.FC = () => {
                 ? "Pause Ambient Soundtrack"
                 : "Play Ambient Soundtrack"
             }
-            className={`h-8 px-2 sm:px-2.5 bg-[#111620] border text-[10px] font-mono flex items-center gap-1.5 cursor-pointer transition-colors ${
+            className={`h-8 px-2 bg-[#111620] border text-[10px] font-mono flex items-center gap-1 cursor-pointer transition-colors shrink-0 ${
               isMusicPlaying
                 ? "border-[#3fb950] text-[#3fb950] bg-[#122217]"
                 : "border-[#e3b341] text-[#e3b341] hover:border-[#f0883e] bg-[#1c180d]"
             }`}
           >
             <span
-              className={`w-2 h-2 rounded-full shrink-0 ${
+              className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                 isMusicPlaying
                   ? "bg-[#3fb950] shadow-[0_0_8px_#3fb950] animate-pulse"
                   : "bg-[#e3b341]"
               }`}
             />
-            <span className="font-bold tracking-wider hidden md:inline">
-              {isMusicPlaying
-                ? traceActive || underAttack
-                  ? "OST: COMBAT [❚❚]"
-                  : "OST: PLAYING [❚❚]"
-                : "OST: PAUSED [▶]"}
-            </span>
-            <span className="font-bold md:hidden">
-              {isMusicPlaying ? "[❚❚]" : "[▶]"}
+            <span className="font-bold">
+              {isMusicPlaying ? "OST ❚❚" : "OST ▶"}
             </span>
           </button>
 
@@ -703,51 +701,42 @@ const DesktopEnvironment: React.FC = () => {
               sound.ensureMusicPlaying();
             }}
             title="Tactical Audio Mixer (Music & SFX Volume)"
-            className={`h-8 px-2 sm:px-2.5 bg-[#111620] border text-[10px] font-mono flex items-center gap-1.5 cursor-pointer transition-colors ${
+            className={`h-8 w-7 bg-[#111620] border flex items-center justify-center cursor-pointer transition-colors shrink-0 ${
               audioMixerOpen
                 ? "border-[#58a6ff] text-white bg-[#171c26]"
                 : "border-[#21262d] text-[#79c0ff] hover:border-[#58a6ff]"
             }`}
           >
             <Sliders className="w-3.5 h-3.5 text-[#58a6ff]" />
-            <span className="hidden xl:inline truncate max-w-[120px]">
-              {isMuted
-                ? "OST: MUTED"
-                : traceActive || underAttack
-                  ? "BEFORE THE LOCK"
-                  : "SILENT PERIMETER"}
-            </span>
           </button>
 
           <button
             onClick={toggleMute}
             title={isMuted ? "Unmute Audio" : "Mute Audio"}
-            className="h-8 w-8 bg-[#111620] border border-[#21262d] text-[#8b949e] hover:text-white cursor-pointer flex items-center justify-center shrink-0"
+            className="h-8 w-7 bg-[#111620] border border-[#21262d] text-[#8b949e] hover:text-white cursor-pointer flex items-center justify-center shrink-0"
           >
             {isMuted ? (
-              <VolumeX className="w-4 h-4" />
+              <VolumeX className="w-3.5 h-3.5 text-[#ff7b72]" />
             ) : (
-              <Volume2 className="w-4 h-4" />
+              <Volume2 className="w-3.5 h-3.5" />
             )}
           </button>
 
-          {/* Hardware Surveillance Indicator */}
-          {camStatus === "active" ? (
-            <div className="h-8 px-2 bg-[#290808] border border-[#ff3b3b] text-[10px] font-mono text-[#ff5555] font-bold flex items-center gap-1.5 animate-pulse">
-              <span className="w-2 h-2 rounded-full bg-[#ff3b3b] animate-ping" />
-              <span className="hidden sm:inline">[CAM: ON]</span>
-            </div>
-          ) : (
-            <div className="hidden lg:flex h-8 px-2 bg-[#111620] border border-[#21262d] text-[10px] font-mono text-[#6e7681] items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#30363d]" />
-              <span>[CAM: OFF]</span>
+          {/* Hardware Surveillance Indicator (only takes space when active) */}
+          {camStatus === "active" && (
+            <div className="h-8 px-1.5 bg-[#290808] border border-[#ff3b3b] text-[10px] font-mono text-[#ff5555] font-bold flex items-center gap-1 animate-pulse shrink-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#ff3b3b] animate-ping" />
+              <span>CAM</span>
             </div>
           )}
 
-          {/* Operator Badge & Logout */}
-          <div className="h-8 px-2 sm:px-2.5 bg-[#111620] border border-[#21262d] text-[11px] font-mono text-[#c9d1d9] flex items-center gap-1.5">
-            <User className="w-3.5 h-3.5 text-[#3fb950] shrink-0" />
-            <span className="text-[#3fb950] font-bold truncate max-w-[70px] hidden sm:inline">
+          {/* Compact Operator Badge, Logout & Wipe */}
+          <div
+            title={`Operator: ${currentUser.username} [${difficulty.toUpperCase()}]`}
+            className="h-8 px-1.5 bg-[#111620] border border-[#21262d] text-[10px] font-mono text-[#c9d1d9] flex items-center gap-1 shrink-0"
+          >
+            <User className="w-3 h-3 text-[#3fb950] shrink-0" />
+            <span className="text-[#3fb950] font-bold truncate max-w-[64px] hidden xl:inline">
               {currentUser.username}
             </span>
             <button
@@ -760,28 +749,22 @@ const DesktopEnvironment: React.FC = () => {
                   logout();
                 }
               }}
-              title="Log Out Operator Session"
-              className="text-[#8b949e] hover:text-[#ff5555] cursor-pointer flex items-center gap-1 bg-[#1a1416] px-1.5 py-0.5 border border-[#3b2329] hover:border-[#ff5555] transition-colors"
+              title={`Log Out (${currentUser.username})`}
+              className="text-[#8b949e] hover:text-[#ff5555] cursor-pointer p-0.5 hover:bg-[#1a1416] transition-colors"
             >
               <LogOut className="w-3 h-3 text-[#ff7b72]" />
-              <span className="text-[9px] uppercase font-bold text-[#ff7b72]">
-                Exit
-              </span>
             </button>
           </div>
 
           <button
             onClick={() => setWipeModalOpen(true)}
             title="Wipe Progress / Restart Campaign"
-            className="h-8 px-2 bg-[#111620] border border-[#21262d] text-[#8b949e] hover:text-[#ff5555] hover:border-[#ff5555] cursor-pointer flex items-center gap-1 transition-colors shrink-0"
+            className="h-8 w-7 bg-[#111620] border border-[#21262d] text-[#8b949e] hover:text-[#ff5555] hover:border-[#ff5555] cursor-pointer flex items-center justify-center transition-colors shrink-0"
           >
             <RotateCcw className="w-3.5 h-3.5 text-[#ff7b72]" />
-            <span className="hidden md:inline text-[10px] font-mono text-[#ff7b72] font-bold">
-              WIPE
-            </span>
           </button>
 
-          <div className="h-8 px-2 sm:px-3 bg-[#111620] border border-[#21262d] text-[#c9d1d9] font-semibold flex items-center text-[11px] font-mono shrink-0">
+          <div className="h-8 px-2 bg-[#111620] border border-[#21262d] text-[#c9d1d9] font-semibold flex items-center text-[11px] font-mono shrink-0">
             {clock}
           </div>
         </div>
