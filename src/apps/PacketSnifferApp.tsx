@@ -25,6 +25,7 @@ export const PacketSnifferApp: React.FC = () => {
   const {
     discoveredClues,
     discoverClue,
+    crackedEmails,
     openApp,
     showContextMenu,
     executeTerminalCommand,
@@ -34,7 +35,7 @@ export const PacketSnifferApp: React.FC = () => {
   const [selectedSubnetId, setSelectedSubnetId] =
     useState<string>("velox_subnet");
   const [protocolFilter, setProtocolFilter] = useState<string>("ALL");
-  const [selectedPacketId, setSelectedPacketId] = useState<string>("pkt_v_1");
+  const [selectedPacketId, setSelectedPacketId] = useState<string>("pkt_v_2");
   const [livePacketCount, setLivePacketCount] = useState<number>(142);
   const [isCapturing, setIsCapturing] = useState<boolean>(true);
 
@@ -249,6 +250,11 @@ export const PacketSnifferApp: React.FC = () => {
                   pkt.containsCredential &&
                   pkt.extractedClueId &&
                   discoveredClues.some((c) => c.id === pkt.extractedClueId);
+                const isLockedByTls =
+                  (pkt.extractedClueId === "clue_dropoff_ip" &&
+                    !crackedEmails.includes("m.cole@velox-ai.io")) ||
+                  (pkt.extractedClueId === "clue_vault_override" &&
+                    !crackedEmails.includes("j.sterling@aethelgard.corp"));
 
                 const protoColor =
                   pkt.protocol === "HTTP"
@@ -280,7 +286,7 @@ export const PacketSnifferApp: React.FC = () => {
                         {pkt.protocol}
                       </span>
                       <span className="col-span-6 text-white truncate">
-                        {pkt.destIp}
+                        {isLockedByTls ? "[TLS_CIPHER_MASKED]" : pkt.destIp}
                       </span>
                     </div>
 
@@ -291,10 +297,12 @@ export const PacketSnifferApp: React.FC = () => {
                           className={`px-1 text-[9px] font-bold shrink-0 ml-1 ${
                             hasClue
                               ? "bg-[#122117] text-[#3fb950] border border-[#238636]"
-                              : "bg-[#ff3b3b] text-white animate-pulse"
+                              : isLockedByTls
+                                ? "bg-[#21180b] text-[#d29922] border border-[#9e6a03]"
+                                : "bg-[#ff3b3b] text-white animate-pulse"
                           }`}
                         >
-                          {hasClue ? "LOGGED" : "AUTH"}
+                          {hasClue ? "LOGGED" : isLockedByTls ? "TLS_LOCKED" : "AUTH"}
                         </span>
                       )}
                     </div>
@@ -307,92 +315,135 @@ export const PacketSnifferApp: React.FC = () => {
           {/* Packet Inspector (Right 7 cols) */}
           <div className="col-span-7 flex flex-col bg-[#050608] overflow-y-auto p-4 space-y-3.5">
             {activePacket ? (
-              <>
-                {/* Header Information */}
-                <div className="p-3 bg-[#0a0d14] border border-[#1e232c] space-y-1.5 font-mono text-[11px]">
-                  <div className="flex items-center justify-between border-b border-[#161c26] pb-1">
-                    <span className="text-[#8b949e]">
-                      FRAME #{activePacket.id}
-                    </span>
-                    <span className="text-[#58a6ff] font-bold">
-                      {activePacket.protocol} INTERCEPT
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 text-[10px]">
-                    <div>
-                      <span className="text-[#6e7681]">SRC_IP: </span>
-                      <span className="text-white">
-                        {activePacket.sourceIp}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-[#6e7681]">DST_IP: </span>
-                      <span className="text-white">{activePacket.destIp}</span>
-                    </div>
-                  </div>
-                </div>
+              (() => {
+                const isPacketTlsLocked =
+                  (activePacket.extractedClueId === "clue_dropoff_ip" &&
+                    !crackedEmails.includes("m.cole@velox-ai.io")) ||
+                  (activePacket.extractedClueId === "clue_vault_override" &&
+                    !crackedEmails.includes("j.sterling@aethelgard.corp"));
+                const requiredAccount =
+                  activePacket.extractedClueId === "clue_dropoff_ip"
+                    ? "m.cole@velox-ai.io"
+                    : "j.sterling@aethelgard.corp";
 
-                {/* Credential Action Banner */}
-                {activePacket.containsCredential &&
-                  activePacket.extractedClueId && (
-                    <div className="p-3 bg-[#131d2a] border border-[#58a6ff] space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="text-xs font-bold text-[#79c0ff] flex items-center gap-1.5">
-                          <Fingerprint className="w-4 h-4 text-[#58a6ff]" />
-                          <span>
-                            UNENCRYPTED CREDENTIAL / IP LEAK IDENTIFIED
+                return (
+                  <>
+                    {/* Header Information */}
+                    <div className="p-3 bg-[#0a0d14] border border-[#1e232c] space-y-1.5 font-mono text-[11px]">
+                      <div className="flex items-center justify-between border-b border-[#161c26] pb-1">
+                        <span className="text-[#8b949e]">
+                          FRAME #{activePacket.id}
+                        </span>
+                        <span className="text-[#58a6ff] font-bold">
+                          {activePacket.protocol} INTERCEPT
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-[10px]">
+                        <div>
+                          <span className="text-[#6e7681]">SRC_IP: </span>
+                          <span className="text-white">
+                            {activePacket.sourceIp}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[#6e7681]">DST_IP: </span>
+                          <span className="text-white">
+                            {isPacketTlsLocked
+                              ? "[TLS_HANDSHAKE_MASKED]"
+                              : activePacket.destIp}
                           </span>
                         </div>
                       </div>
+                    </div>
 
-                      <div className="p-2 bg-[#06080d] border border-[#1f293a] font-mono text-xs text-white">
-                        {activePacket.credentialSnippet}
-                      </div>
-
-                      {discoveredClues.some(
-                        (c) => c.id === activePacket.extractedClueId,
-                      ) ? (
-                        <div className="text-[11px] text-[#56d364] flex items-center gap-1 font-bold">
-                          <Check className="w-3.5 h-3.5" />
-                          <span>Intelligence pinned to OSINT Clue Board!</span>
+                    {/* Credential Action Banner */}
+                    {activePacket.containsCredential &&
+                      activePacket.extractedClueId &&
+                      (isPacketTlsLocked ? (
+                        <div className="p-3 bg-[#1c150a] border border-[#d29922] space-y-2">
+                          <div className="text-xs font-bold text-[#e3b341] flex items-center gap-1.5">
+                            <KeyRound className="w-4 h-4 text-[#d29922]" />
+                            <span>
+                              TLS SESSION ENCRYPTED — CREDENTIAL KEY REQUIRED
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-[#d4d7dc]">
+                            This packet payload is encrypted with{" "}
+                            <span className="font-mono text-white font-bold">
+                              {requiredAccount}
+                            </span>
+                            &apos;s session bearer key. Crack{" "}
+                            <span className="font-mono text-[#79c0ff]">
+                              {requiredAccount}
+                            </span>{" "}
+                            in PassWeaver first to decrypt this frame!
+                          </p>
                         </div>
                       ) : (
-                        <button
-                          onClick={() =>
-                            handleExtractClue(activePacket.extractedClueId)
-                          }
-                          className="w-full py-1.5 bg-[#1f6feb] hover:bg-[#388bfd] text-white font-bold text-xs uppercase cursor-pointer flex items-center justify-center gap-1.5"
-                        >
-                          <Fingerprint className="w-3.5 h-3.5" />[ PIN EXTRACTED
-                          CLUE TO CLUE BOARD ]
-                        </button>
-                      )}
+                        <div className="p-3 bg-[#131d2a] border border-[#58a6ff] space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="text-xs font-bold text-[#79c0ff] flex items-center gap-1.5">
+                              <Fingerprint className="w-4 h-4 text-[#58a6ff]" />
+                              <span>
+                                UNENCRYPTED CREDENTIAL / IP LEAK IDENTIFIED
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="p-2 bg-[#06080d] border border-[#1f293a] font-mono text-xs text-white">
+                            {activePacket.credentialSnippet}
+                          </div>
+
+                          {discoveredClues.some(
+                            (c) => c.id === activePacket.extractedClueId,
+                          ) ? (
+                            <div className="text-[11px] text-[#56d364] flex items-center gap-1 font-bold">
+                              <Check className="w-3.5 h-3.5" />
+                              <span>
+                                Intelligence pinned to OSINT Clue Board!
+                              </span>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() =>
+                                handleExtractClue(activePacket.extractedClueId)
+                              }
+                              className="w-full py-1.5 bg-[#1f6feb] hover:bg-[#388bfd] text-white font-bold text-xs uppercase cursor-pointer flex items-center justify-center gap-1.5"
+                            >
+                              <Fingerprint className="w-3.5 h-3.5" />[ PIN
+                              EXTRACTED CLUE TO CLUE BOARD ]
+                            </button>
+                          )}
+                        </div>
+                      ))}
+
+                    {/* Cleartext Payload View */}
+                    <div className="space-y-1.5">
+                      <div className="text-[10px] uppercase font-bold text-[#6e7681] flex items-center justify-between">
+                        <span>REASSEMBLED TCP PAYLOAD (ASCII):</span>
+                        <span className="font-mono text-[9px] text-[#8b949e]">
+                          STREAM 0
+                        </span>
+                      </div>
+                      <pre className="p-3 bg-[#080a0f] border border-[#1b212c] font-mono text-[11px] text-[#d4d7dc] leading-relaxed whitespace-pre-wrap break-all select-text">
+                        {isPacketTlsLocked
+                          ? "[ENCRYPTED TLS 1.3 APPLICATION DATA // SESSION KEY REQUIRED: Crack target account in PassWeaver to unmask]"
+                          : activePacket.payloadPreview}
+                      </pre>
                     </div>
-                  )}
 
-                {/* Cleartext Payload View */}
-                <div className="space-y-1.5">
-                  <div className="text-[10px] uppercase font-bold text-[#6e7681] flex items-center justify-between">
-                    <span>REASSEMBLED TCP PAYLOAD (ASCII):</span>
-                    <span className="font-mono text-[9px] text-[#8b949e]">
-                      STREAM 0
-                    </span>
-                  </div>
-                  <pre className="p-3 bg-[#080a0f] border border-[#1b212c] font-mono text-[11px] text-[#d4d7dc] leading-relaxed whitespace-pre-wrap break-all select-text">
-                    {activePacket.payloadPreview}
-                  </pre>
-                </div>
-
-                {/* Hex Dump View */}
-                <div className="space-y-1.5">
-                  <div className="text-[10px] uppercase font-bold text-[#6e7681]">
-                    HEXADECIMAL DUMP:
-                  </div>
-                  <pre className="p-2.5 bg-[#040507] border border-[#161a22] font-mono text-[10px] text-[#58a6ff]/80 leading-snug whitespace-pre-wrap break-all">
-                    {activePacket.rawHex}
-                  </pre>
-                </div>
-              </>
+                    {/* Hex Dump View */}
+                    <div className="space-y-1.5">
+                      <div className="text-[10px] uppercase font-bold text-[#6e7681]">
+                        HEXADECIMAL DUMP:
+                      </div>
+                      <pre className="p-2.5 bg-[#040507] border border-[#161a22] font-mono text-[10px] text-[#58a6ff]/80 leading-snug whitespace-pre-wrap break-all">
+                        {activePacket.rawHex}
+                      </pre>
+                    </div>
+                  </>
+                );
+              })()
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center p-6 text-[#6e7681]">
                 <Radio className="w-8 h-8 mb-2 opacity-50" />

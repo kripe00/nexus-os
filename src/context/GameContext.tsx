@@ -1499,18 +1499,20 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
     switch (objId) {
       case "obj_m1_clues":
         return (
-          hasClueId("clue_marcus_email") ||
-          hasClueId("clue_dropoff_ip") ||
-          (hasClueId("clue_marcus_dog") && hasClueId("clue_marcus_year"))
+          (hasClueId("clue_marcus_dog") && hasClueId("clue_marcus_year")) ||
+          crackedEmails.includes("m.cole@velox-ai.io")
         );
       case "obj_m1_passweaver":
         return (
           crackedEmails.includes("m.cole@velox-ai.io") ||
-          hasClueId("clue_dropoff_ip") ||
           successfulPhishes.includes("phish_marcus")
         );
       case "obj_m1_webmail":
-        return hasClueId("clue_dropoff_ip");
+        return (
+          (crackedEmails.includes("m.cole@velox-ai.io") ||
+            successfulPhishes.includes("phish_marcus")) &&
+          hasClueId("clue_dropoff_ip")
+        );
 
       case "obj_m2_buy_ssh":
         return ownedTools.includes("ssh_breaker_v1");

@@ -735,7 +735,7 @@ export const IntraWebApp: React.FC = () => {
       {/* Browser Viewport */}
       <div
         onContextMenu={handleViewportContextMenu}
-        className="flex-1 overflow-y-auto p-5 bg-[#060708] text-xs select-text"
+        className="flex-1 overflow-y-auto p-5 bg-[#060708] text-xs select-text selection:bg-[#1f6feb]/40 selection:text-white [&_*]:selection:bg-[#1f6feb]/40 [&_*]:selection:text-white"
       >
         {/* PAGE 0: LOOKUP SEARCH ENGINE */}
         {browserPage === "search" && (
