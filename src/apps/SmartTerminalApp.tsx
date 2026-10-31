@@ -622,14 +622,44 @@ export const SmartTerminalApp: React.FC = () => {
         setCwd("/root");
         sound.playSuccess();
         const folders = getNodeFolders(node);
-        appendLog(
-          "success",
-          [
-            `[+] ROOT SHELL SPAWNED ON ${node.ip} (${node.hostname}).`,
-            `    MOUNTED VOLUMES : ${folders.join("  ")}`,
-            `    TACTICAL HINT   : Use "ls -la" or "find" to inspect all directories, and "ps" to check active daemons.`,
-          ].join("\n"),
+        const activeSentinel = (node.processes || []).find(
+          (p) =>
+            p.isHostileSentinel &&
+            !(killedPidsByServer[targetIp] || []).includes(p.pid),
         );
+        const encryptedFile = node.files.find(
+          (f) =>
+            f.encryptionKey &&
+            !(unlockedKeysByServer[targetIp] || []).includes(f.encryptionKey),
+        );
+        const keyProviderFile = node.files.find((f) => Boolean(f.providesKey));
+
+        const connectBanner = [
+          `[+] ROOT SHELL SPAWNED ON ${node.ip} (${node.hostname}).`,
+          `    MOUNTED VOLUMES : ${folders.join("  ")}`,
+          `    TACTICAL HINT   : Use "ls -la" or "find" to inspect all directories, and "ps" to check active daemons.`,
+        ];
+
+        if (activeSentinel || encryptedFile) {
+          connectBanner.push(
+            `    -----------------------------------------------------------------`,
+            `    [ZERO // FIELD ADVISORY]:`,
+          );
+          if (activeSentinel) {
+            connectBanner.push(
+              `      • ACTIVE TRACE SENTINEL: "${activeSentinel.name}" (PID ${activeSentinel.pid}) is accelerating trace!`,
+              `        -> Run "ps" then "kill ${activeSentinel.pid}" to cut trace speed & drop trace by ${activeSentinel.traceReduction || 30}%.`,
+            );
+          }
+          if (encryptedFile && keyProviderFile) {
+            connectBanner.push(
+              `      • ENCRYPTED ARCHIVE: "${encryptedFile.name}" in ${encryptedFile.folder || "/opt"} is cipher-locked.`,
+              `        -> Run "cat ${keyProviderFile.folder || "/etc"}/${keyProviderFile.name}" first to harvest the decryption key!`,
+            );
+          }
+        }
+
+        appendLog("success", connectBanner.join("\n"));
         break;
       }
 
@@ -654,6 +684,9 @@ export const SmartTerminalApp: React.FC = () => {
         const filesInCwd = node.files.filter(
           (f) => (f.folder || "/root") === cwd,
         );
+        const filesOutsideCwd = node.files.filter(
+          (f) => (f.folder || "/root") !== cwd,
+        );
         const filesToList =
           showAllRecursive || filesInCwd.length === 0 ? node.files : filesInCwd;
 
@@ -672,6 +705,15 @@ export const SmartTerminalApp: React.FC = () => {
           return `  -r--------  root  ${f.size.padEnd(10)}  ${dirPrefix}${f.name}${lockTag}${keyTag}${evTag}`;
         });
 
+        const footerNotice =
+          !showAllRecursive && filesInCwd.length > 0 && filesOutsideCwd.length > 0
+            ? [
+                "  -----------------------------------------------------------------",
+                `  [!] ${filesOutsideCwd.length} additional file(s) located in subdirectories (${Array.from(new Set(filesOutsideCwd.map((f) => f.folder || "/root"))).join(", ")}).`,
+                `      -> Run "ls -la" or "find" to view all files across the server, or "cd <dir>" to navigate.`,
+              ]
+            : [];
+
         appendLog(
           "info",
           [
@@ -679,6 +721,7 @@ export const SmartTerminalApp: React.FC = () => {
             ...dirLines,
             "  -----------------------------------------------------------------",
             ...fileLines,
+            ...footerNotice,
           ].join("\n"),
         );
         break;

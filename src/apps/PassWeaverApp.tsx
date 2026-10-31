@@ -465,6 +465,39 @@ export const PassWeaverApp: React.FC = () => {
             )}
           </div>
 
+          {/* Domain PAM Policy Intel Banner so player can deduce the schema fairly */}
+          {targetAccount && (
+            <div className="p-2 bg-[#07090d] border border-[#1f2937] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[10px]">
+              <div className="text-[#8b949e]">
+                <span className="text-[#58a6ff] font-bold uppercase mr-1.5">
+                  [DOMAIN PAM POLICY INTEL]:
+                </span>
+                {targetAccount.patternSchemaId === "project_pin"
+                  ? "Aethelgard Executive Policy requires [Program Codename] concatenated with [4-Digit Berth/Registry PIN]."
+                  : targetAccount.patternSchemaId === "unit_shift"
+                    ? "NordGrid Industrial Policy requires [Substation / Unit ID] concatenated with [Shift or Sync Code]."
+                    : "Standard Corporate PAM Policy requires [Personal Noun / Pet / Brand] concatenated with [4-Digit Year]."}
+              </div>
+              {passWeaverSelectedClues.length > 0 && (
+                <div className="shrink-0 font-mono bg-[#11161f] px-2 py-0.5 border border-[#263040] text-[#79c0ff]">
+                  Preview:{" "}
+                  <span className="text-white font-bold">
+                    {(() => {
+                      const vals = discoveredClues
+                        .filter((c) => passWeaverSelectedClues.includes(c.id))
+                        .map((c) => c.value);
+                      const x = vals[0] || "<Clue1>";
+                      const y = vals[1] || "<Clue2>";
+                      if (selectedSchemaId === "unix_delim") return `${x.toLowerCase()}_${y}`;
+                      if (selectedSchemaId === "pin_prefix") return `${y}${x}!`;
+                      return `${x}${y}`;
+                    })()}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
             {Object.values(PASSWORD_PATTERN_SCHEMAS).map((schema) => {
               const active = selectedSchemaId === schema.id;
