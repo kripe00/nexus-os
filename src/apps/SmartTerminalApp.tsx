@@ -1347,52 +1347,87 @@ export const SmartTerminalApp: React.FC = () => {
         </div>
       )}
 
-      {/* Target Host Header */}
-      <div className="px-3.5 py-1.5 bg-[#0c0e13] border-b border-[#1e232c] flex items-center justify-between text-xs">
-        <div className="flex items-center gap-2">
-          <Server className="w-3.5 h-3.5 text-[#58a6ff]" />
-          <span className="text-[#8b949e]">RHOST:</span>
-          {knownIps.length === 0 ? (
-            <span className="text-[#79c0ff]">
-              [NO RHOST IP IN BUFFER — INSPECT MARCUS WEBMAIL FIRST]
+      {/* Target Host Header (Wraps cleanly + includes dropdown selector when many IPs are discovered) */}
+      <div className="px-3 py-1.5 bg-[#0c0e13] border-b border-[#1e232c] flex flex-col gap-1.5 text-xs">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <Server className="w-3.5 h-3.5 text-[#58a6ff] shrink-0" />
+            <span className="text-[#8b949e] text-[11px] font-bold shrink-0">
+              RHOST:
             </span>
-          ) : (
-            <div className="flex items-center gap-1">
-              {knownIps.map((ip) => (
+            {knownIps.length > 0 && (
+              <select
+                value={connectedIp || terminalSelectedIp || knownIps[knownIps.length - 1]}
+                onChange={(e) => {
+                  sound.playClick();
+                  setTerminalSelectedIp(e.target.value);
+                }}
+                className="bg-[#060708] border border-[#282f3d] hover:border-[#58a6ff] text-[#79c0ff] font-mono text-[11px] px-2 py-0.5 focus:outline-none focus:border-[#58a6ff] cursor-pointer max-w-[310px] truncate"
+                title="Select Target Host IP"
+              >
+                {knownIps.map((ip) => {
+                  const n = SERVER_NODES[ip];
+                  return (
+                    <option key={ip} value={ip}>
+                      {ip} {n ? `— ${n.hostname}` : ""}
+                    </option>
+                  );
+                })}
+              </select>
+            )}
+          </div>
+
+          <span
+            className={`text-[11px] shrink-0 truncate ${
+              connectedIp
+                ? connectedIp === "102.16.88.12" ||
+                  connectedIp === "185.190.20.1"
+                  ? "text-[#ffb454] font-bold font-mono"
+                  : "text-[#56d364] font-bold font-mono"
+                : "text-[#6e7681] font-mono"
+            }`}
+          >
+            {connectedIp
+              ? connectedIp === "102.16.88.12" || connectedIp === "185.190.20.1"
+                ? `[AMBER CRT] root@${connectedIp}:${cwd}`
+                : `SESSION: root@${connectedIp}:${cwd}`
+              : "SESSION: LOCAL_TTY"}
+          </span>
+        </div>
+
+        {knownIps.length === 0 ? (
+          <div className="text-[#79c0ff] text-[11px]">
+            [NO RHOST IP IN BUFFER — INSPECT MARCUS WEBMAIL FIRST]
+          </div>
+        ) : (
+          <div className="flex flex-wrap items-center gap-1">
+            {knownIps.map((ip) => {
+              const nodeInfo = SERVER_NODES[ip];
+              const isCurrent = (connectedIp || terminalSelectedIp) === ip;
+              return (
                 <button
                   key={ip}
                   onClick={() => {
                     sound.playClick();
                     setTerminalSelectedIp(ip);
                   }}
-                  className={`px-2 py-0.5 border text-[11px] cursor-pointer transition-colors ${
-                    (connectedIp || terminalSelectedIp) === ip
+                  title={
+                    nodeInfo
+                      ? `${ip} — ${nodeInfo.hostname} (${nodeInfo.organization})`
+                      : ip
+                  }
+                  className={`px-1.5 py-0.5 border text-[10px] font-mono cursor-pointer transition-colors ${
+                    isCurrent
                       ? "bg-[#1f6feb] text-white border-[#58a6ff] font-bold"
-                      : "bg-[#060708] text-[#8b949e] border-[#21262d] hover:text-white"
+                      : "bg-[#060708] text-[#8b949e] border-[#21262d] hover:text-white hover:border-[#3b4659]"
                   }`}
                 >
                   {ip}
                 </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <span
-          className={
-            connectedIp
-              ? connectedIp === "102.16.88.12" || connectedIp === "185.190.20.1"
-                ? "text-[#ffb454] font-bold font-mono"
-                : "text-[#56d364] font-bold"
-              : "text-[#6e7681]"
-          }
-        >
-          {connectedIp
-            ? connectedIp === "102.16.88.12" || connectedIp === "185.190.20.1"
-              ? `[AMBER CRT // MIL-SPEC 50-BAUD] root@${connectedIp}:${cwd}`
-              : `SESSION: root@${connectedIp}:${cwd}`
-            : "SESSION: LOCAL_TTY"}
-        </span>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Raw Terminal Output */}
