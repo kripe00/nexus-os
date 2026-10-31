@@ -302,6 +302,26 @@ export const ClueBoardSidebar: React.FC = () => {
           </button>
         </div>
 
+        {/* Difficulty Protocol Tag */}
+        <div className="flex items-center justify-between text-[9px] font-mono px-2 py-1 mb-2 bg-[#06080d] border border-[#1b2330]">
+          <span className="text-[#8b949e]">INTEL PROTOCOL:</span>
+          <span
+            className={
+              difficulty === "analyst"
+                ? "text-[#58a6ff] font-bold"
+                : difficulty === "operative"
+                  ? "text-[#d29922] font-bold"
+                  : "text-[#ff7b72] font-bold"
+            }
+          >
+            {difficulty === "analyst"
+              ? "ANALYST (ASSISTED)"
+              : difficulty === "operative"
+                ? "OPERATIVE (MANUAL INTEL)"
+                : "ZERO-GHOST (RAW INTEL)"}
+          </span>
+        </div>
+
         {/* Manual Intel Submission Form */}
         <form
           onSubmit={handleManualIntelSubmit}
@@ -354,7 +374,16 @@ export const ClueBoardSidebar: React.FC = () => {
                 ? "Load IP in Terminal →"
                 : isEmail
                   ? "Set Target in PassWeaver →"
-                  : "Add to PassWeaver →";
+                  : difficulty === "analyst"
+                    ? "Add to PassWeaver →"
+                    : "Stage in PassWeaver →";
+
+              const displayTarget =
+                difficulty === "analyst"
+                  ? clue.targetPerson
+                  : isIp
+                    ? "REMOTE HOST"
+                    : `[INTEL // ${clue.category.toUpperCase()}]`;
 
               return (
                 <div
@@ -367,7 +396,15 @@ export const ClueBoardSidebar: React.FC = () => {
                     <span className="text-[#79c0ff] font-semibold uppercase">
                       {clue.label}
                     </span>
-                    <span>{clue.targetPerson}</span>
+                    <span
+                      className={
+                        difficulty === "analyst"
+                          ? "text-[#6e7681]"
+                          : "text-[#d29922] font-mono text-[9px]"
+                      }
+                    >
+                      {displayTarget}
+                    </span>
                   </div>
 
                   <div className="flex items-center justify-between">

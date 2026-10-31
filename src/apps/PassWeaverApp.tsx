@@ -6,8 +6,12 @@ import {
   Lock,
   Unlock,
   AlertTriangle,
+  Sliders,
+  ShieldAlert,
+  Binary,
+  CheckCircle2,
 } from "lucide-react";
-import { EMAIL_ACCOUNTS } from "../data/worldData";
+import { EMAIL_ACCOUNTS, PASSWORD_PATTERN_SCHEMAS } from "../data/worldData";
 import { useGame } from "../context/GameContext";
 import { WindowFrame } from "../components/WindowFrame";
 import {
@@ -26,8 +30,16 @@ export const PassWeaverApp: React.FC = () => {
     passWeaverSelectedClues,
     togglePassWeaverClue,
     navigateBrowser,
+    difficulty,
+    addNotification,
   } = useGame();
 
+  const targetAccount = EMAIL_ACCOUNTS[passWeaverTargetEmail];
+  const isAlreadyCracked = crackedEmails.includes(passWeaverTargetEmail);
+
+  const [selectedSchemaId, setSelectedSchemaId] = useState<string>(
+    targetAccount?.patternSchemaId || "noun_year",
+  );
   const [crackingProgress, setCrackingProgress] = useState<number | null>(null);
   const [candidatePreview, setCandidatePreview] = useState<string>("");
   const [failedAttempts, setFailedAttempts] = useState<number>(0);
@@ -37,13 +49,24 @@ export const PassWeaverApp: React.FC = () => {
     text: string;
   }>({
     type: "idle",
-    text: "Select 2 personal OSINT clues belonging to the target to synthesize their password.",
+    text:
+      difficulty === "analyst"
+        ? "Select 2 personal OSINT clues belonging to the target to synthesize their password."
+        : "Select target account, isolate matching OSINT clues, and derive password policy schema.",
   });
 
-  const targetAccount = EMAIL_ACCOUNTS[passWeaverTargetEmail];
-  const isAlreadyCracked = crackedEmails.includes(passWeaverTargetEmail);
+  // Calculate difficulty-based thresholds
+  const maxAttempts = difficulty === "ghost" ? 2 : difficulty === "operative" ? 3 : 5;
+  const baseLockoutSeconds = difficulty === "ghost" ? 35 : difficulty === "operative" ? 20 : 5;
 
-  // 20-second lockout timer countdown
+  // Sync schema automatically when switching accounts on Analyst difficulty
+  useEffect(() => {
+    if (targetAccount && difficulty === "analyst" && targetAccount.patternSchemaId) {
+      setSelectedSchemaId(targetAccount.patternSchemaId);
+    }
+  }, [passWeaverTargetEmail, difficulty, targetAccount]);
+
+  // Lockout countdown
   useEffect(() => {
     if (lockoutRemaining <= 0) return;
     const timer = setInterval(() => {
@@ -71,16 +94,17 @@ export const PassWeaverApp: React.FC = () => {
       sound.playError();
       const newAttempts = failedAttempts + 1;
       setFailedAttempts(newAttempts);
-      if (newAttempts >= 3) {
-        setLockoutRemaining(20);
+      if (newAttempts >= maxAttempts) {
+        setLockoutRemaining(baseLockoutSeconds);
+        if (difficulty === "ghost") sound.playAlarm();
         setStatusMessage({
           type: "error",
-          text: "SECURITY LOCKOUT (20s): 3 failed attempts. ERR_SALTED_HARDWARE_KEY: Chief Reyes utilizes a 64-char military hardware token. Heuristic synthesis impossible. Deploy SpearPhish campaign.",
+          text: `SECURITY LOCKOUT (${baseLockoutSeconds}s): ${maxAttempts} failed attempts. ERR_SALTED_HARDWARE_KEY: Chief Reyes utilizes a 64-char military hardware token. Heuristic synthesis impossible. Deploy SpearPhish campaign.`,
         });
       } else {
         setStatusMessage({
           type: "error",
-          text: `ERR_SALTED_HARDWARE_KEY: Chief Reyes utilizes a 64-character military hardware token. Heuristic password synthesis impossible. Deploy SpearPhish campaign. (${newAttempts}/3 attempts before lockout)`,
+          text: `ERR_SALTED_HARDWARE_KEY: Chief Reyes utilizes a 64-character military hardware token. Heuristic password synthesis impossible. Deploy SpearPhish campaign. (${newAttempts}/${maxAttempts} attempts before lockout)`,
         });
       }
       return;
@@ -91,20 +115,62 @@ export const PassWeaverApp: React.FC = () => {
       req.every((r) => passWeaverSelectedClues.includes(r)) &&
       passWeaverSelectedClues.length === req.length;
 
+    // Schema matching logic: On Analyst, auto-matches. On Operative/Ghost, must match target's pattern schema!
+    const targetExpectedSchema = targetAccount.patternSchemaId || "noun_year";
+    const hasMatchingSchema =
+      difficulty === "analyst" || selectedSchemaId === targetExpectedSchema;
+
     const selectedValues = discoveredClues
       .filter((c) => passWeaverSelectedClues.includes(c.id))
       .map((c) => c.value);
 
     const a = selectedValues[0] || "admin";
     const b = selectedValues[1] || "1234";
-    const permutations = [
-      `${a}_${b}`,
-      `${b}${a}!`,
-      `${a.toLowerCase()}${b}`,
-      `${a}#${b}`,
-      `${b}_${a}`,
-      `${a}${b}`,
-    ];
+
+    // Build permutations reflecting the selected schema
+    let permutations: string[] = [];
+    if (selectedSchemaId === "noun_year") {
+      permutations = [
+        `${a}${b}`,
+        `${a.toLowerCase()}${b}`,
+        `${a}_${b}`,
+        `${b}${a}!`,
+        `${a.toUpperCase()}${b}`,
+        `${a}${b}#`,
+      ];
+    } else if (selectedSchemaId === "project_pin") {
+      permutations = [
+        `${a}${b}`,
+        `${a}-${b}`,
+        `${a.toUpperCase()}${b}`,
+        `${a}_${b}!`,
+        `${b}${a}`,
+        `${a}${b}#`,
+      ];
+    } else if (selectedSchemaId === "unit_shift") {
+      permutations = [
+        `${a}${b}`,
+        `${a}_${b}`,
+        `${a.toUpperCase()}${b}`,
+        `${b}-${a}`,
+        `${a}#${b}`,
+      ];
+    } else if (selectedSchemaId === "unix_delim") {
+      permutations = [
+        `${a}_${b}`,
+        `${a.toLowerCase()}_${b}`,
+        `${a}_${b}_sys`,
+        `${b}_${a}`,
+      ];
+    } else {
+      // pin_prefix or default
+      permutations = [
+        `${b}${a}`,
+        `${b}_${a}`,
+        `${b}${a}!`,
+        `${a}${b}`,
+      ];
+    }
 
     setCrackingProgress(0);
     let step = 0;
@@ -120,28 +186,69 @@ export const PassWeaverApp: React.FC = () => {
         clearInterval(timer);
         setCrackingProgress(null);
 
-        if (hasAllRequired) {
+        if (hasAllRequired && hasMatchingSchema) {
           setFailedAttempts(0);
           markEmailCracked(passWeaverTargetEmail);
           setCandidatePreview(targetAccount.password);
+          sound.playClueFound();
           setStatusMessage({
             type: "success",
             text: `MATCH CONFIRMED! Password for ${passWeaverTargetEmail} is "${targetAccount.password}".`,
           });
+        } else if (hasAllRequired && !hasMatchingSchema) {
+          // Right clues, but incorrect pattern policy
+          sound.playError();
+          const newAttempts = failedAttempts + 1;
+          setFailedAttempts(newAttempts);
+          if (newAttempts >= maxAttempts) {
+            setLockoutRemaining(baseLockoutSeconds);
+            if (difficulty === "ghost") {
+              sound.playAlarm();
+              addNotification(
+                "GATEWAY IDS ALERT",
+                "Repeated policy violation detected on target identity provider!",
+                "warning",
+              );
+            }
+            setStatusMessage({
+              type: "error",
+              text: `SECURITY LOCKOUT (${baseLockoutSeconds}s): ${maxAttempts} failed attempts. Pattern schema mismatch triggered host PAM lockout.`,
+            });
+          } else {
+            const schemaObj = PASSWORD_PATTERN_SCHEMAS[selectedSchemaId];
+            setStatusMessage({
+              type: "error",
+              text: `POLICY REJECTED: Selected intel clues are valid, but candidate hash violates ${targetAccount.ownerName}'s corporate password policy (tried ${schemaObj?.name || selectedSchemaId}). (${newAttempts}/${maxAttempts} attempts)`,
+            });
+          }
         } else {
           sound.playError();
           const newAttempts = failedAttempts + 1;
           setFailedAttempts(newAttempts);
-          if (newAttempts >= 3) {
-            setLockoutRemaining(20);
+          if (newAttempts >= maxAttempts) {
+            setLockoutRemaining(baseLockoutSeconds);
+            if (difficulty === "ghost") {
+              sound.playAlarm();
+              addNotification(
+                "GATEWAY IDS ALERT",
+                "Heuristic brute-force threshold exceeded! Target IP throttled.",
+                "warning",
+              );
+            }
             setStatusMessage({
               type: "error",
-              text: `SECURITY LOCKOUT (20s): 3 failed heuristic permutations. Heuristic synthesis engine locked for 20 seconds.`,
+              text: `SECURITY LOCKOUT (${baseLockoutSeconds}s): ${maxAttempts} failed heuristic permutations. Heuristic engine throttled.`,
             });
           } else {
+            const hintText =
+              difficulty === "analyst"
+                ? `Pattern: ${targetAccount.hint}`
+                : difficulty === "operative"
+                  ? "Check target personal records and division tags"
+                  : "Authentication rejected by target PAM";
             setStatusMessage({
               type: "error",
-              text: `Synthesis failed: Selected clues do not match ${targetAccount.ownerName}'s password pattern (${targetAccount.hint}). (${newAttempts}/3 attempts before lockout)`,
+              text: `Synthesis failed: Selected clues failed entropy verification against ${targetAccount.ownerName} (${hintText}). (${newAttempts}/${maxAttempts} attempts before lockout)`,
             });
           }
         }
@@ -153,10 +260,36 @@ export const PassWeaverApp: React.FC = () => {
     <WindowFrame
       id="passweaver"
       icon={<KeyRound className="w-3.5 h-3.5" />}
-      width="w-[620px]"
-      height="h-[500px]"
+      width="w-[680px]"
+      height="h-[560px]"
     >
       <div className="p-4 space-y-4 flex-1 overflow-y-auto bg-[#060708] text-xs">
+        {/* Protocol Protocol Header */}
+        <div className="flex items-center justify-between px-3 py-1.5 bg-[#0b0f17] border border-[#1b2536] text-[11px] font-mono">
+          <span className="text-[#8b949e] flex items-center gap-1.5">
+            <Sliders className="w-3.5 h-3.5 text-[#58a6ff]" />
+            <span>SYNTHESIS PROTOCOL:</span>
+            <span
+              className={
+                difficulty === "analyst"
+                  ? "text-[#58a6ff] font-bold"
+                  : difficulty === "operative"
+                    ? "text-[#d29922] font-bold"
+                    : "text-[#ff7b72] font-bold"
+              }
+            >
+              {difficulty === "analyst"
+                ? "ANALYST (ASSISTED)"
+                : difficulty === "operative"
+                  ? "OPERATIVE (SCHEMA VERIFICATION)"
+                  : "ZERO-GHOST (HARDENED IDS)"}
+            </span>
+          </span>
+          <span className="text-[#6e7681]">
+            THRESHOLD: {maxAttempts - failedAttempts}/{maxAttempts} TRIES
+          </span>
+        </div>
+
         {/* Step 1: Target Account */}
         <div className="p-3.5 bg-[#0b0d11] border border-[#1e232c] space-y-2.5">
           <div className="flex items-center justify-between border-b border-[#161a22] pb-1.5">
@@ -165,13 +298,14 @@ export const PassWeaverApp: React.FC = () => {
               1. Select Target Account
             </span>
             {isAlreadyCracked && (
-              <span className="px-2 py-0.5 bg-[#238636] text-white text-[10px] font-bold">
+              <span className="px-2 py-0.5 bg-[#238636] text-white text-[10px] font-bold flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3" />
                 CRACKED: {targetAccount.password}
               </span>
             )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             {Object.values(EMAIL_ACCOUNTS).map((acc) => {
               const cracked = crackedEmails.includes(acc.email);
               const active = passWeaverTargetEmail === acc.email;
@@ -181,18 +315,35 @@ export const PassWeaverApp: React.FC = () => {
                 "v.reyes@aethelgard.corp": "reyes",
               };
               const subj = subjectMap[acc.email] || "operator";
+
+              // Display hint based on difficulty
+              const displayHint =
+                difficulty === "analyst"
+                  ? acc.hint
+                  : difficulty === "operative"
+                    ? acc.hint.split("+")[0]
+                      ? `${acc.hint.split("+")[0].trim()} + [...]`
+                      : acc.hint
+                    : "[RESTRICTED // EXAMINE INTRANET IT MEMOS]";
+
               return (
                 <button
                   key={acc.email}
                   onClick={() => {
                     sound.playClick();
                     setPassWeaverTargetEmail(acc.email);
+                    if (difficulty === "analyst" && acc.patternSchemaId) {
+                      setSelectedSchemaId(acc.patternSchemaId);
+                    }
                     setStatusMessage({
                       type: "idle",
-                      text: `Pattern Hint: ${acc.hint}`,
+                      text:
+                        difficulty === "analyst"
+                          ? `Pattern Hint: ${acc.hint}`
+                          : `Target set to ${acc.ownerName}. Match intel clues and policy schema.`,
                     });
                   }}
-                  className={`p-2.5 border text-left cursor-pointer transition-colors flex items-center gap-3 ${
+                  className={`p-2.5 border text-left cursor-pointer transition-colors flex items-center gap-2.5 ${
                     active
                       ? "bg-[#151921] border-[#58a6ff] text-white"
                       : "bg-[#07080a] border-[#1e232c] text-[#8b949e] hover:border-[#303947]"
@@ -209,10 +360,19 @@ export const PassWeaverApp: React.FC = () => {
                       )}
                     </div>
                     <div className="text-[10px] text-[#8b949e] truncate">
-                      {acc.ownerName}
+                      {acc.ownerName.split("(")[0].trim()}
                     </div>
-                    <div className="text-[10px] text-[#79c0ff] mt-0.5 truncate">
-                      Hint: {acc.hint}
+                    <div
+                      className={`text-[9px] mt-0.5 truncate ${
+                        difficulty === "analyst"
+                          ? "text-[#79c0ff]"
+                          : difficulty === "operative"
+                            ? "text-[#d29922]"
+                            : "text-[#6e7681] font-mono"
+                      }`}
+                      title={displayHint}
+                    >
+                      {displayHint}
                     </div>
                   </div>
                 </button>
@@ -247,6 +407,12 @@ export const PassWeaverApp: React.FC = () => {
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {discoveredClues.map((clue) => {
                 const selected = passWeaverSelectedClues.includes(clue.id);
+                // On Operative / Ghost, do NOT reveal target person! Show category/source instead
+                const targetTag =
+                  difficulty === "analyst"
+                    ? clue.targetPerson
+                    : `[${clue.category.toUpperCase()}] ${clue.source ? clue.source.slice(0, 18) : "INTEL"}`;
+
                 return (
                   <button
                     key={clue.id}
@@ -269,16 +435,77 @@ export const PassWeaverApp: React.FC = () => {
                     </div>
                     <div
                       className={`text-[9px] truncate ${
-                        selected ? "text-white/75" : "text-[#6e7681]"
+                        selected
+                          ? "text-white/75"
+                          : difficulty === "analyst"
+                            ? "text-[#6e7681]"
+                            : "text-[#d29922] font-mono"
                       }`}
                     >
-                      {clue.targetPerson}
+                      {targetTag}
                     </div>
                   </button>
                 );
               })}
             </div>
           )}
+        </div>
+
+        {/* Step 3: Password Complexity Rule / Schema Selector */}
+        <div className="p-3.5 bg-[#0b0d11] border border-[#1e232c] space-y-2.5">
+          <div className="flex items-center justify-between border-b border-[#161a22] pb-1.5">
+            <span className="text-[11px] uppercase tracking-wider text-[#79c0ff] font-bold flex items-center gap-1.5">
+              <Binary className="w-3.5 h-3.5 text-[#58a6ff]" />
+              3. Password Policy Rule / Schema
+            </span>
+            {difficulty === "analyst" && (
+              <span className="text-[10px] text-[#58a6ff] font-mono">
+                [AUTO-POLICY MATCHING]
+              </span>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            {Object.values(PASSWORD_PATTERN_SCHEMAS).map((schema) => {
+              const active = selectedSchemaId === schema.id;
+              const isSuggested =
+                difficulty === "analyst" &&
+                targetAccount?.patternSchemaId === schema.id;
+
+              return (
+                <button
+                  key={schema.id}
+                  onClick={() => {
+                    sound.playClick();
+                    setSelectedSchemaId(schema.id);
+                  }}
+                  className={`p-2.5 border text-left cursor-pointer transition-colors relative ${
+                    active
+                      ? "bg-[#151921] border-[#58a6ff] text-white"
+                      : "bg-[#07080a] border-[#1e232c] text-[#8b949e] hover:border-[#303947]"
+                  }`}
+                >
+                  <div className="flex items-center justify-between text-[11px] font-bold mb-1">
+                    <span className="truncate">{schema.name}</span>
+                    {isSuggested && (
+                      <span className="text-[8px] bg-[#1f6feb] text-white px-1.5 py-0.2 uppercase font-mono">
+                        SUGGESTED
+                      </span>
+                    )}
+                  </div>
+                  <div className="font-mono text-[10px] text-[#58a6ff] mb-1">
+                    {schema.template}
+                  </div>
+                  <div className="text-[9px] text-[#6e7681] leading-tight line-clamp-2">
+                    {schema.description}
+                  </div>
+                  <div className="text-[9px] text-[#484f58] mt-1 font-mono">
+                    Ex: {schema.example}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Live Synthesis Animation Bar */}
@@ -303,7 +530,9 @@ export const PassWeaverApp: React.FC = () => {
                 [PBKDF2-HMAC-SHA256] :: SALT 0x
                 {(crackingProgress * 1337).toString(16).toUpperCase()}
               </span>
-              <span className="text-[#56d364]">ENTROPY: 52.4 BITS</span>
+              <span className="text-[#56d364]">
+                RULE: {PASSWORD_PATTERN_SCHEMAS[selectedSchemaId]?.template || selectedSchemaId}
+              </span>
             </div>
 
             <div className="w-full h-2.5 bg-[#060708] border border-[#282f3d] overflow-hidden">
@@ -344,7 +573,7 @@ export const PassWeaverApp: React.FC = () => {
               <AlertTriangle className="w-4 h-4 text-[#ff5555] animate-pulse shrink-0" />
               <span>
                 LOCKOUT ACTIVE: Synthesis engine throttled. Wait{" "}
-                {lockoutRemaining}s to retry.
+                {lockoutRemaining}s before re-attempting authentication.
               </span>
             </div>
           )}
@@ -367,7 +596,7 @@ export const PassWeaverApp: React.FC = () => {
               ? `LOCKOUT ACTIVE (${lockoutRemaining}s)`
               : crackingProgress !== null
                 ? "SYNTHESIZING PERMUTATIONS..."
-                : "SYNTHESIZE & CRACK PASSWORD"}
+                : `SYNTHESIZE & CRACK PASSWORD (${passWeaverSelectedClues.length} CLUES)`}
           </button>
         </div>
       </div>

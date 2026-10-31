@@ -2047,24 +2047,33 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
       return;
     }
 
-    // Personal / Date / Code clue -> Load into PassWeaver and auto-select it!
-    if (clue.targetPerson.includes("Marcus")) {
-      setPassWeaverTargetEmail("m.cole@velox-ai.io");
-    } else if (clue.targetPerson.includes("Julian")) {
-      setPassWeaverTargetEmail("j.sterling@aethelgard.corp");
-    } else if (
-      clue.targetPerson.includes("Reyes") ||
-      clue.targetPerson.includes("Viktor")
-    ) {
-      setPassWeaverTargetEmail("v.reyes@aethelgard.corp");
+    // Personal / Date / Code clue -> Load into PassWeaver
+    // On Analyst difficulty, auto-bind target email.
+    // On Operative / Ghost, do NOT reveal or switch target account - operator must deduce target!
+    if (difficulty === "analyst") {
+      if (clue.targetPerson.includes("Marcus")) {
+        setPassWeaverTargetEmail("m.cole@velox-ai.io");
+      } else if (clue.targetPerson.includes("Julian")) {
+        setPassWeaverTargetEmail("j.sterling@aethelgard.corp");
+      } else if (
+        clue.targetPerson.includes("Reyes") ||
+        clue.targetPerson.includes("Viktor")
+      ) {
+        setPassWeaverTargetEmail("v.reyes@aethelgard.corp");
+      }
     }
+
     setPassWeaverSelectedClues((prev) =>
       prev.includes(clue.id) ? prev : [...prev, clue.id],
     );
     openApp("passweaver");
     addNotification(
-      "Clue Loaded into PassWeaver",
-      `"${clue.value}" added to synthesis slots`,
+      difficulty === "analyst"
+        ? "Clue Loaded into PassWeaver"
+        : "Raw Intel Loaded",
+      difficulty === "analyst"
+        ? `"${clue.value}" added to synthesis slots`
+        : `"${clue.value}" staged in PassWeaver. Select target account manually.`,
       "clue",
     );
   };

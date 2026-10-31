@@ -5,6 +5,7 @@ import {
   EmailAccount,
   GeoRelayNode,
   Mission,
+  PasswordPatternSchema,
   ServerNode,
   ShopItem,
   SnifferSubnet,
@@ -325,12 +326,51 @@ export const ALL_CLUES: Record<string, Clue> = {
   },
 };
 
+export const PASSWORD_PATTERN_SCHEMAS: Record<string, PasswordPatternSchema> = {
+  noun_year: {
+    id: "noun_year",
+    name: "Policy Alpha: [Word] + [Year]",
+    template: "[Noun/Pet] + [Year]",
+    description: "Velox AI Standard: Plaintext corporate moniker/pet with 4-digit numeric suffix",
+    example: "Koda1997",
+  },
+  project_pin: {
+    id: "project_pin",
+    name: "Policy Beta: [Project] + [PIN]",
+    template: "[Codename] + [Index]",
+    description: "Aethelgard Executive Protocol: Capitalized defense project and 4-digit facility index",
+    example: "Hyperion0451",
+  },
+  unit_shift: {
+    id: "unit_shift",
+    name: "Policy Gamma: [Callsign] + [PIN]",
+    template: "[Unit/Tag] + [Shift Code]",
+    description: "Facility Delta Perimeter Security: Combat unit callsign with 6-digit gate code",
+    example: "Phantom778821",
+  },
+  unix_delim: {
+    id: "unix_delim",
+    name: "Policy Delta: [Noun] + [_] + [Year]",
+    template: "[Word] + [_] + [Year]",
+    description: "Legacy Infrastructure: Underscore-delimited system identifier with epoch year",
+    example: "Koda_1997",
+  },
+  pin_prefix: {
+    id: "pin_prefix",
+    name: "Policy Epsilon: [PIN] + [Word]",
+    template: "[Year/PIN] + [Word]",
+    description: "Inverted Prefix: Numerical timestamp followed by subject moniker",
+    example: "1997Koda",
+  },
+};
+
 export const EMAIL_ACCOUNTS: Record<string, EmailAccount> = {
   "m.cole@velox-ai.io": {
     email: "m.cole@velox-ai.io",
     ownerName: "Marcus Cole (CTO, Velox AI)",
     password: "Koda1997",
     hint: "Canine profile callout + Legacy workstation year",
+    patternSchemaId: "noun_year",
     requiredClueIds: ["clue_marcus_dog", "clue_marcus_year"],
     inbox: [
       {
@@ -405,6 +445,7 @@ export const EMAIL_ACCOUNTS: Record<string, EmailAccount> = {
     ownerName: "Julian Sterling (VP Special Projects, Aethelgard)",
     password: "Hyperion0451",
     hint: "Flagship vessel callsign + Sovereign division index",
+    patternSchemaId: "project_pin",
     requiredClueIds: ["clue_julian_project", "clue_julian_badge"],
     inbox: [
       {
@@ -460,6 +501,7 @@ export const EMAIL_ACCOUNTS: Record<string, EmailAccount> = {
     ownerName: "Viktor Reyes (Chief Security Officer, Facility Delta)",
     password: "Phantom778821",
     hint: "Combat unit callsign + Perimeter gatehouse shift index",
+    patternSchemaId: "unit_shift",
     requiredClueIds: ["clue_reyes_unit", "clue_reyes_pin"],
     inbox: [
       {

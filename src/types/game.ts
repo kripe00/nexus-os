@@ -82,11 +82,20 @@ export interface EmailMessage {
   };
 }
 
+export interface PasswordPatternSchema {
+  id: string;
+  name: string;
+  template: string;
+  description: string;
+  example: string;
+}
+
 export interface EmailAccount {
   email: string;
   ownerName: string;
   password: string;
   hint: string;
+  patternSchemaId?: string;
   requiredClueIds: string[]; // Clues that when combined in PassWeaver crack this password
   inbox: EmailMessage[];
 }

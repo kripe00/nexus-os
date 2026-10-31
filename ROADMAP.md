@@ -20,16 +20,16 @@ Dette dokumentet samler de viktigste forbedringsområdene for **NexusOS**, struk
 
 ---
 
-## Fase 2: Mindre Automasjon i Clue Board og PassWeaver
+## Fase 2: Mindre Automasjon i Clue Board og PassWeaver ✅ (Fullført)
 
 **Mål:** Gi spilleren en ekte følelse av å knekke koder og koble bevis selv — spesielt på `Operative` og `Zero-Ghost (Hardcore)`.
 
 ### Konkrete oppgaver
 
-- [ ] **Vanskelighetsgrad-styrt Clue Board (`src/components/ClueBoardSidebar.tsx`):**
+- [x] **Vanskelighetsgrad-styrt Clue Board (`src/components/ClueBoardSidebar.tsx`):**
   - **Analyst (Story):** Nåværende oppførsel (klikk på et bevis sender det rett til riktig app og målperson).
   - **Operative / Zero-Ghost:** Ikke avslør automatisk hvilken målperson et funnet hint tilhører, og krev at spilleren selv velger mål-epost og kombinerer riktige brikker i PassWeaver.
-- [ ] **Mer engasjerende PassWeaver (`src/apps/PassWeaverApp.tsx`):**
+- [x] **Mer engasjerende PassWeaver (`src/apps/PassWeaverApp.tsx`):**
   - Innfør passord-regler/mønstre (f.eks. `[Substantiv] + [Årstall]` vs. `[Enhet] + [PIN]`) som spilleren må utlede fra kontekst (f.eks. IT-policy i en e-post eller hint i loggfiler).
   - Begrens antall forsøk før midlertidig rate-limit på Hardcore, slik at man ikke bare kan prøve alle kombinasjoner blindt.
 
